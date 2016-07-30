@@ -2,13 +2,11 @@
   "name": "test-runner",
   "author": "Lloyd Brookes <75pound@gmail.com>",
   "version": "0.0.0",
-  "description": "test-runner",
+  "description": "Minimal test runner",
   "repository": "https://github.com/75lb/test-runner.git",
   "license": "MIT",
   "main": "./lib/test-runner.js",
-  "bin": {
-    "test-runner": "bin/cli.js"
-  },
+  "bin": "bin/cli.js",
   "keywords": [],
   "engines": {
     "node": ">=0.10.0"
