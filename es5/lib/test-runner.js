@@ -12,6 +12,10 @@ var suiteFailed = false;
 
 function test(name, testFunction) {
   if (beforeExitEventExists()) {
+    if (tests.has(name)) {
+      console.error('Duplicate test name: ' + name);
+      process.exit(1);
+    }
     tests.set(name, testFunction);
   } else {
     runTest(name, testFunction);
