@@ -14,7 +14,11 @@ function test (name, testFunction) {
   if (beforeExitEventExists()) {
     tests.set(name, testFunction)
   } else {
+    /* variance for node 0.10 */
     runTest(name, testFunction)
+    if (suiteFailed) {
+      process.nextTick(() => process.exit(1))
+    }
   }
 }
 

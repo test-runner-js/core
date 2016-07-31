@@ -15,6 +15,11 @@ function test(name, testFunction) {
     tests.set(name, testFunction);
   } else {
     runTest(name, testFunction);
+    if (suiteFailed) {
+      process.nextTick(function () {
+        return process.exit(1);
+      });
+    }
   }
 }
 
