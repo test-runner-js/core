@@ -11,7 +11,11 @@ const only = []
 let suiteFailed = false
 
 function test (name, testFunction) {
-  tests.set(name, testFunction)
+  if (beforeExitEventExists()) {
+    tests.set(name, testFunction)
+  } else {
+    runTest(name, testFunction)
+  }
 }
 
 test.skip = function () {}
@@ -20,23 +24,27 @@ test.only = function (name, testFunction) {
   only.push(name)
 }
 
-process.on('beforeExit', function () {
+function runTest (name, testFunction) {
   const t = require('typical')
-  for (const [ name, test ] of tests) {
-    if (only.length && !only.includes(name)) continue
-    let result
-    try {
-      result = test()
-      if (t.isPromise(result)) {
-        result
-          .then(output => printOk(name, output))
-          .catch(err => printFail(name, err))
-      } else {
-        printOk(name, result)
-      }
-    } catch (err) {
-      printFail(name, err)
+  if (only.length && !only.includes(name)) return
+  let result
+  try {
+    result = testFunction()
+    if (t.isPromise(result)) {
+      result
+        .then(output => printOk(name, output))
+        .catch(err => printFail(name, err))
+    } else {
+      printOk(name, result)
     }
+  } catch (err) {
+    printFail(name, err)
+  }
+}
+
+process.on('beforeExit', function () {
+  for (const [ name, testFunction ] of tests) {
+    runTest(name, testFunction)
   }
   tests.clear()
   if (suiteFailed) process.exitCode = 1
@@ -60,3 +68,8 @@ function printFail (name, err) {
 process.on('unhandledRejection', function (reason, p) {
   console.error('unhandledRejection', reason)
 })
+
+function beforeExitEventExists () {
+  const version = process.version.replace('v', '').split('.')
+  return version[0] > 0 || (version[0] === 0 && version[1] >= 11 && version[2] >= 12)
+}

@@ -11,7 +11,11 @@ var only = [];
 var suiteFailed = false;
 
 function test(name, testFunction) {
-  tests.set(name, testFunction);
+  if (beforeExitEventExists()) {
+    tests.set(name, testFunction);
+  } else {
+    runTest(name, testFunction);
+  }
 }
 
 test.skip = function () {};
@@ -20,41 +24,39 @@ test.only = function (name, testFunction) {
   only.push(name);
 };
 
-process.on('beforeExit', function () {
+function runTest(name, testFunction) {
   var t = require('typical');
+  if (only.length && !only.includes(name)) return;
+  var result = void 0;
+  try {
+    result = testFunction();
+    if (t.isPromise(result)) {
+      result.then(function (output) {
+        return printOk(name, output);
+      }).catch(function (err) {
+        return printFail(name, err);
+      });
+    } else {
+      printOk(name, result);
+    }
+  } catch (err) {
+    printFail(name, err);
+  }
+}
+
+process.on('beforeExit', function () {
   var _iteratorNormalCompletion = true;
   var _didIteratorError = false;
   var _iteratorError = undefined;
 
   try {
-    var _loop = function _loop() {
+    for (var _iterator = tests[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
       var _step$value = _slicedToArray(_step.value, 2);
 
       var name = _step$value[0];
-      var test = _step$value[1];
+      var testFunction = _step$value[1];
 
-      if (only.length && !only.includes(name)) return 'continue';
-      var result = void 0;
-      try {
-        result = test();
-        if (t.isPromise(result)) {
-          result.then(function (output) {
-            return printOk(name, output);
-          }).catch(function (err) {
-            return printFail(name, err);
-          });
-        } else {
-          printOk(name, result);
-        }
-      } catch (err) {
-        printFail(name, err);
-      }
-    };
-
-    for (var _iterator = tests[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
-      var _ret = _loop();
-
-      if (_ret === 'continue') continue;
+      runTest(name, testFunction);
     }
   } catch (err) {
     _didIteratorError = true;
@@ -93,3 +95,8 @@ function printFail(name, err) {
 process.on('unhandledRejection', function (reason, p) {
   console.error('unhandledRejection', reason);
 });
+
+function beforeExitEventExists() {
+  var version = process.version.replace('v', '').split('.');
+  return version[0] > 0 || version[0] === 0 && version[1] >= 11 && version[2] >= 12;
+}
