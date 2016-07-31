@@ -78,12 +78,12 @@ process.on('beforeExit', function () {
     }
   }
 
-  tests.clear();
   if (suiteFailed) process.exitCode = 1;
 });
 
 function printOk(name, msg) {
   console.log(ansi.format(name, 'green') + ': ' + (msg || 'ok'));
+  tests.delete(name);
 }
 
 function printFail(name, err) {
@@ -95,11 +95,8 @@ function printFail(name, err) {
     msg = 'failed';
   }
   console.log(ansi.format(name, 'red') + ': ' + msg);
+  tests.delete(name);
 }
-
-process.on('unhandledRejection', function (reason, p) {
-  console.error('unhandledRejection', reason);
-});
 
 function beforeExitEventExists() {
   var version = process.version.replace('v', '').split('.');

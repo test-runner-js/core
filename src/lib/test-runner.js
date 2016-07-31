@@ -50,12 +50,12 @@ process.on('beforeExit', function () {
   for (const [ name, testFunction ] of tests) {
     runTest(name, testFunction)
   }
-  tests.clear()
   if (suiteFailed) process.exitCode = 1
 })
 
 function printOk (name, msg) {
   console.log(`${ansi.format(name, 'green')}: ${msg || 'ok'}`)
+  tests.delete(name)
 }
 
 function printFail (name, err) {
@@ -67,11 +67,8 @@ function printFail (name, err) {
     msg = 'failed'
   }
   console.log(`${ansi.format(name, 'red')}: ${msg}`)
+  tests.delete(name)
 }
-
-process.on('unhandledRejection', function (reason, p) {
-  console.error('unhandledRejection', reason)
-})
 
 function beforeExitEventExists () {
   const version = process.version.replace('v', '').split('.')
