@@ -38,7 +38,7 @@ function runTest(name, testFunction) {
   if (only.length && !only.includes(name)) return;
   var result = void 0;
   try {
-    result = testFunction();
+    result = testFunction.call({ name: name });
     if (t.isPromise(result)) {
       result.then(function (output) {
         return printOk(name, output);

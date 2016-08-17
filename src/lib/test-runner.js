@@ -37,7 +37,7 @@ function runTest (name, testFunction) {
   if (only.length && !only.includes(name)) return
   let result
   try {
-    result = testFunction()
+    result = testFunction.call({ name: name })
     if (t.isPromise(result)) {
       result
         .then(output => printOk(name, output))
