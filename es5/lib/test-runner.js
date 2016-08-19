@@ -33,12 +33,16 @@ test.only = function (name, testFunction) {
   only.push(name);
 };
 
+var index = 1;
 function runTest(name, testFunction) {
   var t = require('typical');
   if (only.length && !only.includes(name)) return;
   var result = void 0;
   try {
-    result = testFunction.call({ name: name });
+    result = testFunction.call({
+      name: name,
+      index: index++
+    });
     if (t.isPromise(result)) {
       result.then(function (output) {
         return printOk(name, output);

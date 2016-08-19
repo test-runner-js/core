@@ -32,12 +32,16 @@ test.only = function (name, testFunction) {
   only.push(name)
 }
 
+let index = 1
 function runTest (name, testFunction) {
   const t = require('typical')
   if (only.length && !only.includes(name)) return
   let result
   try {
-    result = testFunction.call({ name: name })
+    result = testFunction.call({
+      name: name,
+      index: index++
+    })
     if (t.isPromise(result)) {
       result
         .then(output => printOk(name, output))
