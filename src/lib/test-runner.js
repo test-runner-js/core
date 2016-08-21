@@ -7,6 +7,8 @@ const t = require('typical')
  * @module test-runner
  */
 
+const only = []
+
 /**
  * @extends {EventEmitter}
  * @alias module:test-runner
@@ -24,7 +26,6 @@ class TestRunner extends EventEmitter {
     this.tests = new Map()
     this.passed = []
     this.failed = []
-    this.only = []
     this.suiteFailed = false
     this.index = 1
     this.log = options.log || console.log
@@ -74,7 +75,7 @@ class TestRunner extends EventEmitter {
    * Only run this test.
    */
   only (name, testFunction) {
-    test(name, testFunction)
+    this.test(name, testFunction)
     only.push(name)
   }
 
@@ -85,7 +86,7 @@ class TestRunner extends EventEmitter {
    * @returns {*}
    */
   runTest (name, testFunction) {
-    if (this.only.length && !this.only.includes(name)) return
+    if (only.length && !only.includes(name)) return
     let result
     try {
       result = testFunction.call({

@@ -14,6 +14,8 @@ var ansi = require('ansi-escape-sequences');
 var EventEmitter = require('events').EventEmitter;
 var t = require('typical');
 
+var _only = [];
+
 var TestRunner = function (_EventEmitter) {
   _inherits(TestRunner, _EventEmitter);
 
@@ -26,7 +28,6 @@ var TestRunner = function (_EventEmitter) {
     _this.tests = new Map();
     _this.passed = [];
     _this.failed = [];
-    _this.only = [];
     _this.suiteFailed = false;
     _this.index = 1;
     _this.log = options.log || console.log;
@@ -71,26 +72,16 @@ var TestRunner = function (_EventEmitter) {
     value: function skip() {}
   }, {
     key: 'only',
-    value: function (_only) {
-      function only(_x, _x2) {
-        return _only.apply(this, arguments);
-      }
-
-      only.toString = function () {
-        return _only.toString();
-      };
-
-      return only;
-    }(function (name, testFunction) {
-      test(name, testFunction);
-      only.push(name);
-    })
+    value: function only(name, testFunction) {
+      this.test(name, testFunction);
+      _only.push(name);
+    }
   }, {
     key: 'runTest',
     value: function runTest(name, testFunction) {
       var _this3 = this;
 
-      if (this.only.length && !this.only.includes(name)) return;
+      if (_only.length && !_only.includes(name)) return;
       var result = void 0;
       try {
         result = testFunction.call({
