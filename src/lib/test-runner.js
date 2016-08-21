@@ -7,7 +7,17 @@ const t = require('typical')
  * @module test-runner
  */
 
+/**
+ * @extends {EventEmitter}
+ * @alias module:test-runner
+ */
 class TestRunner extends EventEmitter {
+
+  /**
+   * @param [options] {object}
+   * @param [options.log] {function}
+   * @param [options.manualStart] {boolean}
+   */
   constructor (options) {
     super()
     options = options || {}
@@ -24,6 +34,9 @@ class TestRunner extends EventEmitter {
     }
   }
 
+  /**
+   * @returns {Promise}
+   */
   start () {
     this.emit('start')
     return Promise
@@ -38,20 +51,39 @@ class TestRunner extends EventEmitter {
       })
   }
 
+  /**
+   * @param {string}
+   * @param {function}
+   * @chainable
+   */
   test (name, testFunction) {
     if (this.tests.has(name)) {
       console.error('Duplicate test name: ' + name)
       process.exit(1)
     }
     this.tests.set(name, testFunction)
+    return this
   }
 
+  /**
+   * no-op
+   */
   skip () {}
+
+  /**
+   * Only run this test.
+   */
   only (name, testFunction) {
     test(name, testFunction)
     only.push(name)
   }
 
+  /**
+   * Run test, returning the result which may be a Promise.
+   * @param {string}
+   * @param {function}
+   * @returns {*}
+   */
   runTest (name, testFunction) {
     if (this.only.length && !this.only.includes(name)) return
     let result
@@ -93,6 +125,9 @@ class TestRunner extends EventEmitter {
     this.failed.push(name)
   }
 
+  /**
+   * Run one or more test files.
+   */
   static run (globs) {
     const arrayify = require('array-back')
     globs = arrayify(globs)

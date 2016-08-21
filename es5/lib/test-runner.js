@@ -64,6 +64,7 @@ var TestRunner = function (_EventEmitter) {
         process.exit(1);
       }
       this.tests.set(name, testFunction);
+      return this;
     }
   }, {
     key: 'skip',
