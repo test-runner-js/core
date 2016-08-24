@@ -27,6 +27,7 @@ var TestRunner = function (_EventEmitter) {
     options = options || {};
     _this.tests = new Map();
     _this.passed = [];
+    _this.noop = [];
     _this.failed = [];
     _this.suiteFailed = false;
     _this.index = 1;
@@ -81,7 +82,13 @@ var TestRunner = function (_EventEmitter) {
     value: function runTest(name, testFunction) {
       var _this3 = this;
 
-      if (_only.length && !_only.includes(name)) return;
+      if (_only.length && !_only.includes(name)) {
+        return;
+      } else if (!testFunction) {
+        this.printNoOp(name);
+        return;
+      }
+
       var result = void 0;
       try {
         result = testFunction.call({
@@ -109,6 +116,13 @@ var TestRunner = function (_EventEmitter) {
       this.log(ansi.format(name, 'green') + ': ' + (msg || 'ok'));
       this.tests.delete(name);
       this.passed.push(name);
+    }
+  }, {
+    key: 'printNoOp',
+    value: function printNoOp(name, msg) {
+      this.log(ansi.format(name, 'magenta') + ': ' + (msg || '--'));
+      this.tests.delete(name);
+      this.noop.push(name);
     }
   }, {
     key: 'printFail',

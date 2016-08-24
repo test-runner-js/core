@@ -25,6 +25,7 @@ class TestRunner extends EventEmitter {
     options = options || {}
     this.tests = new Map()
     this.passed = []
+    this.noop = []
     this.failed = []
     this.suiteFailed = false
     this.index = 1
@@ -86,7 +87,13 @@ class TestRunner extends EventEmitter {
    * @returns {*}
    */
   runTest (name, testFunction) {
-    if (only.length && !only.includes(name)) return
+    if (only.length && !only.includes(name)) {
+      return
+    } else if (!testFunction) {
+      this.printNoOp(name)
+      return
+    }
+
     let result
     try {
       result = testFunction.call({
@@ -111,6 +118,12 @@ class TestRunner extends EventEmitter {
     this.log(`${ansi.format(name, 'green')}: ${msg || 'ok'}`)
     this.tests.delete(name)
     this.passed.push(name)
+  }
+
+  printNoOp (name, msg) {
+    this.log(`${ansi.format(name, 'magenta')}: ${msg || '--'}`)
+    this.tests.delete(name)
+    this.noop.push(name)
   }
 
   printFail (name, err) {
