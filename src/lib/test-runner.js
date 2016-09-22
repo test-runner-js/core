@@ -31,8 +31,14 @@ class TestRunner extends EventEmitter {
     this.index = 1
     this.log = options.log || console.log
 
+    this._autoStarted = false
     if (!options.manualStart) {
-      process.on('beforeExit', this.start.bind(this))
+      process.on('beforeExit', () => {
+        if (!this._autoStarted) {
+          this.start()
+          this._autoStarted = true
+        }
+      })
     }
   }
 
@@ -50,6 +56,9 @@ class TestRunner extends EventEmitter {
         if (this.suiteFailed) process.exitCode = 1
         this.emit('end')
         return results
+      })
+      .catch(err => {
+        // exceptions already handled
       })
   }
 

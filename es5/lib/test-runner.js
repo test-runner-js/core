@@ -22,7 +22,7 @@ var TestRunner = function (_EventEmitter) {
   function TestRunner(options) {
     _classCallCheck(this, TestRunner);
 
-    var _this = _possibleConstructorReturn(this, Object.getPrototypeOf(TestRunner).call(this));
+    var _this = _possibleConstructorReturn(this, (TestRunner.__proto__ || Object.getPrototypeOf(TestRunner)).call(this));
 
     options = options || {};
     _this.tests = new Map();
@@ -33,8 +33,14 @@ var TestRunner = function (_EventEmitter) {
     _this.index = 1;
     _this.log = options.log || console.log;
 
+    _this._autoStarted = false;
     if (!options.manualStart) {
-      process.on('beforeExit', _this.start.bind(_this));
+      process.on('beforeExit', function () {
+        if (!_this._autoStarted) {
+          _this.start();
+          _this._autoStarted = true;
+        }
+      });
     }
     return _this;
   }
@@ -56,7 +62,7 @@ var TestRunner = function (_EventEmitter) {
         if (_this2.suiteFailed) process.exitCode = 1;
         _this2.emit('end');
         return results;
-      });
+      }).catch(function (err) {});
     }
   }, {
     key: 'test',
@@ -164,7 +170,7 @@ var OldNodeTestRunner = function (_TestRunner) {
   function OldNodeTestRunner() {
     _classCallCheck(this, OldNodeTestRunner);
 
-    return _possibleConstructorReturn(this, Object.getPrototypeOf(OldNodeTestRunner).apply(this, arguments));
+    return _possibleConstructorReturn(this, (OldNodeTestRunner.__proto__ || Object.getPrototypeOf(OldNodeTestRunner)).apply(this, arguments));
   }
 
   _createClass(OldNodeTestRunner, [{
