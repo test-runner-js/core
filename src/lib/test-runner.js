@@ -1,7 +1,10 @@
 'use strict'
 const ansi = require('ansi-escape-sequences')
 const EventEmitter = require('events').EventEmitter
-const t = require('typical')
+const from = require('core-js/library/fn/array/from')
+const includes = require('core-js/library/fn/array/includes')
+const Map = require('core-js/library/fn/map')
+const Promise_ = typeof Promise === 'undefined' ? require('core-js/library/fn/promise') : Promise
 
 /**
  * @module test-runner
@@ -47,8 +50,8 @@ class TestRunner extends EventEmitter {
    */
   start () {
     this.emit('start')
-    return Promise
-      .all(Array.from(this.tests).map(testItem => {
+    return Promise_
+      .all(from(this.tests).map(testItem => {
         const [ name, testFunction ] = testItem
         return this.runTest(name, testFunction)
       }))
@@ -96,7 +99,7 @@ class TestRunner extends EventEmitter {
    * @returns {*}
    */
   runTest (name, testFunction) {
-    if (only.length && !only.includes(name)) {
+    if (only.length && !includes(only, name)) {
       return
     } else if (!testFunction) {
       this.printNoOp(name)
@@ -109,7 +112,7 @@ class TestRunner extends EventEmitter {
         name: name,
         index: this.index++
       })
-      if (t.isPromise(result)) {
+      if (result && result.then) {
         result
           .then(output => this.printOk(name, output))
           .catch(err => this.printFail(name, err))

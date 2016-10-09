@@ -12,7 +12,10 @@ function _inherits(subClass, superClass) { if (typeof superClass !== "function" 
 
 var ansi = require('ansi-escape-sequences');
 var EventEmitter = require('events').EventEmitter;
-var t = require('typical');
+var from = require('core-js/library/fn/array/from');
+var includes = require('core-js/library/fn/array/includes');
+var Map = require('core-js/library/fn/map');
+var Promise_ = typeof Promise === 'undefined' ? require('core-js/library/fn/promise') : Promise;
 
 var _only = [];
 
@@ -51,7 +54,7 @@ var TestRunner = function (_EventEmitter) {
       var _this2 = this;
 
       this.emit('start');
-      return Promise.all(Array.from(this.tests).map(function (testItem) {
+      return Promise_.all(from(this.tests).map(function (testItem) {
         var _testItem = _slicedToArray(testItem, 2);
 
         var name = _testItem[0];
@@ -88,7 +91,7 @@ var TestRunner = function (_EventEmitter) {
     value: function runTest(name, testFunction) {
       var _this3 = this;
 
-      if (_only.length && !_only.includes(name)) {
+      if (_only.length && !includes(_only, name)) {
         return;
       } else if (!testFunction) {
         this.printNoOp(name);
@@ -101,7 +104,7 @@ var TestRunner = function (_EventEmitter) {
           name: name,
           index: this.index++
         });
-        if (t.isPromise(result)) {
+        if (result && result.then) {
           result.then(function (output) {
             return _this3.printOk(name, output);
           }).catch(function (err) {
