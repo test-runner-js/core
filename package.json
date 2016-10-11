@@ -28,6 +28,11 @@
   "devDependencies": {
     "babel-preset-es2015": "^6.16.0",
     "core-assert": "^0.2.1",
-    "jsdoc-to-markdown": "^2.0.0-alpha.11"
+    "jsdoc-to-markdown": "^2.0.0"
+  },
+  "standard": {
+    "ignore": [
+      "es5", "tmp"
+    ]
   }
 }

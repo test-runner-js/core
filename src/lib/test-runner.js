@@ -20,12 +20,14 @@ class TestRunner extends EventEmitter {
 
   /**
    * @param [options] {object}
-   * @param [options.log] {function}
-   * @param [options.manualStart] {boolean}
+   * @param [options.log] {function} - Specify a custom log function. Defaults to `console.log`.
+   * @param [options.manualStart] {boolean} - If `true`, you must call `runner.start()` manually.
+   * @param [options.sequential] {boolean} - Run each test sequentially.
    */
   constructor (options) {
     super()
     options = options || {}
+    this.sequential = options.sequential
     this.tests = new Map()
     this.passed = []
     this.noop = []
@@ -47,22 +49,44 @@ class TestRunner extends EventEmitter {
 
   /**
    * @returns {Promise}
+   * @fulfil {Array} - Resolves with an array containing the return value of each test.
    */
   start () {
     this.emit('start')
-    return Promise_
-      .all(from(this.tests).map(testItem => {
+    if (this.sequential) {
+      const tests = from(this.tests)
+      return new Promise((resolve, reject) => {
+        const run = () => {
+          const testItem = tests.shift()
+          const [ name, testFunction ] = testItem
+          let result = this.runTest(name, testFunction)
+          if (!(result && result.then)) result = Promise.resolve(result)
+          result.then(() => {
+            if (tests.length) {
+              run()
+            } else {
+              resolve()
+            }
+          })
+        }
+        run()
+      })
+    } else {
+      const testResults = from(this.tests).map(testItem => {
         const [ name, testFunction ] = testItem
         return this.runTest(name, testFunction)
-      }))
-      .then(results => {
-        if (this.suiteFailed) process.exitCode = 1
-        this.emit('end')
-        return results
       })
-      .catch(err => {
-        // exceptions already handled
-      })
+      return Promise_
+        .all(testResults)
+        .then(results => {
+          if (this.suiteFailed) process.exitCode = 1
+          this.emit('end')
+          return results
+        })
+        .catch(err => {
+          // exceptions already handled
+        })
+    }
   }
 
   /**

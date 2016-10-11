@@ -8,6 +8,8 @@ const runner = new TestRunner({ manualStart: true, log: () => {} })
 runner.test("Promise which doesn't resolve", function () {
   return new Promise((resolve, reject) => {
     /* tumbleweeds */
+    /* no IO or callbacks added by this, node won't wait for it */
+    /* which means the .start().then handler will never be fired as not alway promises resolve */
   })
 })
 

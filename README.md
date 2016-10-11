@@ -4,6 +4,33 @@
 [![Dependency Status](https://david-dm.org/75lb/test-runner.svg)](https://david-dm.org/75lb/test-runner)
 [![js-standard-style](https://img.shields.io/badge/code%20style-standard-brightgreen.svg)](https://github.com/feross/standard)
 
+# test-runner
+
+A minimal test runner built around a single, core principle: if a test function completes successfully (or fulfils), it passes. If it throws (or rejects) it fails. It has no opinion how you write tests, or which (if any) assertion library you use.
+
+```js
+const TestRunner = require('test-runner')
+const runner = new TestRunner()
+```
+
+## Synopsis
+
+Passing test, sync.
+
+```js
+runner.test('this will pass', function () {
+  console.log('Wow, nice day outside.')
+})
+```
+
+Failing test, sync.
+
+```js
+runner.test('this will fail', function () {
+  throw new Error("Damn, it's bucketing it down.")
+})
+```
+
 <a name="module_test-runner"></a>
 
 ## test-runner
@@ -29,16 +56,18 @@
 
 #### new TestRunner([options])
 
-| Param | Type |
-| --- | --- |
-| [options] | <code>object</code> | 
-| [options.log] | <code>function</code> | 
-| [options.manualStart] | <code>boolean</code> | 
+| Param | Type | Description |
+| --- | --- | --- |
+| [options] | <code>object</code> |  |
+| [options.log] | <code>function</code> | Specify a custom log function. Defaults to `console.log`. |
+| [options.manualStart] | <code>boolean</code> | If `true`, you must call `runner.start()` manually. |
+| [options.sequential] | <code>boolean</code> | Run each test sequentially. |
 
 <a name="module_test-runner--TestRunner+start"></a>
 
 #### testRunner.start() ⇒ <code>Promise</code>
 **Kind**: instance method of <code>[TestRunner](#exp_module_test-runner--TestRunner)</code>  
+**Fulfil**: <code>Array</code> - Resolves with an array containing the return value of each test.  
 <a name="module_test-runner--TestRunner+test"></a>
 
 #### testRunner.test(name, testFunction) ↩︎
