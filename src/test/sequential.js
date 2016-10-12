@@ -25,4 +25,5 @@ runner.test('two', function () {
 
 runner.test('three', function () {
   a.deepStrictEqual(finished, [ 1, 2 ])
+  finished.push(3)
 })

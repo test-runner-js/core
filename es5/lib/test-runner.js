@@ -31,6 +31,7 @@ var TestRunner = function (_EventEmitter) {
 
     options = options || {};
     _this.sequential = options.sequential;
+    _this.manualStart = options.manualStart;
     _this.tests = new Map();
     _this.passed = [];
     _this.noop = [];
@@ -57,6 +58,7 @@ var TestRunner = function (_EventEmitter) {
       var _this2 = this;
 
       this.emit('start');
+
       if (this.sequential) {
         var _ret = function () {
           var tests = from(_this2.tests);
@@ -76,8 +78,12 @@ var TestRunner = function (_EventEmitter) {
                   if (tests.length) {
                     run();
                   } else {
+                    if (_this2.suiteFailed) process.exitCode = 1;
                     resolve();
                   }
+                }).catch(function (err) {
+                  if (_this2.suiteFailed) process.exitCode = 1;
+                  reject(err);
                 });
               };
               run();
@@ -95,11 +101,21 @@ var TestRunner = function (_EventEmitter) {
 
           return _this2.runTest(name, testFunction);
         });
-        return Promise_.all(testResults).then(function (results) {
+        var result = Promise_.all(testResults).then(function (results) {
           if (_this2.suiteFailed) process.exitCode = 1;
           _this2.emit('end');
           return results;
-        }).catch(function (err) {});
+        }).catch(function (err) {
+          if (_this2.suiteFailed) process.exitCode = 1;
+          _this2.emit('end');
+          throw err;
+        });
+
+        if (this.manualStart) {
+          return result;
+        } else {
+          return result.catch(function (err) {});
+        }
       }
     }
   }, {

@@ -28,6 +28,7 @@ class TestRunner extends EventEmitter {
     super()
     options = options || {}
     this.sequential = options.sequential
+    this.manualStart = options.manualStart
     this.tests = new Map()
     this.passed = []
     this.noop = []
@@ -53,6 +54,8 @@ class TestRunner extends EventEmitter {
    */
   start () {
     this.emit('start')
+
+    /* sequential */
     if (this.sequential) {
       const tests = from(this.tests)
       return new Promise((resolve, reject) => {
@@ -61,22 +64,30 @@ class TestRunner extends EventEmitter {
           const [ name, testFunction ] = testItem
           let result = this.runTest(name, testFunction)
           if (!(result && result.then)) result = Promise.resolve(result)
-          result.then(() => {
-            if (tests.length) {
-              run()
-            } else {
-              resolve()
-            }
-          })
+          result
+            .then(() => {
+              if (tests.length) {
+                run()
+              } else {
+                if (this.suiteFailed) process.exitCode = 1
+                resolve()
+              }
+            })
+            .catch(err => {
+              if (this.suiteFailed) process.exitCode = 1
+              reject(err)
+            })
         }
         run()
       })
+
+    /* parallel */
     } else {
       const testResults = from(this.tests).map(testItem => {
         const [ name, testFunction ] = testItem
         return this.runTest(name, testFunction)
       })
-      return Promise_
+      const result = Promise_
         .all(testResults)
         .then(results => {
           if (this.suiteFailed) process.exitCode = 1
@@ -84,8 +95,18 @@ class TestRunner extends EventEmitter {
           return results
         })
         .catch(err => {
-          // exceptions already handled
+          if (this.suiteFailed) process.exitCode = 1
+          this.emit('end')
+          throw err
         })
+
+      if (this.manualStart) {
+        return result
+      } else {
+        return result.catch(err => {
+          // exceptions won't be handled, avoid warning.
+        })
+      }
     }
   }
 
@@ -123,8 +144,11 @@ class TestRunner extends EventEmitter {
    * @returns {*}
    */
   runTest (name, testFunction) {
+    /* runner.only */
     if (only.length && !includes(only, name)) {
       return
+
+    /* placeholder test */
     } else if (!testFunction) {
       this.printNoOp(name)
       return
