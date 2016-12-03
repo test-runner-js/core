@@ -68,10 +68,9 @@ var TestRunner = function (_EventEmitter) {
               var run = function run() {
                 var testItem = tests.shift();
 
-                var _testItem = _slicedToArray(testItem, 2);
-
-                var name = _testItem[0];
-                var testFunction = _testItem[1];
+                var _testItem = _slicedToArray(testItem, 2),
+                    name = _testItem[0],
+                    testFunction = _testItem[1];
 
                 var result = _this2.runTest(name, testFunction);
                 if (!(result && result.then)) result = Promise.resolve(result);
@@ -95,10 +94,9 @@ var TestRunner = function (_EventEmitter) {
         if ((typeof _ret === 'undefined' ? 'undefined' : _typeof(_ret)) === "object") return _ret.v;
       } else {
         var testResults = from(this.tests).map(function (testItem) {
-          var _testItem2 = _slicedToArray(testItem, 2);
-
-          var name = _testItem2[0];
-          var testFunction = _testItem2[1];
+          var _testItem2 = _slicedToArray(testItem, 2),
+              name = _testItem2[0],
+              testFunction = _testItem2[1];
 
           return _this2.runTest(name, testFunction);
         });
@@ -115,7 +113,7 @@ var TestRunner = function (_EventEmitter) {
         if (this.manualStart) {
           return result;
         } else {
-          return result.catch(function (err) {});
+          return result.catch(function () {});
         }
       }
     }
@@ -131,12 +129,15 @@ var TestRunner = function (_EventEmitter) {
     }
   }, {
     key: 'skip',
-    value: function skip() {}
+    value: function skip() {
+      return this;
+    }
   }, {
     key: 'only',
     value: function only(name, testFunction) {
       this.test(name, testFunction);
       _only.push(name);
+      return this;
     }
   }, {
     key: 'runTest',

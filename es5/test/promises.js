@@ -2,7 +2,6 @@
 
 var TestRunner = require('../../');
 var a = require('core-assert');
-var path = require('path');
 
 var runner = new TestRunner({ manualStart: true, log: function log() {} });
 
@@ -10,7 +9,7 @@ runner.test("Promise which doesn't resolve", function () {
   return new Promise(function (resolve, reject) {});
 });
 
-runner.test("Promise which resolves", function () {
+runner.test('Promise which resolves', function () {
   return new Promise(function (resolve, reject) {
     setTimeout(resolve, 50);
   });

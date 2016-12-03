@@ -3,7 +3,7 @@ const TestRunner = require('../../')
 const a = require('core-assert')
 const path = require('path')
 
-const runners = TestRunner.run(__dirname + '/fixture/*.js')
+const runners = TestRunner.run(path.resolve(__dirname, 'fixture/*.js'))
 const done = []
 
 for (const runner of runners) {

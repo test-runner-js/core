@@ -1,6 +1,5 @@
 #!/usr/bin/env node
 'use strict'
-const fileSet = require('file-set')
 const tool = require('command-line-tool')
 const cliData = require('../lib/cli-data')
 const path = require('path')

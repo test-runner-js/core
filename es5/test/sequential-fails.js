@@ -3,7 +3,6 @@
 var TestRunner = require('../../');
 
 var runner = new TestRunner({ sequential: true, manualStart: true });
-var a = require('core-assert');
 
 runner.test('one', function () {
   return new Promise(function (resolve, reject) {

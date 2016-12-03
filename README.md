@@ -19,7 +19,7 @@ Passing test, sync.
 
 ```js
 runner.test('this will pass', function () {
-  console.log('Wow, nice day outside.')
+  const thought = 'Nothing failing here.'
 })
 ```
 
@@ -27,8 +27,20 @@ Failing test, sync.
 
 ```js
 runner.test('this will fail', function () {
-  throw new Error("Damn, it's bucketing it down.")
+  throw new Error("Definitely something wrong here.")
 })
+```
+
+To run the tests, simple execute the script:
+
+```
+$ node test.js
+```
+
+... or to test multiple files, use the command line tool:
+
+```
+$ test-runner test/*.js
 ```
 
 <a name="module_test-runner"></a>
@@ -42,14 +54,16 @@ runner.test('this will fail', function () {
             * [.start()](#module_test-runner--TestRunner+start) ⇒ <code>Promise</code>
             * [.test(name, testFunction)](#module_test-runner--TestRunner+test) ↩︎
             * [.skip()](#module_test-runner--TestRunner+skip)
-            * [.only()](#module_test-runner--TestRunner+only)
+            * [.only(name, testFunction)](#module_test-runner--TestRunner+only) ↩︎
             * [.runTest(name, testFunction)](#module_test-runner--TestRunner+runTest) ⇒ <code>\*</code>
         * _static_
-            * [.run()](#module_test-runner--TestRunner.run)
+            * [.run(globs)](#module_test-runner--TestRunner.run) ⇒ <code>Array</code>
 
 <a name="exp_module_test-runner--TestRunner"></a>
 
 ### TestRunner ⇐ <code>EventEmitter</code> ⏏
+Register tests and run them sequentially or in parallel. The testing can be set to begin manually or automatically.
+
 **Kind**: Exported class  
 **Extends:** <code>EventEmitter</code>  
 <a name="new_module_test-runner--TestRunner_new"></a>
@@ -66,11 +80,15 @@ runner.test('this will fail', function () {
 <a name="module_test-runner--TestRunner+start"></a>
 
 #### testRunner.start() ⇒ <code>Promise</code>
+Begin testing. You'll only need to use this method when `manualStart` is `true`.
+
 **Kind**: instance method of <code>[TestRunner](#exp_module_test-runner--TestRunner)</code>  
 **Fulfil**: <code>Array</code> - Resolves with an array containing the return value of each test.  
 <a name="module_test-runner--TestRunner+test"></a>
 
 #### testRunner.test(name, testFunction) ↩︎
+Register a test.
+
 **Kind**: instance method of <code>[TestRunner](#exp_module_test-runner--TestRunner)</code>  
 **Chainable**  
 
@@ -82,15 +100,22 @@ runner.test('this will fail', function () {
 <a name="module_test-runner--TestRunner+skip"></a>
 
 #### testRunner.skip()
-no-op
+No-op. Use this method when you want a test to be skipped.
 
 **Kind**: instance method of <code>[TestRunner](#exp_module_test-runner--TestRunner)</code>  
 <a name="module_test-runner--TestRunner+only"></a>
 
-#### testRunner.only()
+#### testRunner.only(name, testFunction) ↩︎
 Only run this test.
 
 **Kind**: instance method of <code>[TestRunner](#exp_module_test-runner--TestRunner)</code>  
+**Chainable**  
+
+| Param | Type |
+| --- | --- |
+| name | <code>string</code> | 
+| testFunction | <code>function</code> | 
+
 <a name="module_test-runner--TestRunner+runTest"></a>
 
 #### testRunner.runTest(name, testFunction) ⇒ <code>\*</code>
@@ -105,10 +130,15 @@ Run test, returning the result which may be a Promise.
 
 <a name="module_test-runner--TestRunner.run"></a>
 
-#### TestRunner.run()
-Run one or more test files.
+#### TestRunner.run(globs) ⇒ <code>Array</code>
+Run one or more test files. The output will be an array containing the export value from each module.
 
 **Kind**: static method of <code>[TestRunner](#exp_module_test-runner--TestRunner)</code>  
+
+| Param | Type |
+| --- | --- |
+| globs | <code>Array.&lt;string&gt;</code> | 
+
 
 * * *
 

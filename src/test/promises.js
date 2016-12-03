@@ -1,7 +1,6 @@
 'use strict'
 const TestRunner = require('../../')
 const a = require('core-assert')
-const path = require('path')
 
 const runner = new TestRunner({ manualStart: true, log: () => {} })
 
@@ -13,7 +12,7 @@ runner.test("Promise which doesn't resolve", function () {
   })
 })
 
-runner.test("Promise which resolves", function () {
+runner.test('Promise which resolves', function () {
   return new Promise((resolve, reject) => {
     setTimeout(resolve, 50)
   })

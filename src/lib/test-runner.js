@@ -13,6 +13,7 @@ const Promise_ = typeof Promise === 'undefined' ? require('core-js/library/fn/pr
 const only = []
 
 /**
+ * Register tests and run them sequentially or in parallel. The testing can be set to begin manually or automatically.
  * @extends {EventEmitter}
  * @alias module:test-runner
  */
@@ -50,6 +51,7 @@ class TestRunner extends EventEmitter {
   }
 
   /**
+   * Begin testing. You'll only need to use this method when `manualStart` is `true`.
    * @returns {Promise}
    * @fulfil {Array} - Resolves with an array containing the return value of each test.
    */
@@ -104,7 +106,7 @@ class TestRunner extends EventEmitter {
       if (this.manualStart) {
         return result
       } else {
-        return result.catch(err => {
+        return result.catch(() => {
           // exceptions won't be handled, avoid warning.
         })
       }
@@ -112,6 +114,7 @@ class TestRunner extends EventEmitter {
   }
 
   /**
+   * Register a test.
    * @param {string}
    * @param {function}
    * @chainable
@@ -126,16 +129,22 @@ class TestRunner extends EventEmitter {
   }
 
   /**
-   * no-op
+   * No-op. Use this method when you want a test to be skipped.
    */
-  skip () {}
+  skip () {
+    return this
+  }
 
   /**
    * Only run this test.
+   * @param {string}
+   * @param {function}
+   * @chainable
    */
   only (name, testFunction) {
     this.test(name, testFunction)
     only.push(name)
+    return this
   }
 
   /**
@@ -203,7 +212,7 @@ class TestRunner extends EventEmitter {
   /**
    * Run one or more test files. The output will be an array containing the export value from each module.
    * @param {string[]}
-   * @returns {TestRunner[]}
+   * @returns {Array}
    */
   static run (globs) {
     const arrayify = require('array-back')

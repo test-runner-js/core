@@ -19,7 +19,7 @@ Passing test, sync.
 
 ```js
 runner.test('this will pass', function () {
-  console.log('Wow, nice day outside.')
+  const thought = 'Nothing failing here.'
 })
 ```
 
@@ -27,8 +27,20 @@ Failing test, sync.
 
 ```js
 runner.test('this will fail', function () {
-  throw new Error("Damn, it's bucketing it down.")
+  throw new Error("Definitely something wrong here.")
 })
+```
+
+To run the tests, simple execute the script:
+
+```
+$ node test.js
+```
+
+... or to test multiple files, use the command line tool:
+
+```
+$ test-runner test/*.js
 ```
 
 {{>main}}

@@ -4,7 +4,7 @@ var TestRunner = require('../../');
 var a = require('core-assert');
 var path = require('path');
 
-var runners = TestRunner.run(__dirname + '/fixture/*.js');
+var runners = TestRunner.run(path.resolve(__dirname, 'fixture/*.js'));
 var done = [];
 
 var _iteratorNormalCompletion = true;

@@ -2,7 +2,6 @@
 const TestRunner = require('../../')
 
 const runner = new TestRunner({ sequential: true, manualStart: true })
-const a = require('core-assert')
 
 runner.test('one', function () {
   return new Promise((resolve, reject) => {
