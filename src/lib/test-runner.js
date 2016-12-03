@@ -39,6 +39,7 @@ class TestRunner extends EventEmitter {
 
     this._autoStarted = false
     if (!options.manualStart) {
+      process.setMaxListeners(Infinity)
       process.on('beforeExit', () => {
         if (!this._autoStarted) {
           this.start()
@@ -200,7 +201,9 @@ class TestRunner extends EventEmitter {
   }
 
   /**
-   * Run one or more test files.
+   * Run one or more test files. The output will be an array containing the export value from each module.
+   * @param {string[]}
+   * @returns {TestRunner[]}
    */
   static run (globs) {
     const arrayify = require('array-back')
@@ -217,23 +220,4 @@ class TestRunner extends EventEmitter {
   }
 }
 
-/* variance for node 0.10 */
-class OldNodeTestRunner extends TestRunner {
-  test (name, testFunction) {
-    this.runTest(name, testFunction)
-    if (this.suiteFailed) {
-      process.nextTick(() => process.exit(1))
-    }
-  }
-}
-
-function beforeExitEventExists () {
-  const version = process.version.replace('v', '').split('.').map(Number)
-  return version[0] > 0 || (version[0] === 0 && version[1] >= 11 && version[2] >= 12)
-}
-
-if (beforeExitEventExists()) {
-  module.exports = TestRunner
-} else {
-  module.exports = OldNodeTestRunner
-}
+module.exports = TestRunner

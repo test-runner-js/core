@@ -42,6 +42,7 @@ var TestRunner = function (_EventEmitter) {
 
     _this._autoStarted = false;
     if (!options.manualStart) {
+      process.setMaxListeners(Infinity);
       process.on('beforeExit', function () {
         if (!_this._autoStarted) {
           _this.start();
@@ -218,37 +219,4 @@ var TestRunner = function (_EventEmitter) {
   return TestRunner;
 }(EventEmitter);
 
-var OldNodeTestRunner = function (_TestRunner) {
-  _inherits(OldNodeTestRunner, _TestRunner);
-
-  function OldNodeTestRunner() {
-    _classCallCheck(this, OldNodeTestRunner);
-
-    return _possibleConstructorReturn(this, (OldNodeTestRunner.__proto__ || Object.getPrototypeOf(OldNodeTestRunner)).apply(this, arguments));
-  }
-
-  _createClass(OldNodeTestRunner, [{
-    key: 'test',
-    value: function test(name, testFunction) {
-      this.runTest(name, testFunction);
-      if (this.suiteFailed) {
-        process.nextTick(function () {
-          return process.exit(1);
-        });
-      }
-    }
-  }]);
-
-  return OldNodeTestRunner;
-}(TestRunner);
-
-function beforeExitEventExists() {
-  var version = process.version.replace('v', '').split('.').map(Number);
-  return version[0] > 0 || version[0] === 0 && version[1] >= 11 && version[2] >= 12;
-}
-
-if (beforeExitEventExists()) {
-  module.exports = TestRunner;
-} else {
-  module.exports = OldNodeTestRunner;
-}
+module.exports = TestRunner;
