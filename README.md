@@ -39,13 +39,21 @@ runner.test('this will fail', function () {
 })
 ```
 
-To run the tests, simple execute the script:
+Failing test, async.
+
+```js
+runner.test('this will also fail', function () {
+  return Promise.reject('Definitely something wrong here.')
+})
+```
+
+To run the tests, execute the script:
 
 ```
 $ node test.js
 ```
 
-... or to test multiple files, use the command line tool:
+... or use the command-line tool to test multiple files:
 
 ```
 $ test-runner test/*.js

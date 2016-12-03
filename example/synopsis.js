@@ -13,3 +13,7 @@ runner.test('this will also pass', function () {
 runner.test('this will fail', function () {
   throw new Error('Definitely something wrong here.')
 })
+
+runner.test('this will also fail', function () {
+  return Promise.reject('Definitely something wrong here.')
+})
