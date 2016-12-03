@@ -13,7 +13,7 @@ const Promise_ = typeof Promise === 'undefined' ? require('core-js/library/fn/pr
 const only = []
 
 /**
- * Register tests and run them sequentially or in parallel. The testing can be set to begin manually or automatically.
+ * Register tests and run them sequentially or in parallel. By default, testing begins automatically but can be set to start manually.
  * @extends {EventEmitter}
  * @alias module:test-runner
  */
@@ -23,7 +23,7 @@ class TestRunner extends EventEmitter {
    * @param [options] {object}
    * @param [options.log] {function} - Specify a custom log function. Defaults to `console.log`.
    * @param [options.manualStart] {boolean} - If `true`, you must call `runner.start()` manually.
-   * @param [options.sequential] {boolean} - Run each test sequentially.
+   * @param [options.sequential] {boolean} - Run async tests sequentially.
    */
   constructor (options) {
     super()
@@ -116,7 +116,7 @@ class TestRunner extends EventEmitter {
   /**
    * Register a test.
    * @param {string} - Each name supplied must be unique to the runner instance.
-   * @param {function}
+   * @param {function} - The test function. If it throws or rejects, the test will fail.
    * @chainable
    */
   test (name, testFunction) {
@@ -137,7 +137,7 @@ class TestRunner extends EventEmitter {
   }
 
   /**
-   * Only run this test.
+   * Only run this and other tests registered with `only`.
    * @param {string}
    * @param {function}
    * @chainable
@@ -153,6 +153,7 @@ class TestRunner extends EventEmitter {
    * @param {string}
    * @param {function}
    * @returns {*}
+   * @ignore
    */
   runTest (name, testFunction) {
     /* runner.only */
@@ -212,7 +213,7 @@ class TestRunner extends EventEmitter {
 
   /**
    * Run one or more test files. The output will be an array containing the export value from each module.
-   * @param {string[]}
+   * @param {string[]} - One or more file paths or glob expressions.
    * @returns {Array}
    */
   static run (globs) {

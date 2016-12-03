@@ -26,7 +26,7 @@ runner.test('this will pass', function () {
 Passing test, async.
 
 ```js
-runner.test('this will pass', function () {
+runner.test('this will also pass', function () {
   return Promise.resolve('Nothing failing here.')
 })
 ```
@@ -63,14 +63,13 @@ $ test-runner test/*.js
             * [.test(name, testFunction)](#module_test-runner--TestRunner+test) ↩︎
             * [.skip()](#module_test-runner--TestRunner+skip) ↩︎
             * [.only(name, testFunction)](#module_test-runner--TestRunner+only) ↩︎
-            * [.runTest(name, testFunction)](#module_test-runner--TestRunner+runTest) ⇒ <code>\*</code>
         * _static_
             * [.run(globs)](#module_test-runner--TestRunner.run) ⇒ <code>Array</code>
 
 <a name="exp_module_test-runner--TestRunner"></a>
 
 ### TestRunner ⇐ <code>EventEmitter</code> ⏏
-Register tests and run them sequentially or in parallel. The testing can be set to begin manually or automatically.
+Register tests and run them sequentially or in parallel. By default, testing begins automatically but can be set to start manually.
 
 **Kind**: Exported class  
 **Extends:** <code>EventEmitter</code>  
@@ -83,7 +82,7 @@ Register tests and run them sequentially or in parallel. The testing can be set 
 | [options] | <code>object</code> |  |
 | [options.log] | <code>function</code> | Specify a custom log function. Defaults to `console.log`. |
 | [options.manualStart] | <code>boolean</code> | If `true`, you must call `runner.start()` manually. |
-| [options.sequential] | <code>boolean</code> | Run each test sequentially. |
+| [options.sequential] | <code>boolean</code> | Run async tests sequentially. |
 
 <a name="module_test-runner--TestRunner+start"></a>
 
@@ -103,7 +102,7 @@ Register a test.
 | Param | Type | Description |
 | --- | --- | --- |
 | name | <code>string</code> | Each name supplied must be unique to the runner instance. |
-| testFunction | <code>function</code> |  |
+| testFunction | <code>function</code> | The test function. If it throws or rejects, the test will fail. |
 
 <a name="module_test-runner--TestRunner+skip"></a>
 
@@ -115,22 +114,10 @@ No-op. Use this method when you want a test to be skipped.
 <a name="module_test-runner--TestRunner+only"></a>
 
 #### testRunner.only(name, testFunction) ↩︎
-Only run this test.
+Only run this and other tests registered with `only`.
 
 **Kind**: instance method of <code>[TestRunner](#exp_module_test-runner--TestRunner)</code>  
 **Chainable**  
-
-| Param | Type |
-| --- | --- |
-| name | <code>string</code> | 
-| testFunction | <code>function</code> | 
-
-<a name="module_test-runner--TestRunner+runTest"></a>
-
-#### testRunner.runTest(name, testFunction) ⇒ <code>\*</code>
-Run test, returning the result which may be a Promise.
-
-**Kind**: instance method of <code>[TestRunner](#exp_module_test-runner--TestRunner)</code>  
 
 | Param | Type |
 | --- | --- |
@@ -144,9 +131,9 @@ Run one or more test files. The output will be an array containing the export va
 
 **Kind**: static method of <code>[TestRunner](#exp_module_test-runner--TestRunner)</code>  
 
-| Param | Type |
-| --- | --- |
-| globs | <code>Array.&lt;string&gt;</code> | 
+| Param | Type | Description |
+| --- | --- | --- |
+| globs | <code>Array.&lt;string&gt;</code> | One or more file paths or glob expressions. |
 
 
 * * *
