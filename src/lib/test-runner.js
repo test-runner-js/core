@@ -115,7 +115,7 @@ class TestRunner extends EventEmitter {
 
   /**
    * Register a test.
-   * @param {string}
+   * @param {string} - Each name supplied must be unique to the runner instance.
    * @param {function}
    * @chainable
    */
@@ -130,6 +130,7 @@ class TestRunner extends EventEmitter {
 
   /**
    * No-op. Use this method when you want a test to be skipped.
+   * @chainable
    */
   skip () {
     return this

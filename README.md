@@ -23,11 +23,19 @@ runner.test('this will pass', function () {
 })
 ```
 
+Passing test, async.
+
+```js
+runner.test('this will pass', function () {
+  return Promise.resolve('Nothing failing here.')
+})
+```
+
 Failing test, sync.
 
 ```js
 runner.test('this will fail', function () {
-  throw new Error("Definitely something wrong here.")
+  throw new Error('Definitely something wrong here.')
 })
 ```
 
@@ -53,7 +61,7 @@ $ test-runner test/*.js
         * _instance_
             * [.start()](#module_test-runner--TestRunner+start) ⇒ <code>Promise</code>
             * [.test(name, testFunction)](#module_test-runner--TestRunner+test) ↩︎
-            * [.skip()](#module_test-runner--TestRunner+skip)
+            * [.skip()](#module_test-runner--TestRunner+skip) ↩︎
             * [.only(name, testFunction)](#module_test-runner--TestRunner+only) ↩︎
             * [.runTest(name, testFunction)](#module_test-runner--TestRunner+runTest) ⇒ <code>\*</code>
         * _static_
@@ -92,17 +100,18 @@ Register a test.
 **Kind**: instance method of <code>[TestRunner](#exp_module_test-runner--TestRunner)</code>  
 **Chainable**  
 
-| Param | Type |
-| --- | --- |
-| name | <code>string</code> | 
-| testFunction | <code>function</code> | 
+| Param | Type | Description |
+| --- | --- | --- |
+| name | <code>string</code> | Each name supplied must be unique to the runner instance. |
+| testFunction | <code>function</code> |  |
 
 <a name="module_test-runner--TestRunner+skip"></a>
 
-#### testRunner.skip()
+#### testRunner.skip() ↩︎
 No-op. Use this method when you want a test to be skipped.
 
 **Kind**: instance method of <code>[TestRunner](#exp_module_test-runner--TestRunner)</code>  
+**Chainable**  
 <a name="module_test-runner--TestRunner+only"></a>
 
 #### testRunner.only(name, testFunction) ↩︎
