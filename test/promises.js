@@ -1,6 +1,6 @@
 'use strict'
-const TestRunner = require('../../')
-const a = require('core-assert')
+const TestRunner = require('../')
+const a = require('assert')
 
 const runner = new TestRunner({ manualStart: true, log: () => {} })
 

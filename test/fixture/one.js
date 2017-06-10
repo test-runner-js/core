@@ -1,12 +1,12 @@
 'use strict'
-const TestRunner = require('../../../')
+const TestRunner = require('../../')
 const runner = new TestRunner({ manualStart: true, log: function () {} })
 
-runner.test('pass2', function () {
+runner.test('pass', function () {
   return 'ok'
 })
 
-runner.test('fail2', function () {
+runner.test('fail', function () {
   throw new Error('failed')
 })
 

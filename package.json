@@ -5,30 +5,36 @@
   "description": "Minimal, extensible test runner.",
   "repository": "https://github.com/75lb/test-runner.git",
   "license": "MIT",
-  "main": "main.js",
-  "bin": "bin.js",
-  "keywords": [],
+  "main": "lib/test-runner.js",
+  "bin": "bin/cli.js",
+  "keywords": [
+    "test",
+    "runner",
+    "minimal",
+    "simple",
+    "easy",
+    "tape",
+    "tap",
+    "ava",
+    "mocha"
+  ],
   "engines": {
-    "node": ">=0.10.0"
+    "node": ">=4"
   },
   "scripts": {
     "test": "node test.js",
-    "docs": "jsdoc2md -t jsdoc2md/README.hbs src/lib/*.js > README.md; echo",
-    "es5": "rm -rf es5 && babel --presets babel-preset-es2015 --no-comments src --out-dir es5"
+    "docs": "jsdoc2md -t jsdoc2md/README.hbs lib/*.js > README.md; echo"
   },
   "dependencies": {
     "ansi-escape-sequences": "^3.0.0",
-    "array-back": "^1.0.3",
-    "command-line-tool": "~0.6.4",
-    "core-js": "^2.4.1",
-    "feature-detect-es6": "^1.3.1",
+    "array-back": "^1.0.4",
+    "command-line-args": "^4.0.6",
+    "command-line-usage": "^4.0.0",
     "file-set": "^1.1.1",
     "reduce-flatten": "^1.0.1"
   },
   "devDependencies": {
-    "babel-preset-es2015": "^6.18.0",
-    "core-assert": "^0.2.1",
-    "jsdoc-to-markdown": "^2.0.1"
+    "jsdoc-to-markdown": "^3.0.0"
   },
   "standard": {
     "ignore": [

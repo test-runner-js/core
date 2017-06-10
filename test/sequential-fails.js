@@ -1,5 +1,5 @@
 'use strict'
-const TestRunner = require('../../')
+const TestRunner = require('../')
 
 const runner = new TestRunner({ sequential: true, manualStart: true })
 

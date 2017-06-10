@@ -1,6 +1,6 @@
 'use strict'
-const TestRunner = require('../../')
-const a = require('core-assert')
+const TestRunner = require('../')
+const a = require('assert')
 const path = require('path')
 
 const runners = TestRunner.run(path.resolve(__dirname, 'fixture/*.js'))

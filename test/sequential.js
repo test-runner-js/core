@@ -1,8 +1,8 @@
 'use strict'
-const TestRunner = require('../../')
+const TestRunner = require('../')
 const runner = new TestRunner({ sequential: true })
 const finished = []
-const a = require('core-assert')
+const a = require('assert')
 
 runner.test('one', function () {
   return new Promise((resolve, reject) => {

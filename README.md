@@ -1,5 +1,5 @@
-[![view on npm](http://img.shields.io/npm/v/test-runner.svg)](https://www.npmjs.org/package/test-runner)
-[![npm module downloads](http://img.shields.io/npm/dt/test-runner.svg)](https://www.npmjs.org/package/test-runner)
+[![view on npm](https://img.shields.io/npm/v/test-runner.svg)](https://www.npmjs.org/package/test-runner)
+[![npm module downloads](https://img.shields.io/npm/dt/test-runner.svg)](https://www.npmjs.org/package/test-runner)
 [![Build Status](https://travis-ci.org/75lb/test-runner.svg?branch=master)](https://travis-ci.org/75lb/test-runner)
 [![Dependency Status](https://david-dm.org/75lb/test-runner.svg)](https://david-dm.org/75lb/test-runner)
 [![js-standard-style](https://img.shields.io/badge/code%20style-standard-brightgreen.svg)](https://github.com/feross/standard)
@@ -80,7 +80,7 @@ $ test-runner test/*.js
 Register tests and run them sequentially or in parallel. By default, testing begins automatically but can be set to start manually.
 
 **Kind**: Exported class  
-**Extends:** <code>EventEmitter</code>  
+**Extends**: <code>EventEmitter</code>  
 <a name="new_module_test-runner--TestRunner_new"></a>
 
 #### new TestRunner([options])
@@ -97,14 +97,14 @@ Register tests and run them sequentially or in parallel. By default, testing beg
 #### testRunner.start() ⇒ <code>Promise</code>
 Begin testing. You'll only need to use this method when `manualStart` is `true`.
 
-**Kind**: instance method of <code>[TestRunner](#exp_module_test-runner--TestRunner)</code>  
+**Kind**: instance method of [<code>TestRunner</code>](#exp_module_test-runner--TestRunner)  
 **Fulfil**: <code>Array</code> - Resolves with an array containing the return value of each test.  
 <a name="module_test-runner--TestRunner+test"></a>
 
 #### testRunner.test(name, testFunction) ↩︎
 Register a test.
 
-**Kind**: instance method of <code>[TestRunner](#exp_module_test-runner--TestRunner)</code>  
+**Kind**: instance method of [<code>TestRunner</code>](#exp_module_test-runner--TestRunner)  
 **Chainable**  
 
 | Param | Type | Description |
@@ -117,14 +117,14 @@ Register a test.
 #### testRunner.skip() ↩︎
 No-op. Use this method when you want a test to be skipped.
 
-**Kind**: instance method of <code>[TestRunner](#exp_module_test-runner--TestRunner)</code>  
+**Kind**: instance method of [<code>TestRunner</code>](#exp_module_test-runner--TestRunner)  
 **Chainable**  
 <a name="module_test-runner--TestRunner+only"></a>
 
 #### testRunner.only(name, testFunction) ↩︎
 Only run this and other tests registered with `only`.
 
-**Kind**: instance method of <code>[TestRunner](#exp_module_test-runner--TestRunner)</code>  
+**Kind**: instance method of [<code>TestRunner</code>](#exp_module_test-runner--TestRunner)  
 **Chainable**  
 
 | Param | Type |
@@ -137,7 +137,7 @@ Only run this and other tests registered with `only`.
 #### TestRunner.run(globs) ⇒ <code>Array</code>
 Run one or more test files. The output will be an array containing the export value from each module.
 
-**Kind**: static method of <code>[TestRunner](#exp_module_test-runner--TestRunner)</code>  
+**Kind**: static method of [<code>TestRunner</code>](#exp_module_test-runner--TestRunner)  
 
 | Param | Type | Description |
 | --- | --- | --- |
@@ -146,4 +146,4 @@ Run one or more test files. The output will be an array containing the export va
 
 * * *
 
-&copy; 2016 Lloyd Brookes \<75pound@gmail.com\>. Documented by [jsdoc-to-markdown](https://github.com/jsdoc2md/jsdoc-to-markdown).
+&copy; 2016-17 Lloyd Brookes \<75pound@gmail.com\>. Documented by [jsdoc-to-markdown](https://github.com/jsdoc2md/jsdoc-to-markdown).

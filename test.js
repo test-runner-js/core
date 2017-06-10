@@ -1,12 +1,3 @@
-'use strict'
-var detect = require('feature-detect-es6')
-
-if (detect.all('arrowFunction', 'let', 'const')) {
-  require('./src/test/run')
-  require('./src/test/sequential')
-  require('./src/test/sequential-fails')
-} else {
-  require('./es5/test/run')
-  require('./es5/test/sequential')
-  require('./es5/test/sequential-fails')
-}
+require('./test/run')
+require('./test/sequential')
+require('./test/sequential-fails')
