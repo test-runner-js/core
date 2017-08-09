@@ -26,10 +26,10 @@
     "docs": "jsdoc2md -t jsdoc2md/README.hbs lib/*.js > README.md; echo"
   },
   "dependencies": {
-    "ansi-escape-sequences": "^3.0.0",
-    "array-back": "^1.0.4",
+    "ansi-escape-sequences": "^4.0.0",
+    "array-back": "^2.0.0",
     "command-line-args": "^4.0.6",
-    "command-line-usage": "^4.0.0",
+    "command-line-usage": "^4.0.1",
     "file-set": "^1.1.1",
     "reduce-flatten": "^1.0.1"
   },
