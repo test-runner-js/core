@@ -203,7 +203,16 @@ class TestRunner extends EventEmitter {
     } else {
       msg = 'failed'
     }
-    this.log(`${ansi.format(name, 'red')}: ${msg}`)
+    if (err.code === 'ERR_ASSERTION') {
+      this.log(ansi.format(name, 'red'))
+      this.log('EXPECTED')
+      this.log(require('util').inspect(err.expected, { depth: 6, colors: true }))
+      this.log('ACTUAL')
+      this.log(require('util').inspect(err.actual, { depth: 6, colors: true }))
+      this.log(err.stack)
+    } else {
+      this.log(`${ansi.format(name, 'red')}: ${msg}`)
+    }
     this.tests.delete(name)
     this.failed.push(name)
   }

@@ -5,7 +5,6 @@
   "description": "Minimal, extensible test runner.",
   "repository": "https://github.com/75lb/test-runner.git",
   "license": "MIT",
-  "main": "lib/test-runner.js",
   "bin": "bin/cli.js",
   "keywords": [
     "test",
@@ -28,13 +27,13 @@
   "dependencies": {
     "ansi-escape-sequences": "^4.0.0",
     "array-back": "^2.0.0",
-    "command-line-args": "^4.0.6",
+    "command-line-args": "^4.0.7",
     "command-line-usage": "^4.0.1",
     "file-set": "^1.1.1",
     "reduce-flatten": "^1.0.1"
   },
   "devDependencies": {
-    "jsdoc-to-markdown": "^3.0.0"
+    "jsdoc-to-markdown": "^3.0.2"
   },
   "standard": {
     "ignore": [
