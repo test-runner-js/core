@@ -1,7 +1,7 @@
 {
   "name": "test-runner",
   "author": "Lloyd Brookes <75pound@gmail.com>",
-  "version": "0.4.1",
+  "version": "0.5.0-0",
   "description": "Minimal, extensible test runner.",
   "repository": "https://github.com/75lb/test-runner.git",
   "license": "MIT",
