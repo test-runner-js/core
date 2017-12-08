@@ -120,6 +120,9 @@ class TestRunner extends EventEmitter {
     if (this.tests.has(name)) {
       console.error('Duplicate test name: ' + name)
       process.exit(1)
+    } else if (!name) {
+      console.error('Every test must have a name')
+      process.exit(1)
     }
     this.tests.set(name, testFunction)
     return this
@@ -129,7 +132,8 @@ class TestRunner extends EventEmitter {
    * No-op. Use this method when you want a test to be skipped.
    * @chainable
    */
-  skip () {
+  skip (name) {
+    this.printNoOp(name)
     return this
   }
 
