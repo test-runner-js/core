@@ -27,13 +27,13 @@
   "dependencies": {
     "ansi-escape-sequences": "^4.0.0",
     "array-back": "^2.0.0",
-    "command-line-args": "^4.0.7",
+    "command-line-args": "^5.0.0",
     "command-line-usage": "^4.0.2",
     "file-set": "^1.1.1",
     "reduce-flatten": "^1.0.1"
   },
   "devDependencies": {
-    "jsdoc-to-markdown": "^3.0.2"
+    "jsdoc-to-markdown": "^3.0.4"
   },
   "standard": {
     "ignore": [
