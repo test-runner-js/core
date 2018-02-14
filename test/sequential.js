@@ -4,7 +4,7 @@ const runner = new TestRunner({ sequential: true })
 const finished = []
 const a = require('assert')
 
-runner.test('one', function () {
+runner.test('sequential: one', function () {
   return new Promise((resolve, reject) => {
     setTimeout(() => {
       finished.push(1)
@@ -13,7 +13,7 @@ runner.test('one', function () {
   })
 })
 
-runner.test('two', function () {
+runner.test('sequential: two', function () {
   a.deepStrictEqual(finished, [ 1 ])
   return new Promise((resolve, reject) => {
     setTimeout(() => {
@@ -23,7 +23,6 @@ runner.test('two', function () {
   })
 })
 
-runner.test('three', function () {
+runner.test('sequential: three', function () {
   a.deepStrictEqual(finished, [ 1, 2 ])
-  finished.push(3)
 })

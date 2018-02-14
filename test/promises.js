@@ -2,13 +2,15 @@
 const TestRunner = require('../')
 const a = require('assert')
 
-const runner = new TestRunner({ manualStart: true, log: () => {} })
+const runner = new TestRunner({ manualStart: true })
 
-runner.test("Promise which doesn't resolve", function () {
+/* These tests need fixing */
+
+runner.test("Promise which doesn't resolve: should timeout", function () {
   return new Promise((resolve, reject) => {
     /* tumbleweeds */
     /* no IO or callbacks added by this, node won't wait for it */
-    /* which means the .start().then handler will never be fired as not alway promises resolve */
+    /* which means the .start().then handler will never be fired as not all promises resolve */
   })
 })
 
@@ -19,7 +21,7 @@ runner.test('Promise which resolves', function () {
 })
 
 runner.start()
-  .then(results => console.error(require('util').inspect(results, { depth: 3, colors: true })))
+  .then(results => console.log("This should fire, but doesn't."))
 
 process.on('beforeExit', () => {
   a.strictEqual(runner.passed.length, 1)
