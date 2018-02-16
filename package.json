@@ -22,7 +22,8 @@
   },
   "scripts": {
     "test": "node test.js",
-    "docs": "jsdoc2md -t jsdoc2md/README.hbs lib/*.js > README.md; echo"
+    "docs": "jsdoc2md -t jsdoc2md/README.hbs lib/*.js > README.md; echo",
+    "dist": "rollup web.js -f es > dist.js"
   },
   "dependencies": {
     "@keystone/emitter": "^0.2.11",
@@ -34,7 +35,8 @@
     "reduce-flatten": "^1.0.1"
   },
   "devDependencies": {
-    "jsdoc-to-markdown": "^4.0.1"
+    "jsdoc-to-markdown": "^4.0.1",
+    "rollup": "^0.56.1"
   },
   "standard": {
     "ignore": [

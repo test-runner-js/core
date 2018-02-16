@@ -157,14 +157,12 @@ class TestRunner extends Emitter {
   }
 
   printOk (name, msg) {
-    // this.log(`${ansi.format(name, 'green')}: ${msg || 'ok'}`)
     this.emit('pass', name, msg || 'ok')
     this.tests.delete(name)
     this.passed.push(name)
   }
 
   printNoOp (name, msg) {
-    // this.log(`${ansi.format(name, 'magenta')}: ${msg || '--'}`)
     this.emit('no-op', name, msg || '--')
     this.tests.delete(name)
     this.noop.push(name)
@@ -179,15 +177,8 @@ class TestRunner extends Emitter {
       msg = 'failed'
     }
     if (err.code === 'ERR_ASSERTION') {
-      // this.log(ansi.format(name, 'red'))
-      // this.log('EXPECTED')
-      // this.log(require('util').inspect(err.expected, { depth: 6, colors: true }))
-      // this.log('ACTUAL')
-      // this.log(require('util').inspect(err.actual, { depth: 6, colors: true }))
-      // this.log(err.stack)
       this.emit('fail', name, err)
     } else {
-      // this.log(`${ansi.format(name, 'red')}: ${msg}`)
       this.emit('fail', name, err)
     }
     this.tests.delete(name)
