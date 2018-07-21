@@ -16,14 +16,14 @@
     "ava",
     "mocha"
   ],
-  "main": "lib/test-runner.mjs",
+  "main": "./dist/lib/test-runner.js",
   "engines": {
     "node": ">=6"
   },
   "scripts": {
     "test": "node --experimental-modules test/all-tests.mjs",
     "docs": "jsdoc2md -t README.hbs index.js > README.md; echo",
-    "dist": "rollup -c dist/test/all-tests.config.js"
+    "dist": "rollup -c dist/test/all-tests.config.js && rollup -c dist/lib/test-runner.config.js"
   },
   "dependencies": {
     "file-set": "^2.0.0",
