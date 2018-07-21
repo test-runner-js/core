@@ -5,7 +5,6 @@
   "description": "Minimal, extensible test runner.",
   "repository": "https://github.com/75lb/test-runner.git",
   "license": "MIT",
-  "bin": "bin/cli.js",
   "keywords": [
     "test",
     "runner",
@@ -17,30 +16,26 @@
     "ava",
     "mocha"
   ],
+  "main": "lib/test-runner.mjs",
   "engines": {
-    "node": ">=4"
+    "node": ">=6"
   },
   "scripts": {
-    "test": "node test.js",
-    "docs": "jsdoc2md -t jsdoc2md/README.hbs lib/*.js > README.md; echo",
-    "dist": "rollup web.js -f es > dist.js"
+    "test": "node --experimental-modules test/all-tests.mjs",
+    "docs": "jsdoc2md -t README.hbs index.js > README.md; echo",
+    "dist": "rollup -c dist/test/all-tests.config.js"
   },
   "dependencies": {
-    "@keystone/emitter": "^0.2.11",
-    "ansi-escape-sequences": "^4.0.0",
-    "array-back": "^2.0.0",
-    "command-line-args": "^5.0.2",
-    "command-line-usage": "^4.1.0",
-    "file-set": "^1.1.1",
-    "reduce-flatten": "^1.0.1"
+    "file-set": "^2.0.0",
+    "obso": "^0.2.0",
+    "reduce-flatten": "^2.0.0"
   },
   "devDependencies": {
     "jsdoc-to-markdown": "^4.0.1",
-    "rollup": "^0.56.1"
+    "rollup": "^0.59.4"
   },
   "standard": {
     "ignore": [
-      "es5",
       "tmp"
     ]
   }
