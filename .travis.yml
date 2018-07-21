@@ -7,3 +7,6 @@ matrix:
       script: "npm test"
     - node_js: 6
       script: "node dist/test/all-tests.js"
+cache:
+  directories:
+    - "node_modules"
