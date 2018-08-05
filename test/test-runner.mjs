@@ -6,6 +6,7 @@ import a from 'assert'
   runner.test('simple', function () {
     return true
   })
-  const results = runner.run()
+  const results = await runner.run()
+  console.log(results)
   a.strictEqual(results[0], true)
 }
