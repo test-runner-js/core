@@ -21,7 +21,7 @@
     "node": ">=6"
   },
   "scripts": {
-    "test": "node --experimental-modules test/all-tests.mjs",
+    "test": "node --experimental-modules test/node/node-tests.mjs",
     "docs": "jsdoc2md -t README.hbs index.js > README.md; echo",
     "dist": "rollup -c dist/test/all-tests.config.js && rollup -c dist/lib/test-runner.config.js"
   },
@@ -31,6 +31,7 @@
     "reduce-flatten": "^2.0.0"
   },
   "devDependencies": {
+    "chai": "^4.1.2",
     "jsdoc-to-markdown": "^4.0.1",
     "rollup": "^0.59.4"
   },
