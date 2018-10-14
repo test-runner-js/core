@@ -4,6 +4,5 @@ export default {
     file: 'dist/lib/test-runner.js',
     format: 'umd',
     name: 'TestRunner'
-  },
-  external: 'assert'
+  }
 }

@@ -11,6 +11,7 @@
       this.index = 1;
       this.options = Object.assign({ timeout: 10000 }, options);
     }
+    
     run () {
       const testFnResult = new Promise((resolve, reject) => {
         try {
@@ -36,7 +37,7 @@
           },
           this.options.timeout
         );
-        timeout.unref();
+        if (timeout.unref) timeout.unref();
       });
 
       return Promise.race([ testFnResult, timeoutResult ])
