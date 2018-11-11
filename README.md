@@ -72,7 +72,7 @@ $ test-runner test/*.js
             * [.skip()](#module_test-runner--TestRunner+skip) ↩︎
             * [.only(name, testFunction)](#module_test-runner--TestRunner+only) ↩︎
         * _static_
-            * [.run(globs)](#module_test-runner--TestRunner.run) ⇒ <code>Array</code>
+            * [.run(globs)](#module_test-runner--Testrunner.start) ⇒ <code>Array</code>
 
 <a name="exp_module_test-runner--TestRunner"></a>
 
@@ -132,9 +132,9 @@ Only run this and other tests registered with `only`.
 | name | <code>string</code> | 
 | testFunction | <code>function</code> | 
 
-<a name="module_test-runner--TestRunner.run"></a>
+<a name="module_test-runner--Testrunner.start"></a>
 
-#### TestRunner.run(globs) ⇒ <code>Array</code>
+#### Testrunner.start(globs) ⇒ <code>Array</code>
 Run one or more test files. The output will be an array containing the export value from each module.
 
 **Kind**: static method of [<code>TestRunner</code>](#exp_module_test-runner--TestRunner)  

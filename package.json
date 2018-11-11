@@ -21,19 +21,20 @@
     "node": ">=6"
   },
   "scripts": {
-    "test": "node --experimental-modules test/node/node-tests.mjs",
+    "test": "npm run dist && node --experimental-modules test/node/node-tests.mjs && node dist/test/node-tests.js",
     "docs": "jsdoc2md -t README.hbs index.js > README.md; echo",
-    "dist": "rollup -c dist/test/node-tests.config.js && rollup -c dist/lib/test-runner.config.js"
+    "dist": "rollup -c dist/test/node-tests.config.js && rollup -c dist/lib/test-runner.config.js && rollup -c dist/lib/test.config.js"
   },
   "dependencies": {
-    "file-set": "^2.0.0",
-    "obso": "^0.2.0",
+    "file-set": "^2.0.1",
+    "obso": "^0.3.0",
+    "race-timeout-anywhere": "^0.1.1",
     "reduce-flatten": "^2.0.0"
   },
   "devDependencies": {
-    "chai": "^4.1.2",
+    "chai": "^4.2.0",
     "jsdoc-to-markdown": "^4.0.1",
-    "rollup": "^0.59.4"
+    "rollup": "^0.67.0"
   },
   "standard": {
     "ignore": [

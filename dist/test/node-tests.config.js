@@ -4,5 +4,5 @@ export default {
     file: 'dist/test/node-tests.js',
     format: 'cjs'
   },
-  external: 'assert'
+  external: [ 'assert', 'events' ]
 }

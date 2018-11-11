@@ -2,23 +2,45 @@
 
 function _interopDefault (ex) { return (ex && (typeof ex === 'object') && 'default' in ex) ? ex['default'] : ex; }
 
+var events = require('events');
 var a = _interopDefault(require('assert'));
 
+function raceTimeout (ms, msg) {
+  return new Promise((resolve, reject) => {
+    const interval = setTimeout(() => {
+      const err = new Error(msg || `Timeout expired [${ms}]`);
+      reject(err);
+    }, ms);
+    if (interval.unref) interval.unref();
+  })
+}
+
+/**
+ * Test function class.
+ * @param {string} name
+ * @param {function} testFn
+ * @param {object} options
+ * @param {number} options.timeout
+ */
 class Test {
   constructor (name, testFn, options) {
     this.name = name;
     this.testFn = testFn;
-    this.index = 1;
+    this.id = 1;
     this.options = Object.assign({ timeout: 10000 }, options);
   }
-  
+
+  /**
+   * Execute the stored test function.
+   * @returns {Promise}
+   */
   run () {
     const testFnResult = new Promise((resolve, reject) => {
       try {
-        const result = this.testFn.call({
+        const result = this.testFn.call(new TestContext({
           name: this.name,
-          index: this.index++
-        });
+          id: this.id
+        }));
         if (result && result.then) {
           result.then(resolve).catch(reject);
         } else {
@@ -29,160 +51,108 @@ class Test {
       }
     });
 
-    const timeoutResult = new Promise((resolve, reject) => {
-      const timeout = setTimeout(
-        () => {
-          const err = new Error(`Timeout exceeded [${this.options.timeout}ms]`);
-          reject(err);
-        },
-        this.options.timeout
-      );
-      if (timeout.unref) timeout.unref();
-    });
-
-    return Promise.race([ testFnResult, timeoutResult ])
+    return Promise.race([ testFnResult, raceTimeout(this.options.timeout) ])
   }
 }
 
-function testSuite (assert) {
-  {
-    const test = new Test('passing sync test', function () {
-      return true
-    });
-    test.run()
-      .then(result => {
-        assert(result === true);
-      })
-      .catch(err => {
-        console.log(err);
-        assert(false, 'should not reach here');
-      });
-  }
-
-  {
-    const test = new Test('failing sync test', function () {
-      throw new Error('failed')
-    });
-    test.run()
-      .then(() => {
-        assert(false, "shouldn't reach here");
-      })
-      .catch(err => {
-        assert(/failed/.test(err.message));
-      });
-  }
-
-  {
-    const test = new Test('passing async test', function () {
-      return Promise.resolve(true)
-    });
-    test.run().then(result => {
-      assert(result === true);
-    });
-  }
-
-  {
-    const test = new Test('failing async test: rejected', function () {
-      return Promise.reject(new Error('failed'))
-    });
-    test.run()
-      .then(() => {
-        assert(false, "shouldn't reach here");
-      })
-      .catch(err => {
-        assert(/failed/.test(err.message));
-      });
-  }
-
-  {
-    const test = new Test(
-      'failing async test: timeout',
-      function () {
-        return new Promise((resolve, reject) => {
-          setTimeout(resolve, 300);
-        })
-      },
-      { timeout: 150 }
-    );
-    test.run()
-      .then(() => assert(false, 'should not reach here'))
-      .catch(err => {
-        assert(/Timeout exceeded/.test(err.message));
-      });
-  }
-
-  {
-    const test = new Test(
-      'passing async test: timeout',
-      function () {
-        return new Promise((resolve, reject) => {
-          setTimeout(() => resolve('ok'), 300);
-        })
-      },
-      { timeout: 350 }
-    );
-    test.run()
-      .then(result => {
-        assert(result === 'ok');
-      })
-      .catch(err => {
-        console.log(err);
-        assert(false, 'should not reach here');
-      });
+/**
+ * The test context, available as `this` within each test function.
+ */
+class TestContext {
+  constructor (context) {
+    this.name = context.name;
+    this.id = context.id;
   }
 }
 
-class TestRunner {
+/**
+ * @module test-runner
+ */
+
+/**
+ * @alias module:test-runner
+ */
+class TestRunner extends events.EventEmitter {
   constructor () {
+    super();
+    this._id = 1;
     this.tests = [];
   }
 
   test (name, testFn, options) {
-    this.tests.push(new Test(name, testFn, options));
+    const t = new Test(name, testFn, options);
+    t.id = this._id++;
+    this.tests.push(t);
   }
 
-  run () {
-    return Promise.all(this.tests.map(test => test.run()))
+  /**
+   * Run all tests in parallel
+   */
+  start () {
+    this.emit('start', this.tests.length);
+    return Promise
+      .all(this.tests.map(test => {
+        this.emit('test-start', test);
+        return test.run()
+          .then(result => {
+            this.emit('test-end', test);
+            return result
+          })
+          .catch(err => {
+            this.emit('test-end', test);
+            throw err
+          })
+      }))
+      .then(results => {
+        this.emit('end');
+        return results
+      })
+      .catch(err => {
+        process.exitCode = 1;
+        this.emit('end');
+        throw err
+      })
   }
 }
 
-function testSuite$1 (assert) {
-  {
-    const runner = new TestRunner('runner.run: one test');
-    runner.test('simple', function () {
-      return true
-    });
-    runner.run()
-      .then(results => {
-        assert(results[0] === true);
-      })
-      .catch(err => {
-        console.log(err);
-        assert(false, 'should not reach here');
-      });
-  }
+const tests$2 = [];
 
-  {
-    const runner = new TestRunner('runner.run: two tests');
-    runner.test('simple', function () {
-      return true
+tests$2.push(function (assert) {
+  const runner = new TestRunner('runner.start: load test');
+  let i = 0;
+  while (i++ < 100000) {
+    runner.test(`test ${i}`, function () {
+      return i
     });
-    runner.test('simple 2', function () {
-      return 1
-    });
-    runner.run()
-      .then(results => {
-        assert(results[0] === true);
-        assert(results[1] === 1);
-      })
-      .catch(err => {
-        console.log(err);
-        assert(false, 'should not reach here');
-      });
   }
+  return runner.start()
+    // .then(results => {
+    //   assert(results[0] === true)
+    //   assert(results[1] === 1)
+    // })
+});
+
+function testSuite$2 (assert) {
+  return Promise.all(tests$2.map(t => t(assert)))
 }
 
-testSuite(a.ok);
-testSuite$1(a.ok);
+// testSuite(a.ok)
+//   .then(function () {
+//     return testRunnerSuite(a.ok)
+//   })
+//   .then(function () {
+//     console.log('Done.')
+//   })
+//   .catch(function (err) {
+//     process.exitCode = 1
+//     console.error(err)
+//   })
 
-console.log('Done.');
+testSuite$2(a.ok)
+  .then(function () {
+    console.log('Done.');
+  })
+  .catch(function (err) {
+    process.exitCode = 1;
+    console.error(err);
+  });

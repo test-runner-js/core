@@ -1,8 +1,8 @@
 (function (global, factory) {
-  typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory(require('events')) :
-  typeof define === 'function' && define.amd ? define(['events'], factory) :
-  (global.TestRunner = factory(global.events));
-}(this, (function (events) { 'use strict';
+  typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory() :
+  typeof define === 'function' && define.amd ? define(factory) :
+  (global.Test = factory());
+}(this, (function () { 'use strict';
 
   function raceTimeout (ms, msg) {
     return new Promise((resolve, reject) => {
@@ -64,56 +64,6 @@
     }
   }
 
-  /**
-   * @module test-runner
-   */
-
-  /**
-   * @alias module:test-runner
-   */
-  class TestRunner extends events.EventEmitter {
-    constructor () {
-      super();
-      this._id = 1;
-      this.tests = [];
-    }
-
-    test (name, testFn, options) {
-      const t = new Test(name, testFn, options);
-      t.id = this._id++;
-      this.tests.push(t);
-    }
-
-    /**
-     * Run all tests in parallel
-     */
-    start () {
-      this.emit('start', this.tests.length);
-      return Promise
-        .all(this.tests.map(test => {
-          this.emit('test-start', test);
-          return test.run()
-            .then(result => {
-              this.emit('test-end', test);
-              return result
-            })
-            .catch(err => {
-              this.emit('test-end', test);
-              throw err
-            })
-        }))
-        .then(results => {
-          this.emit('end');
-          return results
-        })
-        .catch(err => {
-          process.exitCode = 1;
-          this.emit('end');
-          throw err
-        })
-    }
-  }
-
-  return TestRunner;
+  return Test;
 
 })));
