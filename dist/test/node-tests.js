@@ -95,10 +95,12 @@ class TestRunner extends events.EventEmitter {
         this.emit('test-start', test);
         return test.run()
           .then(result => {
+            this.emit('test-pass', test);
             this.emit('test-end', test);
             return result
           })
           .catch(err => {
+            this.emit('test-fail', test);
             this.emit('test-end', test);
             throw err
           })
