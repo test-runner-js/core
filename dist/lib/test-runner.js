@@ -1,8 +1,8 @@
 (function (global, factory) {
-  typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory(require('events')) :
-  typeof define === 'function' && define.amd ? define(['events'], factory) :
-  (global.TestRunner = factory(global.events));
-}(this, (function (events) { 'use strict';
+  typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory() :
+  typeof define === 'function' && define.amd ? define(factory) :
+  (global.TestRunner = factory());
+}(this, (function () { 'use strict';
 
   function raceTimeout (ms, msg) {
     return new Promise((resolve, reject) => {
@@ -65,17 +65,112 @@
   }
 
   /**
+   * Make an object observable.
+   * @module obso
+   * @example
+   * import Emitter from './node_modules/obso/emitter.mjs'
+   *
+   * class Something extends Emitter {}
+   * const something = new Something()
+   * something.on('load', () => {
+   *   console.log('load event fired.')
+   * })
+   */
+
+  /**
+   * @alias module:obso
+   */
+  class Emitter {
+    /**
+     * Emit an event.
+     * @param eventName {string} - the event name to emit
+     * @param ...args {*} - args to pass to the event handler
+     */
+    emit (eventName, ...args) {
+      if (this._listeners && this._listeners.length > 0) {
+        const toRemove = [];
+        this._listeners.forEach(listener => {
+          if (listener.eventName === eventName) {
+            listener.handler.apply(this, args);
+          } else if (listener.eventName === '__ALL__') {
+            const handlerArgs = args.slice();
+            handlerArgs.unshift(eventName);
+            listener.handler.apply(this, handlerArgs);
+          }
+          if (listener.once) toRemove.push(listener);
+        });
+        toRemove.forEach(listener => {
+          this._listeners.splice(this._listeners.indexOf(listener), 1);
+        });
+      }
+      if (this.parent) this.parent.emit(eventName, ...args);
+    }
+
+     /**
+      * Register an event listener.
+      * @param eventName {string} - the event name to watch
+      * @param handler {function} - the event handler
+      */
+    on (eventName, handler, options) {
+      createListenersArray(this);
+      options = options || {};
+      if (arguments.length === 1 && typeof eventName === 'function') {
+        this._listeners.push({ eventName: '__ALL__', handler: eventName, once: options.once });
+      } else {
+        this._listeners.push({ eventName: eventName, handler: handler, once: options.once });
+      }
+    }
+
+    /**
+     * Remove an event listener.
+     * @param eventName {string} - the event name
+     * @param handler {function} - the event handler
+     */
+    removeEventListener (eventName, handler) {
+      if (!this._listeners || this._listeners.length === 0) return
+      const index = this._listeners.findIndex(function (listener) {
+        return listener.eventName === eventName && listener.handler === handler
+      });
+      if (index > -1) this._listeners.splice(index, 1);
+    }
+
+    once (eventName, handler) {
+      this.on(eventName, handler, { once: true });
+    }
+
+    propagate (eventName, from) {
+      from.on(eventName, (...args) => this.emit(eventName, ...args));
+    }
+  }
+
+  /* alias */
+  Emitter.prototype.addEventListener = Emitter.prototype.on;
+
+  function createListenersArray (target) {
+    if (target._listeners) return
+    Object.defineProperty(target, '_listeners', {
+      enumerable: false,
+      configurable: false,
+      writable: false,
+      value: []
+    });
+  }
+
+  /**
    * @module test-runner
    */
 
   /**
    * @alias module:test-runner
    */
-  class TestRunner extends events.EventEmitter {
+  class TestRunner extends Emitter {
     constructor () {
       super();
       this._id = 1;
       this.tests = [];
+      this.on('start', count => console.log(`1..${count}`));
+      this.on('test-pass', test => console.log(`ok ${test.id} ${test.name}`));
+      this.on('test-fail', test => console.log(`not ok ${test.id} ${test.name}`));
     }
 
     test (name, testFn, options) {
