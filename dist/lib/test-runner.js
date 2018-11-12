@@ -164,13 +164,24 @@
    * @alias module:test-runner
    */
   class TestRunner extends Emitter {
-    constructor () {
+    constructor (options) {
       super();
+      this.options = options || {};
       this._id = 1;
       this.tests = [];
+      this.init();
+    }
+
+    init () {
       this.on('start', count => console.log(`1..${count}`));
       this.on('test-pass', test => console.log(`ok ${test.id} ${test.name}`));
       this.on('test-fail', test => console.log(`not ok ${test.id} ${test.name}`));
+      if (!this.options.manualStart) {
+        process.setMaxListeners(Infinity);
+        process.on('beforeExit', () => {
+          this.start();
+        });
+      }
     }
 
     test (name, testFn, options) {
