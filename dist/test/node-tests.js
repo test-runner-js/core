@@ -154,11 +154,11 @@ function testSuite (assert) {
   return Promise.all(tests.slice(0, 1).map(t => t(assert)))
 }
 
-function testSuite$1 (assert, TestRunner) {
+function testSuite$1 (assert, TestRunner, view) {
   const tests = [];
 
   tests.push(function (assert) {
-    const runner = new TestRunner({ name: 'runner.start: one test' });
+    const runner = new TestRunner({ name: 'runner.start: one test', view });
     runner.test('simple', function () {
       assert(this.name === 'simple');
       return true
@@ -170,7 +170,7 @@ function testSuite$1 (assert, TestRunner) {
   });
 
   tests.push(function (assert) {
-    const runner = new TestRunner({ name: 'runner.start: two tests' });
+    const runner = new TestRunner({ name: 'runner.start: two tests', view });
     runner.test('simple', function () {
       assert(this.id === 1);
       return true
@@ -285,8 +285,26 @@ function createListenersArray (target) {
  * @module test-runner
  */
 
+class TAPView {
+  start (count) {
+    console.log(`1..${count}`);
+  }
+  testPass (test) {
+    console.log(`ok ${test.id} ${test.name}`);
+  }
+  testFail (test) {
+    console.log(`not ok ${test.id} ${test.name}`);
+  }
+}
+
 /**
  * @alias module:test-runner
+ * @emits start
+ * @emits end
+ * @emits test-start
+ * @emits test-end
+ * @emits test-pass
+ * @emits test-fail
  */
 class TestRunner extends Emitter {
   constructor (options) {
@@ -296,13 +314,14 @@ class TestRunner extends Emitter {
     this._id = 1;
     this.name = options.name;
     this.tests = [];
+    this.view = options.view || new TAPView();
+    if (this.view.start) this.on('start', this.view.start.bind(this.view));
+    if (this.view.testPass) this.on('test-pass', this.view.testPass.bind(this.view));
+    if (this.view.testFail) this.on('test-fail', this.view.testFail.bind(this.view));
     this.init();
   }
 
   init () {
-    this.on('start', count => console.log(`1..${count}`));
-    this.on('test-pass', test => console.log(`ok ${test.id} ${test.name}`));
-    this.on('test-fail', test => console.log(`not ok ${test.id} ${test.name}`));
     if (!this.options.manualStart) {
       process.setMaxListeners(Infinity);
       process.on('beforeExit', () => {

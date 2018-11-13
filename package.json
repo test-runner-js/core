@@ -38,7 +38,8 @@
   },
   "standard": {
     "ignore": [
-      "tmp"
+      "tmp",
+      "dist"
     ]
   }
 }

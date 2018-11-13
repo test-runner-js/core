@@ -1,8 +1,8 @@
-export default function testSuite (assert, TestRunner) {
+export default function testSuite (assert, TestRunner, view) {
   const tests = []
 
   tests.push(function (assert) {
-    const runner = new TestRunner({ name: 'runner.start: one test' })
+    const runner = new TestRunner({ name: 'runner.start: one test', view })
     runner.test('simple', function () {
       assert(this.name === 'simple')
       return true
@@ -14,7 +14,7 @@ export default function testSuite (assert, TestRunner) {
   })
 
   tests.push(function (assert) {
-    const runner = new TestRunner({ name: 'runner.start: two tests' })
+    const runner = new TestRunner({ name: 'runner.start: two tests', view })
     runner.test('simple', function () {
       assert(this.id === 1)
       return true

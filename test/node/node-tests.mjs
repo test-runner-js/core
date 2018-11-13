@@ -1,6 +1,5 @@
 import testSuite from '../test.mjs'
 import testRunnerSuite from '../test-runner.mjs'
-import testRunnerLoad from '../test-runner-load.mjs'
 import a from 'assert'
 import TestRunner from '../../lib/test-runner.mjs'
 
