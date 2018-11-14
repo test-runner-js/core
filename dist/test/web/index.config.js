@@ -1,9 +1,8 @@
 export default {
-  input: 'test/node/node-tests.mjs',
+  input: 'test/web/module/index.js',
   output: {
-    file: 'dist/test/node-tests.js',
-    format: 'umd',
-    name: 'nomoduleTests'
+    file: 'dist/test/web/index.js',
+    format: 'cjs'
   },
   external: [ 'assert', 'events' ]
 }

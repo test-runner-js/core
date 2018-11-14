@@ -160,15 +160,15 @@
    * @module test-runner
    */
 
-  class TAPView {
+  class DefaultView {
     start (count) {
-      console.log(`1..${count}`);
+      console.log(`Starting: ${count} tests`);
     }
-    testPass (test) {
-      console.log(`ok ${test.id} ${test.name}`);
+    testPass (test, result) {
+      console.log('✅', test.name, result || 'ok');
     }
-    testFail (test) {
-      console.log(`not ok ${test.id} ${test.name}`);
+    testFail (test, err) {
+      console.error('🛑', test.name, err);
     }
   }
 
@@ -189,10 +189,12 @@
       this._id = 1;
       this.name = options.name;
       this.tests = [];
-      this.view = options.view || new TAPView();
+      this._only = [];
+      this.view = options.view || new DefaultView();
       if (this.view.start) this.on('start', this.view.start.bind(this.view));
       if (this.view.testPass) this.on('test-pass', this.view.testPass.bind(this.view));
       if (this.view.testFail) this.on('test-fail', this.view.testFail.bind(this.view));
+      if (this.view.testSkip) this.on('test-skip', this.view.testSkip.bind(this.view));
       this.init();
     }
 
@@ -206,9 +208,22 @@
     }
 
     test (name, testFn, options) {
-      const t = new Test(name, testFn, options);
-      t.id = this._id++;
-      this.tests.push(t);
+      const test = new Test(name, testFn, options);
+      this.tests.push(test);
+      test.id = this.tests.length;
+      return test
+    }
+
+    skip (name, testFn, options) {
+      const test = this.test(name, testFn, options);
+      test.skip = true;
+      return test
+    }
+
+    only (name, testFn, options) {
+      const test = this.test(name, testFn, options);
+      this._only.push(test);
+      return test
     }
 
     /**
@@ -217,21 +232,31 @@
     start () {
       if (this.state !== 0) return
       this.state = 1;
-      this.emit('start', this.tests.length);
+      if (this._only.length) {
+        for (const test of this.tests) {
+          if (this._only.indexOf(test) === -1) test.skip = true;
+        }
+      }
+      const tests = this.tests;
+      this.emit('start', tests.length);
       return Promise
-        .all(this.tests.map(test => {
-          this.emit('test-start', test);
-          return test.run()
-            .then(result => {
-              this.emit('test-pass', test);
-              this.emit('test-end', test);
-              return result
-            })
-            .catch(err => {
-              this.emit('test-fail', test);
-              this.emit('test-end', test);
-              throw err
-            })
+        .all(tests.map(test => {
+          if (test.skip) {
+            this.emit('test-skip', test);
+          } else {
+            this.emit('test-start', test);
+            return test.run()
+              .then(result => {
+                this.emit('test-pass', test, result);
+                this.emit('test-end', test, result);
+                return result
+              })
+              .catch(err => {
+                this.emit('test-fail', test, err);
+                this.emit('test-end', test, err);
+                throw err
+              })
+          }
         }))
         .then(results => {
           this.state = 2;

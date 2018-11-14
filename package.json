@@ -21,7 +21,9 @@
     "node": ">=6"
   },
   "scripts": {
-    "test": "rollup -c dist/test/node/node-tests.config.js && node --experimental-modules test/node/node-tests.mjs && node dist/test/node/node-tests.js",
+    "test": "npm run test:js && npm run test:esm",
+    "test:js": "rollup -c dist/test/node/node-tests.config.js && node dist/test/node/node-tests.js",
+    "test:esm": "node --experimental-modules test/node/node-tests.mjs",
     "docs": "jsdoc2md -t README.hbs index.js > README.md; echo",
     "dist": "rollup -w -c dist/lib/test-runner.config.js"
   },

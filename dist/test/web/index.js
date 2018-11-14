@@ -1,9 +1,5 @@
 'use strict';
 
-function _interopDefault (ex) { return (ex && (typeof ex === 'object') && 'default' in ex) ? ex['default'] : ex; }
-
-var a = _interopDefault(require('assert'));
-
 function raceTimeout (ms, msg) {
   return new Promise((resolve, reject) => {
     const interval = setTimeout(() => {
@@ -397,14 +393,55 @@ class TestRunner extends Emitter {
   }
 }
 
-testSuite(a.ok)
+/**
+ * @module test-runner-web
+ */
+
+/**
+ * @alias module:test-runner-web
+ */
+class TestRunnerWeb extends TestRunner {
+  init () {
+    if (!this.options.manualStart) {
+      window.onload = () => {
+        this.start();
+      };
+    }
+  }
+}
+
+const π = document.createElement.bind(document);
+const $ = document.querySelector.bind(document);
+
+class WebView extends HTMLElement {
+  connectedCallback () {
+  }
+  start (count) {
+    const li = π('li');
+    li.textContent = `1..${count}`;
+    this.appendChild(li);
+  }
+  testPass (test) {
+    const li = π('li');
+    li.textContent = `ok ${test.id} ${test.name}`;
+    this.appendChild(li);
+  }
+  testFail (test) {
+    const li = π('li');
+    li.textContent = `not ok ${test.id} ${test.name}`;
+    this.appendChild(li);
+  }
+}
+
+customElements.define('web-view', WebView);
+
+const view = new WebView();
+$('body').appendChild(view);
+
+testSuite(console.assert)
   .then(function () {
-    return testSuite$1(a.ok, TestRunner)
-  })
-  .then(function () {
-    console.log('Done.');
+    return testSuite$1(console.assert, TestRunnerWeb, view)
   })
   .catch(function (err) {
-    process.exitCode = 1;
     console.error(err);
   });
