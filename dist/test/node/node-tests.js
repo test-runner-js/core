@@ -327,7 +327,7 @@ class TestRunner extends Emitter {
     if (!this.options.manualStart) {
       process.setMaxListeners(Infinity);
       process.on('beforeExit', () => {
-        this.start();
+        this.start().catch(err => { /* ignore */ });
       });
     }
   }
@@ -353,9 +353,10 @@ class TestRunner extends Emitter {
 
   /**
    * Run all tests in parallel
+   * @returns {Promise}
    */
   start () {
-    if (this.state !== 0) return
+    if (this.state !== 0) return Promise.resolve()
     this.state = 1;
     if (this._only.length) {
       for (const test of this.tests) {
