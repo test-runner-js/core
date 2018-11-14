@@ -64,94 +64,129 @@ class TestContext {
   }
 }
 
-const tests = [];
+function testSuite (assert) {
+  const tests = [];
 
-tests.push(function (assert) {
-  const test = new Test('passing sync test', () => true);
-  return test.run()
-    .then(result => {
+  tests.push(function (assert) {
+    const test = new Test('passing sync test', () => true);
+    return test.run()
+      .then(result => {
+        assert(result === true);
+      })
+      .catch(err => {
+        console.log(err);
+        assert(false, 'should not reach here');
+      })
+  });
+
+  tests.push(function (assert) {
+    const test = new Test('failing sync test', function () {
+      throw new Error('failed')
+    });
+    return test.run()
+      .then(() => {
+        assert(false, "shouldn't reach here");
+      })
+      .catch(err => {
+        assert(/failed/.test(err.message));
+      })
+  });
+
+  tests.push(function (assert) {
+    const test = new Test('passing async test', function () {
+      return Promise.resolve(true)
+    });
+    return test.run().then(result => {
       assert(result === true);
     })
-    .catch(err => {
-      console.log(err);
-      assert(false, 'should not reach here');
-    })
-});
-
-tests.push(function (assert) {
-  const test = new Test('failing sync test', function () {
-    throw new Error('failed')
   });
-  return test.run()
-    .then(() => {
-      assert(false, "shouldn't reach here");
-    })
-    .catch(err => {
-      assert(/failed/.test(err.message));
-    })
-});
 
-tests.push(function (assert) {
-  const test = new Test('passing async test', function () {
-    return Promise.resolve(true)
-  });
-  return test.run().then(result => {
-    assert(result === true);
-  })
-});
-
-tests.push(function (assert) {
-  const test = new Test('failing async test: rejected', function () {
-    return Promise.reject(new Error('failed'))
-  });
-  return test.run()
-    .then(() => {
-      assert(false, "shouldn't reach here");
-    })
-    .catch(err => {
-      assert(/failed/.test(err.message));
-    })
-});
-
-tests.push(function (assert) {
-  const test = new Test(
-    'failing async test: timeout',
-    function () {
-      return new Promise((resolve, reject) => {
-        setTimeout(resolve, 300);
+  tests.push(function (assert) {
+    const test = new Test('failing async test: rejected', function () {
+      return Promise.reject(new Error('failed'))
+    });
+    return test.run()
+      .then(() => {
+        assert(false, "shouldn't reach here");
       })
-    },
-    { timeout: 150 }
-  );
-  return test.run()
-    .then(() => assert(false, 'should not reach here'))
-    .catch(err => {
-      assert(/Timeout expired/.test(err.message));
-    })
-});
-
-tests.push(function (assert) {
-  const test = new Test(
-    'passing async test: timeout 2',
-    function () {
-      return new Promise((resolve, reject) => {
-        setTimeout(() => resolve('ok'), 300);
+      .catch(err => {
+        assert(/failed/.test(err.message));
       })
-    },
-    { timeout: 350 }
-  );
-  return test.run()
-    .then(result => {
-      assert(result === 'ok');
-    })
-    .catch(err => {
-      console.log(err);
-      assert(false, 'should not reach here');
-    })
-});
+  });
 
-function testSuite (assert) {
+  tests.push(function (assert) {
+    const test = new Test(
+      'failing async test: timeout',
+      function () {
+        return new Promise((resolve, reject) => {
+          setTimeout(resolve, 300);
+        })
+      },
+      { timeout: 150 }
+    );
+    return test.run()
+      .then(() => assert(false, 'should not reach here'))
+      .catch(err => {
+        assert(/Timeout expired/.test(err.message));
+      })
+  });
+
+  tests.push(function (assert) {
+    const test = new Test(
+      'passing async test: timeout 2',
+      function () {
+        return new Promise((resolve, reject) => {
+          setTimeout(() => resolve('ok'), 300);
+        })
+      },
+      { timeout: 350 }
+    );
+    return test.run()
+      .then(result => {
+        assert(result === 'ok');
+      })
+      .catch(err => {
+        console.log(err);
+        assert(false, 'should not reach here');
+      })
+  });
+
   return Promise.all(tests.slice(0, 1).map(t => t(assert)))
+}
+
+function testSuite$1 (assert, TestRunner, view) {
+  const tests = [];
+
+  tests.push(function (assert) {
+    const runner = new TestRunner({ name: 'runner.start: one test', view });
+    runner.test('simple', function () {
+      assert(this.name === 'simple');
+      return true
+    });
+    return runner.start()
+      .then(results => {
+        assert(results[0] === true);
+      })
+  });
+
+  tests.push(function (assert) {
+    const runner = new TestRunner({ name: 'runner.start: two tests', view });
+    runner.test('simple', function () {
+      assert(this.id === 1);
+      return true
+    });
+    runner.test('simple 2', function () {
+      assert(this.id === 2);
+      return 1
+    });
+    return runner.start()
+      .then(results => {
+        assert(results[0] === true);
+        assert(results[1] === 1);
+      })
+  });
+
+  return Promise.all(tests.map(t => t(assert)))
 }
 
 /**
@@ -250,17 +285,49 @@ function createListenersArray (target) {
  * @module test-runner
  */
 
+class TAPView {
+  start (count) {
+    console.log(`Starting: ${count} tests`);
+  }
+  testPass (test, result) {
+    console.log('✅', test.name, result || 'ok');
+  }
+  testFail (test, err) {
+    console.error('🛑', test.name, err);
+  }
+}
+
 /**
  * @alias module:test-runner
+ * @emits start
+ * @emits end
+ * @emits test-start
+ * @emits test-end
+ * @emits test-pass
+ * @emits test-fail
  */
 class TestRunner extends Emitter {
-  constructor () {
+  constructor (options) {
     super();
+    this.options = options || {};
+    this.state = 0;
     this._id = 1;
+    this.name = options.name;
     this.tests = [];
-    this.on('start', count => console.log(`1..${count}`));
-    this.on('test-pass', test => console.log(`ok ${test.id} ${test.name}`));
-    this.on('test-fail', test => console.log(`not ok ${test.id} ${test.name}`));
+    this.view = options.view || new TAPView();
+    if (this.view.start) this.on('start', this.view.start.bind(this.view));
+    if (this.view.testPass) this.on('test-pass', this.view.testPass.bind(this.view));
+    if (this.view.testFail) this.on('test-fail', this.view.testFail.bind(this.view));
+    this.init();
+  }
+
+  init () {
+    if (!this.options.manualStart) {
+      process.setMaxListeners(Infinity);
+      process.on('beforeExit', () => {
+        this.start();
+      });
+    }
   }
 
   test (name, testFn, options) {
@@ -269,76 +336,49 @@ class TestRunner extends Emitter {
     this.tests.push(t);
   }
 
+  skip () {
+
+  }
+
   /**
    * Run all tests in parallel
    */
   start () {
+    if (this.state !== 0) return
+    this.state = 1;
     this.emit('start', this.tests.length);
     return Promise
       .all(this.tests.map(test => {
         this.emit('test-start', test);
         return test.run()
           .then(result => {
-            this.emit('test-pass', test);
-            this.emit('test-end', test);
+            this.emit('test-pass', test, result);
+            this.emit('test-end', test, result);
             return result
           })
           .catch(err => {
-            this.emit('test-fail', test);
-            this.emit('test-end', test);
+            this.emit('test-fail', test, err);
+            this.emit('test-end', test, err);
             throw err
           })
       }))
       .then(results => {
+        this.state = 2;
         this.emit('end');
         return results
       })
       .catch(err => {
         process.exitCode = 1;
+        this.state = 2;
         this.emit('end');
         throw err
       })
   }
 }
 
-const tests$1 = [];
-
-tests$1.push(function (assert) {
-  const runner = new TestRunner('runner.start: one test');
-  runner.test('simple', function () {
-    assert(this.name === 'simple');
-    return true
-  });
-  return runner.start()
-    .then(results => {
-      assert(results[0] === true);
-    })
-});
-
-tests$1.push(function (assert) {
-  const runner = new TestRunner('runner.start: two tests');
-  runner.test('simple', function () {
-    assert(this.id === 1);
-    return true
-  });
-  runner.test('simple 2', function () {
-    assert(this.id === 2);
-    return 1
-  });
-  return runner.start()
-    .then(results => {
-      assert(results[0] === true);
-      assert(results[1] === 1);
-    })
-});
-
-function testSuite$1 (assert) {
-  return Promise.all(tests$1.map(t => t(assert)))
-}
-
 testSuite(a.ok)
   .then(function () {
-    return testSuite$1(a.ok)
+    return testSuite$1(a.ok, TestRunner)
   })
   .then(function () {
     console.log('Done.');
