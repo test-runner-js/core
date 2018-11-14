@@ -202,7 +202,7 @@
       if (!this.options.manualStart) {
         process.setMaxListeners(Infinity);
         process.on('beforeExit', () => {
-          this.start();
+          this.start().catch(err => { /* ignore */ });
         });
       }
     }
