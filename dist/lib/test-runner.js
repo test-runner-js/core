@@ -184,7 +184,7 @@
   class TestRunner extends Emitter {
     constructor (options) {
       super();
-      this.options = options || {};
+      this.config(options);
       this.state = 0;
       this._id = 1;
       this.name = options.name;
@@ -202,9 +202,18 @@
       if (!this.options.manualStart) {
         process.setMaxListeners(Infinity);
         process.on('beforeExit', () => {
-          this.start().catch(err => { /* ignore */ });
+          this.start().catch(err => {
+            if (err.code !== 'ERR_ASSERTION') {
+              console.log('LIB ERROR');
+              console.error(require('util').inspect(err, { depth: 6, colors: true }));
+            }
+          });
         });
       }
+    }
+
+    config (options) {
+      this.options = options || {};
     }
 
     test (name, testFn, options) {
@@ -228,9 +237,10 @@
 
     /**
      * Run all tests in parallel
+     * @returns {Promise}
      */
     start () {
-      if (this.state !== 0) return
+      if (this.state !== 0) return Promise.resolve()
       this.state = 1;
       if (this._only.length) {
         for (const test of this.tests) {
@@ -239,36 +249,65 @@
       }
       const tests = this.tests;
       this.emit('start', tests.length);
-      return Promise
-        .all(tests.map(test => {
-          if (test.skip) {
-            this.emit('test-skip', test);
-          } else {
-            this.emit('test-start', test);
-            return test.run()
+      if (this.options.sequential) {
+        return new Promise((resolve, reject) => {
+          const run = () => {
+            const test = tests.shift();
+            test.run()
               .then(result => {
                 this.emit('test-pass', test, result);
                 this.emit('test-end', test, result);
-                return result
+                if (tests.length) {
+                  run();
+                } else {
+                  resolve();
+                }
               })
               .catch(err => {
                 this.emit('test-fail', test, err);
                 this.emit('test-end', test, err);
-                throw err
-              })
-          }
-        }))
-        .then(results => {
-          this.state = 2;
-          this.emit('end');
-          return results
+                if (tests.length) {
+                  run();
+                } else {
+                  resolve();
+                }
+                // throw err
+              });
+          };
+          run();
         })
-        .catch(err => {
-          process.exitCode = 1;
-          this.state = 2;
-          this.emit('end');
-          throw err
-        })
+      } else {
+        return Promise
+          .all(tests.map(test => {
+            if (test.skip) {
+              this.emit('test-skip', test);
+            } else {
+              this.emit('test-start', test);
+              return test.run()
+                .then(result => {
+                  this.emit('test-pass', test, result);
+                  this.emit('test-end', test, result);
+                  return result
+                })
+                .catch(err => {
+                  this.emit('test-fail', test, err);
+                  this.emit('test-end', test, err);
+                  throw err
+                })
+            }
+          }))
+          .then(results => {
+            this.state = 2;
+            this.emit('end');
+            return results
+          })
+          .catch(err => {
+            process.exitCode = 1;
+            this.state = 2;
+            this.emit('end');
+            throw err
+          })
+      }
     }
   }
 
