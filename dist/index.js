@@ -165,10 +165,10 @@
       console.log(`Starting: ${count} tests`);
     }
     testPass (test, result) {
-      console.log('✅', test.name, result || 'ok');
+      console.log('✓', test.name, result || 'ok');
     }
     testFail (test, err) {
-      console.error('🛑', test.name, err);
+      console.error('⨯', test.name, err);
     }
   }
 
@@ -186,7 +186,7 @@
       super();
       this.config(options);
       this.state = 0;
-      this._id = 1;
+      // this._id = 1
       this.name = this.options.name;
       this.tests = [];
       this._only = [];
@@ -202,12 +202,15 @@
       if (!this.options.manualStart) {
         process.setMaxListeners(Infinity);
         process.on('beforeExit', () => {
-          this.start().catch(err => {
-            if (err.code !== 'ERR_ASSERTION') {
-              console.log('LIB ERROR');
-              console.error(require('util').inspect(err, { depth: 6, colors: true }));
-            }
-          });
+          this.start()
+            .catch(err => {
+              if (err.code === 'ERR_ASSERTION') {
+                console.log('ERR_ASSERTION caught');
+              } else {
+                console.error('ERROR');
+                console.error(require('util').inspect(err, { depth: 6, colors: true }));
+              }
+            });
         });
       }
     }
@@ -255,23 +258,28 @@
             const test = tests.shift();
             test.run()
               .then(result => {
-                this.emit('test-pass', test, result);
-                this.emit('test-end', test, result);
-                if (tests.length) {
-                  run();
-                } else {
-                  resolve();
+                try {
+                  this.emitPass(test, result);
+                  if (tests.length) {
+                    run();
+                  } else {
+                    resolve();
+                  }
+                } catch (err) {
+                  reject(err);
                 }
               })
               .catch(err => {
-                this.emit('test-fail', test, err);
-                this.emit('test-end', test, err);
-                if (tests.length) {
-                  run();
-                } else {
-                  resolve();
+                try {
+                  this.emitFail(test, err);
+                  if (tests.length) {
+                    run();
+                  } else {
+                    resolve();
+                  }
+                } catch (err) {
+                  reject(err);
                 }
-                // throw err
               });
           };
           run();
@@ -285,13 +293,11 @@
               this.emit('test-start', test);
               return test.run()
                 .then(result => {
-                  this.emit('test-pass', test, result);
-                  this.emit('test-end', test, result);
+                  this.emitPass(test, result);
                   return result
                 })
                 .catch(err => {
-                  this.emit('test-fail', test, err);
-                  this.emit('test-end', test, err);
+                  this.emitFail(test, err);
                   throw err
                 })
             }
@@ -302,12 +308,25 @@
             return results
           })
           .catch(err => {
-            process.exitCode = 1;
             this.state = 2;
             this.emit('end');
             throw err
           })
       }
+    }
+
+    emitPass (test, result) {
+      this.emit('test-pass', test, result);
+      this.emit('test-end', test, result);
+    }
+    emitFail (test, err) {
+      this.emit('test-fail', test, err);
+      this.emit('test-end', test, err);
+    }
+
+    clear () {
+      this.tests = [];
+      this._only = [];
     }
   }
 

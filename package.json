@@ -16,7 +16,7 @@
     "ava",
     "mocha"
   ],
-  "main": "./dist/lib/test-runner.js",
+  "main": "./dist/index.js",
   "engines": {
     "node": ">=6"
   },
@@ -43,5 +43,8 @@
       "tmp",
       "dist"
     ]
-  }
+  },
+  "files": [
+    "lib", "dist"
+  ]
 }
