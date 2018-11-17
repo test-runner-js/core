@@ -16,11 +16,11 @@ export default function testSuite (assert, TestRunner, view) {
   tests.push(function (assert) {
     const runner = new TestRunner({ name: 'runner.start: two tests', view })
     runner.test('simple', function () {
-      assert(this.id === 1)
+      assert(this.index === 1)
       return true
     })
     runner.test('simple 2', function () {
-      assert(this.id === 2)
+      assert(this.index === 2)
       return 1
     })
     return runner.start()

@@ -22,10 +22,10 @@
   },
   "scripts": {
     "test": "npm run test:js && npm run test:esm",
-    "test:js": "rollup -c dist/test/node/node-tests.config.js && node dist/test/node/node-tests.js",
+    "test:js": "rollup -c build/node-tests.config.js && node dist/test/node/node-tests.js",
     "test:esm": "node --experimental-modules test/node/node-tests.mjs",
-    "docs": "jsdoc2md -c jsdoc.conf -t README.hbs lib/test-runner.mjs > README.md; echo",
-    "dist": "rollup -w -c dist/lib/test-runner.config.js"
+    "docs": "jsdoc2md -c build/jsdoc.conf -t README.hbs index.mjs > README.md; echo",
+    "dist": "rollup -w -c build/index.config.js"
   },
   "dependencies": {
     "file-set": "^2.0.1",

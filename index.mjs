@@ -1,5 +1,5 @@
-import Test from './test.mjs'
-import Emitter from '../node_modules/obso/emitter.mjs'
+import Test from './lib/test.mjs'
+import Emitter from './node_modules/obso/emitter.mjs'
 
 /**
  * @module test-runner
@@ -52,7 +52,6 @@ class TestRunner extends Emitter {
             if (err.code === 'ERR_ASSERTION') {
               console.log('ERR_ASSERTION caught')
             } else {
-              console.error('ERROR')
               console.error(require('util').inspect(err, { depth: 6, colors: true }))
             }
           })
@@ -67,7 +66,7 @@ class TestRunner extends Emitter {
   test (name, testFn, options) {
     const test = new Test(name, testFn, options)
     this.tests.push(test)
-    test.id = this.tests.length
+    test.index = this.tests.length
     return test
   }
 
@@ -101,31 +100,40 @@ class TestRunner extends Emitter {
       return new Promise((resolve, reject) => {
         const run = () => {
           const test = tests.shift()
-          test.run()
-            .then(result => {
-              try {
-                this.emitPass(test, result)
-                if (tests.length) {
-                  run()
-                } else {
-                  resolve()
+          if (test.skip) {
+            this.emit('test-skip', test)
+            if (tests.length) {
+              run()
+            } else {
+              resolve()
+            }
+          } else {
+            test.run()
+              .then(result => {
+                try {
+                  this.emitPass(test, result)
+                  if (tests.length) {
+                    run()
+                  } else {
+                    resolve()
+                  }
+                } catch (err) {
+                  reject(err)
                 }
-              } catch (err) {
-                reject(err)
-              }
-            })
-            .catch(err => {
-              try {
-                this.emitFail(test, err)
-                if (tests.length) {
-                  run()
-                } else {
-                  resolve()
+              })
+              .catch(err => {
+                try {
+                  this.emitFail(test, err)
+                  if (tests.length) {
+                    run()
+                  } else {
+                    resolve()
+                  }
+                } catch (err) {
+                  reject(err)
                 }
-              } catch (err) {
-                reject(err)
-              }
-            })
+              })
+          }
         }
         run()
       })

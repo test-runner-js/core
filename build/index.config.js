@@ -1,8 +1,9 @@
 export default {
-  input: 'test/web/module/index.js',
+  input: 'index.mjs',
   output: {
-    file: 'dist/test/web/index.js',
-    format: 'cjs'
+    file: 'dist/index.js',
+    format: 'umd',
+    name: 'TestRunner'
   },
   external: [ 'assert', 'events' ]
 }

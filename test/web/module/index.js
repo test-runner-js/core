@@ -1,6 +1,6 @@
 import testSuite from '../../test.mjs'
 import testRunnerSuite from '../../test-runner.mjs'
-import TestRunner from '../../../lib/test-runner-web.mjs'
+import TestRunner from '../../../index.mjs'
 const π = document.createElement.bind(document)
 const $ = document.querySelector.bind(document)
 
@@ -14,12 +14,12 @@ class WebView extends HTMLElement {
   }
   testPass (test) {
     const li = π('li')
-    li.textContent = `ok ${test.id} ${test.name}`
+    li.textContent = `ok ${test.index} ${test.name}`
     this.appendChild(li)
   }
   testFail (test) {
     const li = π('li')
-    li.textContent = `not ok ${test.id} ${test.name}`
+    li.textContent = `not ok ${test.index} ${test.name}`
     this.appendChild(li)
   }
 }

@@ -25,7 +25,7 @@
     constructor (name, testFn, options) {
       this.name = name;
       this.testFn = testFn;
-      this.id = 1;
+      this.index = 1;
       this.options = Object.assign({ timeout: 10000 }, options);
     }
 
@@ -38,7 +38,7 @@
         try {
           const result = this.testFn.call(new TestContext({
             name: this.name,
-            id: this.id
+            index: this.index
           }));
           if (result && result.then) {
             result.then(resolve).catch(reject);
@@ -60,7 +60,7 @@
   class TestContext {
     constructor (context) {
       this.name = context.name;
-      this.id = context.id;
+      this.index = context.index;
     }
   }
 
@@ -207,7 +207,6 @@
               if (err.code === 'ERR_ASSERTION') {
                 console.log('ERR_ASSERTION caught');
               } else {
-                console.error('ERROR');
                 console.error(require('util').inspect(err, { depth: 6, colors: true }));
               }
             });
@@ -222,7 +221,7 @@
     test (name, testFn, options) {
       const test = new Test(name, testFn, options);
       this.tests.push(test);
-      test.id = this.tests.length;
+      test.index = this.tests.length;
       return test
     }
 
@@ -256,31 +255,40 @@
         return new Promise((resolve, reject) => {
           const run = () => {
             const test = tests.shift();
-            test.run()
-              .then(result => {
-                try {
-                  this.emitPass(test, result);
-                  if (tests.length) {
-                    run();
-                  } else {
-                    resolve();
+            if (test.skip) {
+              this.emit('test-skip', test);
+              if (tests.length) {
+                run();
+              } else {
+                resolve();
+              }
+            } else {
+              test.run()
+                .then(result => {
+                  try {
+                    this.emitPass(test, result);
+                    if (tests.length) {
+                      run();
+                    } else {
+                      resolve();
+                    }
+                  } catch (err) {
+                    reject(err);
                   }
-                } catch (err) {
-                  reject(err);
-                }
-              })
-              .catch(err => {
-                try {
-                  this.emitFail(test, err);
-                  if (tests.length) {
-                    run();
-                  } else {
-                    resolve();
+                })
+                .catch(err => {
+                  try {
+                    this.emitFail(test, err);
+                    if (tests.length) {
+                      run();
+                    } else {
+                      resolve();
+                    }
+                  } catch (err) {
+                    reject(err);
                   }
-                } catch (err) {
-                  reject(err);
-                }
-              });
+                });
+            }
           };
           run();
         })
