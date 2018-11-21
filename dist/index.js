@@ -184,18 +184,16 @@
   class TestRunner extends Emitter {
     constructor (options) {
       super();
-      this.config(options);
+      // this.config(options)
       this.state = 0;
-      // this._id = 1
-      this.name = this.options.name;
+      this.name = options.name;
       this.tests = [];
       this._only = [];
-      this.view = this.options.view || new DefaultView();
+      this.view = options.view || new DefaultView();
       if (this.view.start) this.on('start', this.view.start.bind(this.view));
       if (this.view.testPass) this.on('test-pass', this.view.testPass.bind(this.view));
       if (this.view.testFail) this.on('test-fail', this.view.testFail.bind(this.view));
       if (this.view.testSkip) this.on('test-skip', this.view.testSkip.bind(this.view));
-      this.init();
     }
 
     init () {
@@ -216,6 +214,7 @@
 
     config (options) {
       this.options = options || {};
+      this.init();
     }
 
     test (name, testFn, options) {
@@ -241,7 +240,7 @@
      * Run all tests in parallel
      * @returns {Promise}
      */
-    start () {
+    async start () {
       if (this.state !== 0) return Promise.resolve()
       this.state = 1;
       if (this._only.length) {
