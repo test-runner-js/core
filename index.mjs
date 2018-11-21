@@ -16,7 +16,6 @@ class DefaultView {
     console.log('-', test.name)
   }
   testFail (test, err) {
-    process.exitCode = 1
     console.log('⨯', test.name)
     console.log(err)
   }
@@ -41,14 +40,36 @@ class TestRunner extends Emitter {
     this.tests = []
     this._only = []
     this.view = options.view || new DefaultView()
-    if (this.view.start) this.on('start', this.view.start.bind(this.view))
-    if (this.view.testPass) this.on('test-pass', this.view.testPass.bind(this.view))
-    if (this.view.testFail) this.on('test-fail', this.view.testFail.bind(this.view))
-    if (this.view.testSkip) this.on('test-skip', this.view.testSkip.bind(this.view))
     if (!options.manualStart) {
       process.setMaxListeners(Infinity)
       process.on('beforeExit', this.beforeExit.bind(this))
     }
+  }
+
+  removeAll (eventNames) {
+    if (!(this._listeners && this._listeners.length)) return
+    for (const eventName of eventNames) {
+      let l
+      while (l = this._listeners.find(l => l.eventName === eventName)) {
+        this._listeners.splice(this._listeners.indexOf(l), 1)
+      }
+    }
+  }
+
+  set view (val) {
+    this._view = val
+    this.removeAll([ 'start', 'test-pass', 'test-fail', 'test-skip' ])
+    if (this.view.start) this.on('start', this.view.start.bind(this.view))
+    if (this.view.testPass) this.on('test-pass', this.view.testPass.bind(this.view))
+    if (this.view.testFail) this.on('test-fail', (test, err) => {
+      process.exitCode = 1
+      this.view.testFail(test, err)
+    })
+    if (this.view.testSkip) this.on('test-skip', this.view.testSkip.bind(this.view))
+  }
+
+  get view () {
+    return this._view
   }
 
   beforeExit () {
@@ -87,7 +108,7 @@ class TestRunner extends Emitter {
    * Run all tests in parallel
    * @returns {Promise}
    */
-  async start () {
+  start () {
     if (this.state !== 0) return Promise.resolve()
     this.state = 1
     if (this._only.length) {

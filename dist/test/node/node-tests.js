@@ -25,7 +25,7 @@ class Test {
   constructor (name, testFn, options) {
     this.name = name;
     this.testFn = testFn;
-    this.id = 1;
+    this.index = 1;
     this.options = Object.assign({ timeout: 10000 }, options);
   }
 
@@ -38,7 +38,7 @@ class Test {
       try {
         const result = this.testFn.call(new TestContext({
           name: this.name,
-          id: this.id
+          index: this.index
         }));
         if (result && result.then) {
           result.then(resolve).catch(reject);
@@ -60,7 +60,7 @@ class Test {
 class TestContext {
   constructor (context) {
     this.name = context.name;
-    this.id = context.id;
+    this.index = context.index;
   }
 }
 
@@ -172,11 +172,11 @@ function testSuite$1 (assert, TestRunner, view) {
   tests.push(function (assert) {
     const runner = new TestRunner({ name: 'runner.start: two tests', view });
     runner.test('simple', function () {
-      assert(this.id === 1);
+      assert(this.index === 1);
       return true
     });
     runner.test('simple 2', function () {
-      assert(this.id === 2);
+      assert(this.index === 2);
       return 1
     });
     return runner.start()
@@ -292,8 +292,12 @@ class DefaultView {
   testPass (test, result) {
     console.log('✓', test.name, result || 'ok');
   }
+  testSkip (test) {
+    console.log('-', test.name);
+  }
   testFail (test, err) {
-    console.error('⨯', test.name, err);
+    console.log('⨯', test.name);
+    console.log(err);
   }
 }
 
@@ -309,45 +313,61 @@ class DefaultView {
 class TestRunner extends Emitter {
   constructor (options) {
     super();
-    this.config(options);
+    options = options || {};
+    this.options = options;
     this.state = 0;
-    // this._id = 1
-    this.name = this.options.name;
+    this.name = options.name;
     this.tests = [];
     this._only = [];
-    this.view = this.options.view || new DefaultView();
-    if (this.view.start) this.on('start', this.view.start.bind(this.view));
-    if (this.view.testPass) this.on('test-pass', this.view.testPass.bind(this.view));
-    if (this.view.testFail) this.on('test-fail', this.view.testFail.bind(this.view));
-    if (this.view.testSkip) this.on('test-skip', this.view.testSkip.bind(this.view));
-    this.init();
-  }
-
-  init () {
-    if (!this.options.manualStart) {
+    this.view = options.view || new DefaultView();
+    if (!options.manualStart) {
       process.setMaxListeners(Infinity);
-      process.on('beforeExit', () => {
-        this.start()
-          .catch(err => {
-            if (err.code === 'ERR_ASSERTION') {
-              console.log('ERR_ASSERTION caught');
-            } else {
-              console.error('ERROR');
-              console.error(require('util').inspect(err, { depth: 6, colors: true }));
-            }
-          });
-      });
+      process.on('beforeExit', this.beforeExit.bind(this));
     }
   }
 
-  config (options) {
-    this.options = options || {};
+  removeAll (eventNames) {
+    if (!(this._listeners && this._listeners.length)) return
+    for (const eventName of eventNames) {
+      let l;
+      while (l = this._listeners.find(l => l.eventName === eventName)) {
+        this._listeners.splice(this._listeners.indexOf(l), 1);
+      }
+    }
+  }
+
+  set view (val) {
+    this._view = val;
+    this.removeAll([ 'start', 'test-pass', 'test-fail', 'test-skip' ]);
+    if (this.view.start) this.on('start', this.view.start.bind(this.view));
+    if (this.view.testPass) this.on('test-pass', this.view.testPass.bind(this.view));
+    if (this.view.testFail) this.on('test-fail', (test, err) => {
+      process.exitCode = 1;
+      this.view.testFail(test, err);
+    });
+    if (this.view.testSkip) this.on('test-skip', this.view.testSkip.bind(this.view));
+  }
+
+  get view () {
+    return this._view
+  }
+
+  beforeExit () {
+    this.start();
+      // .catch(err => {
+      //   /* start() should never reject as test failures are caught */
+      //   if (err.code === 'ERR_ASSERTION') {
+      //     console.log('ERR_ASSERTION caught')
+      //   } else {
+      //     console.error(require('util').inspect(err, { depth: 6, colors: true }))
+      //   }
+      // })
   }
 
   test (name, testFn, options) {
     const test = new Test(name, testFn, options);
     this.tests.push(test);
-    test.id = this.tests.length;
+    test.index = this.tests.length;
     return test
   }
 
@@ -359,6 +379,7 @@ class TestRunner extends Emitter {
 
   only (name, testFn, options) {
     const test = this.test(name, testFn, options);
+    test.only = true;
     this._only.push(test);
     return test
   }
@@ -381,31 +402,40 @@ class TestRunner extends Emitter {
       return new Promise((resolve, reject) => {
         const run = () => {
           const test = tests.shift();
-          test.run()
-            .then(result => {
-              try {
-                this.emitPass(test, result);
-                if (tests.length) {
-                  run();
-                } else {
-                  resolve();
+          if (test.skip) {
+            this.emit('test-skip', test);
+            if (tests.length) {
+              run();
+            } else {
+              resolve();
+            }
+          } else {
+            test.run()
+              .then(result => {
+                try {
+                  this.emitPass(test, result);
+                  if (tests.length) {
+                    run();
+                  } else {
+                    resolve();
+                  }
+                } catch (err) {
+                  reject(err);
                 }
-              } catch (err) {
-                reject(err);
-              }
-            })
-            .catch(err => {
-              try {
-                this.emitFail(test, err);
-                if (tests.length) {
-                  run();
-                } else {
-                  resolve();
+              })
+              .catch(err => {
+                try {
+                  this.emitFail(test, err);
+                  if (tests.length) {
+                    run();
+                  } else {
+                    resolve();
+                  }
+                } catch (err) {
+                  reject(err);
                 }
-              } catch (err) {
-                reject(err);
-              }
-            });
+              });
+          }
         };
         run();
       })
