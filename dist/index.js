@@ -167,8 +167,13 @@
     testPass (test, result) {
       console.log('✓', test.name, result || 'ok');
     }
+    testSkip (test) {
+      console.log('-', test.name);
+    }
     testFail (test, err) {
-      console.error('⨯', test.name, err);
+      process.exitCode = 1;
+      console.log('⨯', test.name);
+      console.log(err);
     }
   }
 
@@ -184,7 +189,8 @@
   class TestRunner extends Emitter {
     constructor (options) {
       super();
-      // this.config(options)
+      options = options || {};
+      this.options = options;
       this.state = 0;
       this.name = options.name;
       this.tests = [];
@@ -194,27 +200,22 @@
       if (this.view.testPass) this.on('test-pass', this.view.testPass.bind(this.view));
       if (this.view.testFail) this.on('test-fail', this.view.testFail.bind(this.view));
       if (this.view.testSkip) this.on('test-skip', this.view.testSkip.bind(this.view));
-    }
-
-    init () {
-      if (!this.options.manualStart) {
+      if (!options.manualStart) {
         process.setMaxListeners(Infinity);
-        process.on('beforeExit', () => {
-          this.start()
-            .catch(err => {
-              if (err.code === 'ERR_ASSERTION') {
-                console.log('ERR_ASSERTION caught');
-              } else {
-                console.error(require('util').inspect(err, { depth: 6, colors: true }));
-              }
-            });
-        });
+        process.on('beforeExit', this.beforeExit.bind(this));
       }
     }
 
-    config (options) {
-      this.options = options || {};
-      this.init();
+    beforeExit () {
+      this.start();
+        // .catch(err => {
+        //   /* start() should never reject as test failures are caught */
+        //   if (err.code === 'ERR_ASSERTION') {
+        //     console.log('ERR_ASSERTION caught')
+        //   } else {
+        //     console.error(require('util').inspect(err, { depth: 6, colors: true }))
+        //   }
+        // })
     }
 
     test (name, testFn, options) {
@@ -232,6 +233,7 @@
 
     only (name, testFn, options) {
       const test = this.test(name, testFn, options);
+      test.only = true;
       this._only.push(test);
       return test
     }
