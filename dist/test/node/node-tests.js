@@ -320,10 +320,21 @@ class TestRunner extends Emitter {
     this.tests = [];
     this._only = [];
     this.view = options.view || new DefaultView();
-    if (!options.manualStart) {
+    this._beforeExitCallback = this.beforeExit.bind(this);
+    this.manualStart = options.manualStart;
+  }
+
+  set manualStart (val) {
+    if (val) {
+      process.removeListener('beforeExit', this._beforeExitCallback);
+    } else {
       process.setMaxListeners(Infinity);
-      process.on('beforeExit', this.beforeExit.bind(this));
+      process.on('beforeExit', this._beforeExitCallback);
     }
+  }
+
+  get manualStart () {
+    return this._manualStart
   }
 
   removeAll (eventNames) {
@@ -339,13 +350,15 @@ class TestRunner extends Emitter {
   set view (val) {
     this._view = val;
     this.removeAll([ 'start', 'test-pass', 'test-fail', 'test-skip' ]);
-    if (this.view.start) this.on('start', this.view.start.bind(this.view));
-    if (this.view.testPass) this.on('test-pass', this.view.testPass.bind(this.view));
-    if (this.view.testFail) this.on('test-fail', (test, err) => {
-      process.exitCode = 1;
-      this.view.testFail(test, err);
-    });
-    if (this.view.testSkip) this.on('test-skip', this.view.testSkip.bind(this.view));
+    if (this.view) {
+      if (this.view.start) this.on('start', this.view.start.bind(this.view));
+      if (this.view.testPass) this.on('test-pass', this.view.testPass.bind(this.view));
+      if (this.view.testFail) this.on('test-fail', (test, err) => {
+        process.exitCode = 1;
+        this.view.testFail(test, err);
+      });
+      if (this.view.testSkip) this.on('test-skip', this.view.testSkip.bind(this.view));
+    }
   }
 
   get view () {
@@ -453,7 +466,6 @@ class TestRunner extends Emitter {
               })
               .catch(err => {
                 this.emitFail(test, err);
-                throw err
               })
           }
         }))
