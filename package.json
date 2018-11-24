@@ -22,19 +22,16 @@
   },
   "scripts": {
     "test": "npm run test:js && npm run test:esm",
-    "test:js": "rollup -c build/node-tests.config.js && node dist/test/node/node-tests.js",
-    "test:esm": "node --experimental-modules test/node/node-tests.mjs",
+    "test:js": "rollup -c build/node-tests.config.js && node dist/test/node-tests.js",
+    "test:esm": "node --experimental-modules test/node-tests.mjs",
     "docs": "jsdoc2md -c build/jsdoc.conf -t README.hbs index.mjs > README.md; echo",
     "dist": "rollup -w -c build/index.config.js"
   },
   "dependencies": {
-    "file-set": "^2.0.1",
     "obso": "^0.3.0",
-    "race-timeout-anywhere": "^0.1.1",
-    "reduce-flatten": "^2.0.0"
+    "race-timeout-anywhere": "^0.1.1"
   },
   "devDependencies": {
-    "chai": "^4.2.0",
     "jsdoc-to-markdown": "^4.0.1",
     "rollup": "^0.67.1"
   },
@@ -45,6 +42,7 @@
     ]
   },
   "files": [
-    "lib", "dist"
+    "lib",
+    "dist"
   ]
 }

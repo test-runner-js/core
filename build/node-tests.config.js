@@ -1,7 +1,7 @@
 export default {
-  input: 'test/node/node-tests.mjs',
+  input: 'test/node-tests.mjs',
   output: {
-    file: 'dist/test/node/node-tests.js',
+    file: 'dist/test/node-tests.js',
     format: 'cjs'
   },
   external: [ 'assert', 'events' ]

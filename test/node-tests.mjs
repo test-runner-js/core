@@ -1,7 +1,7 @@
-import testSuite from '../test.mjs'
-import testRunnerSuite from '../test-runner.mjs'
+import testSuite from './test.mjs'
+import testRunnerSuite from './test-runner.mjs'
 import a from 'assert'
-import TestRunner from '../../index.mjs'
+import TestRunner from '../index.mjs'
 
 testSuite(a.ok)
   .then(function () {
