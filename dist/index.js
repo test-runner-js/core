@@ -18,8 +18,8 @@
    * Test function class.
    * @param {string} name
    * @param {function} testFn
-   * @param {object} options
-   * @param {number} options.timeout
+   * @param {object} [options]
+   * @param {number} [options.timeout]
    */
   class Test {
     constructor (name, testFn, options) {
@@ -160,7 +160,36 @@
    * @module test-runner
    */
 
-  class DefaultView {
+  class ConsoleView {
+    constructor () {
+      this._callback = {
+        start: this.start.bind(this),
+        testPass: this.testPass.bind(this),
+        testFail: this.testFail.bind(this),
+        testSkip: this.testSkip.bind(this)
+      };
+    }
+
+    attach (runner) {
+      if (this.attachedTo !== runner) {
+        runner.on('start', this._callback.start);
+        runner.on('test-pass', this._callback.testPass);
+        runner.on('test-fail', this._callback.testFail);
+        runner.on('test-skip', this._callback.testSkip);
+        this.attachedTo = runner;
+      }
+    }
+
+    detach () {
+      if (this.attachedTo) {
+        this.attachedTo.removeEventListener('start', this._callback.start);
+        this.attachedTo.removeEventListener('test-pass', this._callback.testPass);
+        this.attachedTo.removeEventListener('test-fail', this._callback.testFail);
+        this.attachedTo.removeEventListener('test-skip', this._callback.testSkip);
+        this.attachedTo = null;
+      }
+    }
+
     start (count) {
       console.log(`Starting: ${count} tests`);
     }
@@ -194,22 +223,23 @@
       this.name = options.name;
       this.tests = [];
       this._only = [];
-      this.view = options.view || new DefaultView();
+      this.view = options.view || new ConsoleView();
       this._beforeExitCallback = this.beforeExit.bind(this);
-      this.manualStart = options.manualStart;
+      this.autoStart = !options.manualStart;
     }
 
-    set manualStart (val) {
+    set autoStart (val) {
+      this._autoStart = val;
       if (val) {
-        process.removeListener('beforeExit', this._beforeExitCallback);
-      } else {
         process.setMaxListeners(Infinity);
         process.on('beforeExit', this._beforeExitCallback);
+      } else {
+        process.removeListener('beforeExit', this._beforeExitCallback);
       }
     }
 
-    get manualStart () {
-      return this._manualStart
+    get autoStart () {
+      return this._autoStart
     }
 
     removeAll (eventNames) {
@@ -224,16 +254,16 @@
 
     set view (val) {
       this._view = val;
-      this.removeAll([ 'start', 'test-pass', 'test-fail', 'test-skip' ]);
-      if (this.view) {
-        if (this.view.start) this.on('start', this.view.start.bind(this.view));
-        if (this.view.testPass) this.on('test-pass', this.view.testPass.bind(this.view));
-        if (this.view.testFail) this.on('test-fail', (test, err) => {
-          process.exitCode = 1;
-          this.view.testFail(test, err);
-        });
-        if (this.view.testSkip) this.on('test-skip', this.view.testSkip.bind(this.view));
-      }
+      this._view.attach(this);
+      // this.removeAll([ 'start', 'test-pass', 'test-fail', 'test-skip' ])
+      // if (this.view) {
+      //   if (this.view.start) this.on('start', this.view.start.bind(this.view))
+      //   if (this.view.testPass) this.on('test-pass', this.view.testPass.bind(this.view))
+      //   if (this.view.testFail) this.on('test-fail', (test, err) => {
+      //     this.view.testFail(test, err)
+      //   })
+      //   if (this.view.testSkip) this.on('test-skip', this.view.testSkip.bind(this.view))
+      // }
     }
 
     get view () {
@@ -242,14 +272,6 @@
 
     beforeExit () {
       this.start();
-        // .catch(err => {
-        //   /* start() should never reject as test failures are caught */
-        //   if (err.code === 'ERR_ASSERTION') {
-        //     console.log('ERR_ASSERTION caught')
-        //   } else {
-        //     console.error(require('util').inspect(err, { depth: 6, colors: true }))
-        //   }
-        // })
     }
 
     test (name, testFn, options) {
@@ -273,7 +295,7 @@
     }
 
     /**
-     * Run all tests in parallel
+     * Run all tests
      * @returns {Promise}
      */
     start () {
@@ -362,6 +384,7 @@
       this.emit('test-end', test, result);
     }
     emitFail (test, err) {
+      if (typeof process !== 'undefined') process.exitCode = 1;
       this.emit('test-fail', test, err);
       this.emit('test-end', test, err);
     }
