@@ -20,6 +20,9 @@ class ConsoleView extends ViewBase {
     console.log('⨯', test.name)
     console.log(err)
   }
+  end () {
+    console.log(`End`)
+  }
 }
 
 /**

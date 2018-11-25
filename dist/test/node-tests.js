@@ -27,6 +27,7 @@ class Test {
     this.testFn = testFn;
     this.index = 1;
     this.options = Object.assign({ timeout: 10000 }, options);
+    this.state = 'pending';
   }
 
   /**
@@ -40,12 +41,14 @@ class Test {
           name: this.name,
           index: this.index
         }));
+        this.state = 'passed';
         if (result && result.then) {
           result.then(resolve).catch(reject);
         } else {
           resolve(result);
         }
       } catch (err) {
+        this.state = 'failed';
         reject(err);
       }
     });
@@ -285,6 +288,7 @@ class ViewBase {
   constructor () {
     this._callback = {
       start: this.start.bind(this),
+      end: this.end.bind(this),
       testPass: this.testPass.bind(this),
       testFail: this.testFail.bind(this),
       testSkip: this.testSkip.bind(this)
@@ -294,6 +298,7 @@ class ViewBase {
   attach (runner) {
     if (this.attachedTo !== runner) {
       runner.on('start', this._callback.start);
+      runner.on('end', this._callback.end);
       runner.on('test-pass', this._callback.testPass);
       runner.on('test-fail', this._callback.testFail);
       runner.on('test-skip', this._callback.testSkip);
@@ -304,6 +309,7 @@ class ViewBase {
   detach () {
     if (this.attachedTo) {
       this.attachedTo.removeEventListener('start', this._callback.start);
+      this.attachedTo.removeEventListener('end', this._callback.end);
       this.attachedTo.removeEventListener('test-pass', this._callback.testPass);
       this.attachedTo.removeEventListener('test-fail', this._callback.testFail);
       this.attachedTo.removeEventListener('test-skip', this._callback.testSkip);
@@ -312,6 +318,9 @@ class ViewBase {
   }
 
   start (count) {
+    throw new Error('not implemented')
+  }
+  end (count) {
     throw new Error('not implemented')
   }
   testPass (test, result) {
@@ -342,6 +351,9 @@ class ConsoleView extends ViewBase {
   testFail (test, err) {
     console.log('⨯', test.name);
     console.log(err);
+  }
+  end () {
+    console.log(`End`);
   }
 }
 
