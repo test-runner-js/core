@@ -1,40 +1,12 @@
 import Test from './lib/test.mjs'
 import Emitter from './node_modules/obso/emitter.mjs'
+import ViewBase from './lib/view-base.mjs'
 
 /**
  * @module test-runner
  */
 
-class ConsoleView {
-  constructor () {
-    this._callback = {
-      start: this.start.bind(this),
-      testPass: this.testPass.bind(this),
-      testFail: this.testFail.bind(this),
-      testSkip: this.testSkip.bind(this)
-    }
-  }
-
-  attach (runner) {
-    if (this.attachedTo !== runner) {
-      runner.on('start', this._callback.start)
-      runner.on('test-pass', this._callback.testPass)
-      runner.on('test-fail', this._callback.testFail)
-      runner.on('test-skip', this._callback.testSkip)
-      this.attachedTo = runner
-    }
-  }
-
-  detach () {
-    if (this.attachedTo) {
-      this.attachedTo.removeEventListener('start', this._callback.start)
-      this.attachedTo.removeEventListener('test-pass', this._callback.testPass)
-      this.attachedTo.removeEventListener('test-fail', this._callback.testFail)
-      this.attachedTo.removeEventListener('test-skip', this._callback.testSkip)
-      this.attachedTo = null
-    }
-  }
-
+class ConsoleView extends ViewBase {
   start (count) {
     console.log(`Starting: ${count} tests`)
   }
@@ -97,18 +69,19 @@ class TestRunner extends Emitter {
     }
   }
 
-  set view (val) {
-    this._view = val
-    this._view.attach(this)
-    // this.removeAll([ 'start', 'test-pass', 'test-fail', 'test-skip' ])
-    // if (this.view) {
-    //   if (this.view.start) this.on('start', this.view.start.bind(this.view))
-    //   if (this.view.testPass) this.on('test-pass', this.view.testPass.bind(this.view))
-    //   if (this.view.testFail) this.on('test-fail', (test, err) => {
-    //     this.view.testFail(test, err)
-    //   })
-    //   if (this.view.testSkip) this.on('test-skip', this.view.testSkip.bind(this.view))
-    // }
+  set view (view) {
+    if (view) {
+      if (this._view) {
+        this._view.detach()
+      }
+      this._view = view
+      this._view.attach(this)
+    } else {
+      if (this._view) {
+        this._view.detach()
+      }
+      this._view = null
+    }
   }
 
   get view () {

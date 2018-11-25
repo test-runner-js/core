@@ -156,11 +156,7 @@
     });
   }
 
-  /**
-   * @module test-runner
-   */
-
-  class ConsoleView {
+  class ViewBase {
     constructor () {
       this._callback = {
         start: this.start.bind(this),
@@ -190,6 +186,25 @@
       }
     }
 
+    start (count) {
+      throw new Error('not implemented')
+    }
+    testPass (test, result) {
+      throw new Error('not implemented')
+    }
+    testFail (test, err) {
+      throw new Error('not implemented')
+    }
+    testSkip (test) {
+      throw new Error('not implemented')
+    }
+  }
+
+  /**
+   * @module test-runner
+   */
+
+  class ConsoleView extends ViewBase {
     start (count) {
       console.log(`Starting: ${count} tests`);
     }
@@ -252,18 +267,19 @@
       }
     }
 
-    set view (val) {
-      this._view = val;
-      this._view.attach(this);
-      // this.removeAll([ 'start', 'test-pass', 'test-fail', 'test-skip' ])
-      // if (this.view) {
-      //   if (this.view.start) this.on('start', this.view.start.bind(this.view))
-      //   if (this.view.testPass) this.on('test-pass', this.view.testPass.bind(this.view))
-      //   if (this.view.testFail) this.on('test-fail', (test, err) => {
-      //     this.view.testFail(test, err)
-      //   })
-      //   if (this.view.testSkip) this.on('test-skip', this.view.testSkip.bind(this.view))
-      // }
+    set view (view) {
+      if (view) {
+        if (this._view) {
+          this._view.detach();
+        }
+        this._view = view;
+        this._view.attach(this);
+      } else {
+        if (this._view) {
+          this._view.detach();
+        }
+        this._view = null;
+      }
     }
 
     get view () {
