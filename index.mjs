@@ -133,39 +133,37 @@ class TestRunner extends Emitter {
       return new Promise((resolve, reject) => {
         const run = () => {
           const test = tests.shift()
-          if (test.skip) {
-            this.emit('test-skip', test)
-            if (tests.length) {
+          if (test) {
+            if (test.skip) {
+              this.emit('test-skip', test)
               run()
             } else {
-              resolve()
+              test.run()
+                .then(result => {
+                  try {
+                    this.emitPass(test, result)
+                    run()
+                  } catch (err) {
+                    this.state = 2
+                    this.emit('end')
+                    reject(err)
+                  }
+                })
+                .catch(err => {
+                  try {
+                    this.emitFail(test, err)
+                    run()
+                  } catch (err) {
+                    this.state = 2
+                    this.emit('end')
+                    reject(err)
+                  }
+                })
             }
           } else {
-            test.run()
-              .then(result => {
-                try {
-                  this.emitPass(test, result)
-                  if (tests.length) {
-                    run()
-                  } else {
-                    resolve()
-                  }
-                } catch (err) {
-                  reject(err)
-                }
-              })
-              .catch(err => {
-                try {
-                  this.emitFail(test, err)
-                  if (tests.length) {
-                    run()
-                  } else {
-                    resolve()
-                  }
-                } catch (err) {
-                  reject(err)
-                }
-              })
+            this.state = 2
+            this.emit('end')
+            resolve()
           }
         }
         run()
