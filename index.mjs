@@ -1,29 +1,14 @@
 import Test from './lib/test.mjs'
 import Emitter from './node_modules/obso/emitter.mjs'
 import ViewBase from './lib/view-base.mjs'
+import ConsoleView from './lib/view-default.mjs'
+import mixin from './node_modules/create-mixin/index.mjs'
+import FsmBase from './node_modules/fsm-base/index.mjs'
+import CompositeClass from './node_modules/composite-class/index.mjs'
 
 /**
  * @module test-runner
  */
-
-class ConsoleView extends ViewBase {
-  start (count) {
-    console.log(`Starting: ${count} tests`)
-  }
-  testPass (test, result) {
-    console.log('✓', test.name, result || 'ok')
-  }
-  testSkip (test) {
-    console.log('-', test.name)
-  }
-  testFail (test, err) {
-    console.log('⨯', test.name)
-    console.log(err)
-  }
-  end () {
-    console.log(`End`)
-  }
-}
 
 /**
  * @alias module:test-runner
@@ -34,9 +19,13 @@ class ConsoleView extends ViewBase {
  * @emits test-pass
  * @emits test-fail
  */
-class TestRunner extends Emitter {
+class TestRunner extends mixin(CompositeClass)(FsmBase) {
   constructor (options) {
-    super()
+    super([
+      { from: undefined, to: 0 },
+      { from: 0, to: 1 },
+      { from: 1, to: 2 },
+    ])
     options = options || {}
     this.options = options
     this.state = 0
@@ -97,8 +86,8 @@ class TestRunner extends Emitter {
 
   test (name, testFn, options) {
     const test = new Test(name, testFn, options)
-    this.tests.push(test)
-    test.index = this.tests.length
+    this.add(test)
+    test.index = this.children.length
     return test
   }
 
@@ -123,11 +112,11 @@ class TestRunner extends Emitter {
     if (this.state !== 0) return Promise.resolve()
     this.state = 1
     if (this._only.length) {
-      for (const test of this.tests) {
+      for (const test of this) {
         if (this._only.indexOf(test) === -1) test.skip = true
       }
     }
-    const tests = this.tests
+    const tests = Array.from(this)
     this.emit('start', tests.length)
     if (this.options.sequential) {
       return new Promise((resolve, reject) => {
