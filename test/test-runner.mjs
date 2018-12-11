@@ -1,34 +1,43 @@
-export default function testSuite (assert, TestRunner, view) {
-  const tests = []
+import TestRunner from '../index.mjs'
+import a from 'assert'
 
-  tests.push(function (assert) {
-    const runner = new TestRunner({ name: 'runner.start: one test', view })
-    runner.test('simple', function () {
-      assert(this.name === 'simple')
-      return true
-    })
-    return runner.start()
-      .then(results => {
-        assert(results[0] === true)
-      })
+const tests = []
+
+tests.push(function () {
+  const runner = new TestRunner({ name: 'runner.start: one test' })
+  runner.test('simple', function () {
+    a.ok(this.name === 'simple')
+    return true
   })
+  return runner.start()
+    .then(results => {
+      console.log('result', results)
+      a.ok(results[0] === true)
+    })
+})
 
-  tests.push(function (assert) {
-    const runner = new TestRunner({ name: 'runner.start: two tests', view })
-    runner.test('simple', function () {
-      assert(this.index === 1)
-      return true
-    })
-    runner.test('simple 2', function () {
-      assert(this.index === 2)
-      return 1
-    })
-    return runner.start()
-      .then(results => {
-        assert(results[0] === true)
-        assert(results[1] === 1)
-      })
+tests.push(function () {
+  const runner = new TestRunner({ name: 'runner.start: two tests' })
+  runner.test('simple', function () {
+    a.ok(this.index === 1)
+    return true
   })
+  runner.test('simple 2', function () {
+    a.ok(this.index === 2)
+    return 1
+  })
+  return runner.start()
+    .then(results => {
+      a.ok(results[0] === true)
+      a.ok(results[1] === 1)
+    })
+})
 
-  return Promise.all(tests.map(t => t(assert)))
-}
+Promise.all(tests.map(test => test()))
+  .then(function () {
+    console.log('Done.')
+  })
+  .catch(function (err) {
+    process.exitCode = 1
+    console.error(err)
+  })

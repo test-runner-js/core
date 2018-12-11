@@ -48,6 +48,9 @@
         if (propName === 'constructor') continue
         Object.defineProperty(Mixed.prototype, propName, Object.getOwnPropertyDescriptor(Src.prototype, propName));
       }
+      if (Src.prototype[Symbol.iterator]) {
+        Object.defineProperty(Mixed.prototype, Symbol.iterator, Object.getOwnPropertyDescriptor(Src.prototype, Symbol.iterator));
+      }
       return Mixed
     }
   }
@@ -72,6 +75,7 @@
         return _children.get(this)
       }
     }
+    
     set children (val) {
       _children.set(this, val);
     }
@@ -693,7 +697,7 @@
       this.options = options;
       this.state = 0;
       this.name = options.name;
-      this.tests = [];
+      // this.tests = []
       this._only = [];
       this.view = options.view || new ConsoleView();
       this._beforeExitCallback = this.beforeExit.bind(this);
@@ -781,73 +785,84 @@
       }
       const tests = Array.from(this);
       this.emit('start', tests.length);
+
       if (this.options.sequential) {
-        return new Promise((resolve, reject) => {
-          const run = () => {
-            const test = tests.shift();
-            if (test) {
-              if (test.skip) {
-                this.emit('test-skip', test);
-                run();
-              } else {
-                test.run()
-                  .then(result => {
-                    try {
-                      this.emitPass(test, result);
-                      run();
-                    } catch (err) {
-                      this.state = 2;
-                      this.emit('end');
-                      reject(err);
-                    }
-                  })
-                  .catch(err => {
-                    try {
-                      this.emitFail(test, err);
-                      run();
-                    } catch (err) {
-                      this.state = 2;
-                      this.emit('end');
-                      reject(err);
-                    }
-                  });
-              }
-            } else {
-              this.state = 2;
-              this.emit('end');
-              resolve();
-            }
-          };
-          run();
-        })
+        return this.startSequential()
       } else {
-        return Promise
-          .all(tests.map(test => {
+        return this.startParallel()
+      }
+    }
+
+    startSequential () {
+      return new Promise((resolve, reject) => {
+        const tests = Array.from(this);
+        const run = () => {
+          const test = tests.shift();
+          if (test) {
             if (test.skip) {
               this.emit('test-skip', test);
+              run();
             } else {
-              this.emit('test-start', test);
-              return test.run()
+              test.run()
                 .then(result => {
-                  this.emitPass(test, result);
-                  return result
+                  try {
+                    this.emitPass(test, result);
+                    run();
+                  } catch (err) {
+                    this.state = 2;
+                    this.emit('end');
+                    reject(err);
+                  }
                 })
                 .catch(err => {
-                  this.emitFail(test, err);
-                })
+                  try {
+                    this.emitFail(test, err);
+                    run();
+                  } catch (err) {
+                    this.state = 2;
+                    this.emit('end');
+                    reject(err);
+                  }
+                });
             }
-          }))
-          .then(results => {
+          } else {
             this.state = 2;
             this.emit('end');
-            return results
-          })
-          .catch(err => {
-            this.state = 2;
-            this.emit('end');
-            throw err
-          })
-      }
+            resolve();
+          }
+        };
+        run();
+      })
+    }
+
+    startParallel () {
+      const tests = Array.from(this).filter(t => t.constructor.name === 'Test');
+      return Promise
+        .all(tests.map(test => {
+          if (test.skip) {
+            this.emit('test-skip', test);
+          } else {
+            this.emit('test-start', test);
+            return test.run()
+              .then(result => {
+                this.emitPass(test, result);
+                return result
+              })
+              .catch(err => {
+                this.emitFail(test, err);
+              })
+          }
+        }))
+        .then(results => {
+          this.state = 2;
+          this.emit('end');
+          return results
+        })
+        .catch(err => {
+          this.state = 2;
+          this.emit('end');
+          throw err
+        })
     }
 
     emitPass (test, result) {
@@ -861,7 +876,7 @@
     }
 
     clear () {
-      this.tests = [];
+      // this.tests = []
       this._only = [];
     }
   }
