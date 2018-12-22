@@ -1,10 +1,10 @@
 import Test from './lib/test.mjs'
 import Emitter from './node_modules/obso/emitter.mjs'
-import ViewBase from './lib/view-base.mjs'
-import ConsoleView from './lib/view-default.mjs'
+import consoleView from './lib/view-default.mjs'
 import mixin from './node_modules/create-mixin/index.mjs'
-import FsmBase from './node_modules/fsm-base/index.mjs'
+import StateMachine from './node_modules/fsm-base/index.mjs'
 import CompositeClass from './node_modules/composite-class/index.mjs'
+import ViewBase from './lib/view-base.mjs'
 
 /**
  * @module test-runner
@@ -19,7 +19,7 @@ import CompositeClass from './node_modules/composite-class/index.mjs'
  * @emits test-pass
  * @emits test-fail
  */
-class TestRunner extends mixin(CompositeClass)(FsmBase) {
+class TestRunner extends mixin(CompositeClass)(StateMachine) {
   constructor (options) {
     super([
       { from: undefined, to: 0 },
@@ -30,9 +30,9 @@ class TestRunner extends mixin(CompositeClass)(FsmBase) {
     this.options = options
     this.state = 0
     this.name = options.name
-    // this.tests = []
     this._only = []
-    this.view = options.view || new ConsoleView()
+    const ViewClass = (options.view || consoleView)(ViewBase)
+    this.view = new ViewClass()
     this._beforeExitCallback = this.beforeExit.bind(this)
     this.autoStart = !options.manualStart
   }
@@ -209,7 +209,6 @@ class TestRunner extends mixin(CompositeClass)(FsmBase) {
   }
 
   clear () {
-    // this.tests = []
     this._only = []
   }
 }

@@ -20,23 +20,6 @@
    */
 
   /**
-   * Returns a function (accepting a single `BaseClass` argument) which can be used to mix behaviour from the supplied `Src` class into `BaseClass`. Intended for use in an `extends` expression.
-   * @example
-   * const mix = require('create-mixin')
-   *
-   * class Greeter {
-   *   hello () { return 'Hello' }
-   * }
-   *
-   * class FriendlyArray extends mix(Greeter)(Array) {}
-   *
-   * const friendlyArray = FriendlyArray.from([ 1, 2, 3 ])
-   * // friendlyArray is now both an Array and a Greeter.
-   * console.log('Length:', friendlyArray.length)
-   * console.log('Greeting:', friendlyArray.hello())
-   * // Length: 3
-   * // Greeting: Hello
-   *
    * @alias module:create-mixin
    * @param {class} Src - The class containing the behaviour you wish to mix into another class.
    * @returns {function}
@@ -604,19 +587,35 @@
     });
   }
 
-  class ViewBase {
-    constructor () {
-      this._callback = {
-        start: this.start.bind(this),
-        end: this.end.bind(this),
-        testPass: this.testPass.bind(this),
-        testFail: this.testFail.bind(this),
-        testSkip: this.testSkip.bind(this)
-      };
+  var consoleView = ViewBase => class ConsoleView extends ViewBase {
+    start (count) {
+      console.log(`Starting: ${count} tests`);
     }
+    testPass (test, result) {
+      console.log('✓', test.name, result || 'ok');
+    }
+    testSkip (test) {
+      console.log('-', test.name);
+    }
+    testFail (test, err) {
+      console.log('⨯', test.name);
+      console.log(err);
+    }
+    end () {
+      console.log(`End`);
+    }
+  };
 
+  class ViewBase {
     attach (runner) {
       if (this.attachedTo !== runner) {
+        this._callback = {
+          start: this.start.bind(this),
+          end: this.end.bind(this),
+          testPass: this.testPass.bind(this),
+          testFail: this.testFail.bind(this),
+          testSkip: this.testSkip.bind(this)
+        };
         runner.on('start', this._callback.start);
         runner.on('end', this._callback.end);
         runner.on('test-pass', this._callback.testPass);
@@ -627,7 +626,7 @@
     }
 
     detach () {
-      if (this.attachedTo) {
+      if (this.attachedTo && this._callback) {
         this.attachedTo.removeEventListener('start', this._callback.start);
         this.attachedTo.removeEventListener('end', this._callback.end);
         this.attachedTo.removeEventListener('test-pass', this._callback.testPass);
@@ -651,25 +650,6 @@
     }
     testSkip (test) {
       throw new Error('not implemented')
-    }
-  }
-
-  class ConsoleView extends ViewBase {
-    start (count) {
-      console.log(`Starting: ${count} tests`);
-    }
-    testPass (test, result) {
-      console.log('✓', test.name, result || 'ok');
-    }
-    testSkip (test) {
-      console.log('-', test.name);
-    }
-    testFail (test, err) {
-      console.log('⨯', test.name);
-      console.log(err);
-    }
-    end () {
-      console.log(`End`);
     }
   }
 
@@ -697,9 +677,9 @@
       this.options = options;
       this.state = 0;
       this.name = options.name;
-      // this.tests = []
       this._only = [];
-      this.view = options.view || new ConsoleView();
+      const ViewClass = (options.view || consoleView)(ViewBase);
+      this.view = new ViewClass();
       this._beforeExitCallback = this.beforeExit.bind(this);
       this.autoStart = !options.manualStart;
     }
@@ -876,7 +856,6 @@
     }
 
     clear () {
-      // this.tests = []
       this._only = [];
     }
   }
