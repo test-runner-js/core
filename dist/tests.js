@@ -448,8 +448,9 @@ class Test extends createMixin(Composite)(StateMachine) {
   constructor (name, testFn, options) {
     super ([
       { from: undefined, to: 'pending' },
-      { from: 'pending', to: 'passed' },
-      { from: 'pending', to: 'failed' }
+      { from: 'pending', to: 'start' },
+      { from: 'start', to: 'pass' },
+      { from: 'start', to: 'fail' }
     ]);
     this.name = name;
     this.testFn = testFn;
@@ -458,25 +459,30 @@ class Test extends createMixin(Composite)(StateMachine) {
     this.state = 'pending';
   }
 
+  toString () {
+    return `${this.name}: ${this.state}`
+  }
+
   /**
    * Execute the stored test function.
    * @returns {Promise}
    */
   run () {
+    this.state = 'start';
     const testFnResult = new Promise((resolve, reject) => {
       try {
         const result = this.testFn.call(new TestContext({
           name: this.name,
           index: this.index
         }));
-        this.state = 'passed';
+        this.state = 'pass';
         if (result && result.then) {
           result.then(resolve).catch(reject);
         } else {
           resolve(result);
         }
       } catch (err) {
-        this.state = 'failed';
+        this.state = 'fail';
         reject(err);
       }
     });
@@ -495,56 +501,107 @@ class TestContext {
   }
 }
 
-const tests = [];
+function halt (err) {
+  console.log(err);
+  process.exitCode = 1;
+}
 
-tests.push(function (assert) {
+{
+  const root = new Test('new Test()');
+}
+
+{
+  const root = new Test('test.tree()');
+  root.add(new Test('one', () => true));
+  const child = root.add(new Test('two', () => true));
+  child.add(new Test('three', () => true));
+  console.log(root.tree());
+}
+
+{
+  let count = 0;
+  const test = new Test('test.run()', function () {
+    count++;
+    return true
+  });
+  test.run()
+    .then(result => {
+      a.strictEqual(result, true);
+      a.strictEqual(count, 1);
+    })
+    .catch(halt);
+}
+
+{
+  let counts = [];
+  const test = new Test('test.run(): event order', function () {
+    counts.push('body');
+    return true
+  });
+  a.strictEqual(test.state, 'pending');
+  test.on('start', test => counts.push('start'));
+  test.on('pass', test => counts.push('pass'));
+  test.run()
+    .then(result => {
+      a.strictEqual(result, true);
+      a.strictEqual(counts.length, 3);
+      a.deepStrictEqual(counts, [ 'start', 'body', 'pass' ]);
+    })
+    .catch(halt);
+}
+
+function halt$1 (err) {
+  console.log(err);
+  process.exitCode = 1;
+}
+
+{
   const test = new Test('passing sync test', () => true);
-  return test.run()
+  test.run()
     .then(result => {
       a.ok(result === true);
     })
-    .catch(err => {
-      console.log(err);
-      a.ok(false, 'should not reach here');
-    })
-});
+    .catch(halt$1);
+}
 
-tests.push(function (assert) {
+{
   const test = new Test('failing sync test', function () {
     throw new Error('failed')
   });
-  return test.run()
+  test.run()
     .then(() => {
       a.ok(false, "shouldn't reach here");
     })
     .catch(err => {
       a.ok(/failed/.test(err.message));
     })
-});
+    .catch(halt$1);
+}
 
-tests.push(function (assert) {
+{
   const test = new Test('passing async test', function () {
     return Promise.resolve(true)
   });
-  return test.run().then(result => {
+  test.run().then(result => {
     a.ok(result === true);
-  })
-});
+  });
+}
 
-tests.push(function (assert) {
+{
   const test = new Test('failing async test: rejected', function () {
     return Promise.reject(new Error('failed'))
   });
-  return test.run()
+  test.run()
     .then(() => {
       a.ok(false, "shouldn't reach here");
     })
     .catch(err => {
       a.ok(/failed/.test(err.message));
     })
-});
+    .catch(halt$1);
+}
 
-tests.push(function (assert) {
+{
   const test = new Test(
     'failing async test: timeout',
     function () {
@@ -554,14 +611,15 @@ tests.push(function (assert) {
     },
     { timeout: 150 }
   );
-  return test.run()
+  test.run()
     .then(() => a.ok(false, 'should not reach here'))
     .catch(err => {
       a.ok(/Timeout expired/.test(err.message));
     })
-});
+    .catch(halt$1);
+}
 
-tests.push(function (assert) {
+{
   const test = new Test(
     'passing async test: timeout 2',
     function () {
@@ -571,21 +629,12 @@ tests.push(function (assert) {
     },
     { timeout: 350 }
   );
-  return test.run()
+  test.run()
     .then(result => {
       a.ok(result === 'ok');
     })
-    .catch(err => {
-      a.ok(false, 'should not reach here');
-    })
-});
-
-Promise.all(tests.map(t => t(a.ok)))
-  .then(() => console.log('Done'))
-  .catch(err => {
-    console.log(err);
-    process.exitCode = 1;
-  });
+    .catch(halt$1);
+}
 
 /**
  * Make an object observable.
@@ -952,22 +1001,26 @@ class TestRunner extends createMixin(Composite)(StateMachine) {
   }
 }
 
-const tests$1 = [];
+function halt$2 (err) {
+  console.log(err);
+  process.exitCode = 1;
+}
 
-tests$1.push(function () {
+{
   const runner = new TestRunner({ name: 'runner.start: one test' });
   runner.test('simple', function () {
     a.ok(this.name === 'simple');
     return true
   });
-  return runner.start()
+  runner.start()
     .then(results => {
-      console.log('result', results);
+      // console.log('result', results)
       a.ok(results[0] === true);
     })
-});
+    .catch(halt$2);
+}
 
-tests$1.push(function () {
+{
   const runner = new TestRunner({ name: 'runner.start: two tests' });
   runner.test('simple', function () {
     a.ok(this.index === 1);
@@ -977,18 +1030,10 @@ tests$1.push(function () {
     a.ok(this.index === 2);
     return 1
   });
-  return runner.start()
+  runner.start()
     .then(results => {
       a.ok(results[0] === true);
       a.ok(results[1] === 1);
     })
-});
-
-Promise.all(tests$1.map(test => test()))
-  .then(function () {
-    console.log('Done.');
-  })
-  .catch(function (err) {
-    process.exitCode = 1;
-    console.error(err);
-  });
+    .catch(halt$2);
+}

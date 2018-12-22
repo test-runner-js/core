@@ -448,8 +448,9 @@
     constructor (name, testFn, options) {
       super ([
         { from: undefined, to: 'pending' },
-        { from: 'pending', to: 'passed' },
-        { from: 'pending', to: 'failed' }
+        { from: 'pending', to: 'start' },
+        { from: 'start', to: 'pass' },
+        { from: 'start', to: 'fail' }
       ]);
       this.name = name;
       this.testFn = testFn;
@@ -458,25 +459,30 @@
       this.state = 'pending';
     }
 
+    toString () {
+      return `${this.name}: ${this.state}`
+    }
+
     /**
      * Execute the stored test function.
      * @returns {Promise}
      */
     run () {
+      this.state = 'start';
       const testFnResult = new Promise((resolve, reject) => {
         try {
           const result = this.testFn.call(new TestContext({
             name: this.name,
             index: this.index
           }));
-          this.state = 'passed';
+          this.state = 'pass';
           if (result && result.then) {
             result.then(resolve).catch(reject);
           } else {
             resolve(result);
           }
         } catch (err) {
-          this.state = 'failed';
+          this.state = 'fail';
           reject(err);
         }
       });
