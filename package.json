@@ -21,10 +21,9 @@
     "node": ">=6"
   },
   "scripts": {
-    "test": "npm run test:js && npm run test:esm",
-    "test:js": "rollup -c build/node-tests.config.js && node dist/test/node-tests.js",
-    "test:esm1": "node --experimental-modules test/test.mjs && ",
-    "test:esm": "node --experimental-modules test/test.mjs && node --experimental-modules test/test-runner.mjs",
+    "test": "npm run test:js && npm run test:mjs",
+    "test:js": "rollup -c build/tests.config.js && node dist/tests.js",
+    "test:mjs": "node --experimental-modules test/tests.mjs",
     "docs": "jsdoc2md -c build/jsdoc.conf -t README.hbs index.mjs > README.md; echo",
     "dist": "rollup -w -c build/index.config.js",
     "dist:view": "rollup -c build/lib/view-base.config.js"
