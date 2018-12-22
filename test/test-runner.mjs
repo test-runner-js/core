@@ -1,4 +1,5 @@
 import TestRunner from '../index.mjs'
+import Test from '../lib/test.mjs'
 import a from 'assert'
 
 function halt (err) {
@@ -6,34 +7,20 @@ function halt (err) {
   process.exitCode = 1
 }
 
+/* SIMPLE RUNNER */
+
 {
-  const runner = new TestRunner({ name: 'runner.start: one test' })
-  runner.test('simple', function () {
-    a.ok(this.name === 'simple')
-    return true
-  })
+  let counts = []
+  const root = new Test('root')
+  root.add(new Test('one', () => counts.push('one')))
+  root.add(new Test('two', () => counts.push('two')))
+
+  const runner = new TestRunner(root, { name: 'runner.start()' })
   runner.start()
-    .then(results => {
-      // console.log('result', results)
-      a.ok(results[0] === true)
-    })
+    .then(root => a.deepStrictEqual(counts, [ 'one', 'two' ]))
     .catch(halt)
 }
 
-{
-  const runner = new TestRunner({ name: 'runner.start: two tests' })
-  runner.test('simple', function () {
-    a.ok(this.index === 1)
-    return true
-  })
-  runner.test('simple 2', function () {
-    a.ok(this.index === 2)
-    return 1
-  })
-  runner.start()
-    .then(results => {
-      a.ok(results[0] === true)
-      a.ok(results[1] === 1)
-    })
-    .catch(halt)
-}
+/* SIMPLE RUNNER, DIFFERENT VIEW */
+/* MULTI-CORE RUNNER */
+/* WEB RUNNER */

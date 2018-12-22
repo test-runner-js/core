@@ -86,3 +86,48 @@ function halt (err) {
     })
     .catch(halt)
 }
+
+{
+  let count = 0
+  const test = new Test('test.run()', function () {
+    count++
+    return true
+  })
+  test.run()
+    .then(result => {
+      a.strictEqual(result, true)
+      a.strictEqual(count, 1)
+    })
+    .catch(halt)
+}
+
+{
+  let counts = []
+  const test = new Test('test.run(): event order', function () {
+    counts.push('body')
+    return true
+  })
+  a.strictEqual(test.state, 'pending')
+  test.on('start', test => counts.push('start'))
+  test.on('pass', test => counts.push('pass'))
+  test.run()
+    .then(result => {
+      a.strictEqual(result, true)
+      a.strictEqual(counts.length, 3)
+      a.deepStrictEqual(counts, [ 'start', 'body', 'pass' ])
+    })
+    .catch(halt)
+}
+
+{
+  let counts = []
+  const test = new Test('no test function: skip event')
+  test.on('start', test => counts.push('start'))
+  test.on('skip', test => counts.push('skip'))
+  test.run()
+    .then(result => {
+      a.strictEqual(result, undefined)
+      a.deepStrictEqual(counts, [ 'start', 'skip' ])
+    })
+    .catch(halt)
+}
