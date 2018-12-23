@@ -1,5 +1,5 @@
 import TestRunner from '../index.mjs'
-import Test from '../lib/test.mjs'
+import Test from 'test-object-model'
 import a from 'assert'
 
 function halt (err) {
@@ -22,7 +22,7 @@ function halt (err) {
     }
   }
 
-  const runner = new TestRunner(root, { view })
+  const runner = new TestRunner({ view, tom: root })
   runner.start()
     .then(root => a.deepStrictEqual(counts, [ 'start', 'one', 'two', 'end' ]))
     .catch(halt)

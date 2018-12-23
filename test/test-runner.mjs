@@ -1,5 +1,5 @@
 import TestRunner from '../index.mjs'
-import Test from '../lib/test.mjs'
+import Test from 'test-object-model'
 import a from 'assert'
 
 function halt (err) {
@@ -11,28 +11,28 @@ function halt (err) {
 
 { /* runner.start(): pass */
   let counts = []
-  const root = new Test('root')
-  root.add(new Test('one', () => counts.push('one')))
-  root.add(new Test('two', () => counts.push('two')))
+  const tom = new Test('tom')
+  tom.add(new Test('one', () => counts.push('one')))
+  tom.add(new Test('two', () => counts.push('two')))
 
-  const runner = new TestRunner(root)
+  const runner = new TestRunner({ tom })
   runner.start()
-    .then(root => a.deepStrictEqual(counts, [ 'one', 'two' ]))
+    .then(tom => a.deepStrictEqual(counts, [ 'one', 'two' ]))
     .catch(halt)
 }
 
 { /* runner.start(): fail */
   let counts = []
-  const root = new Test('root')
-  root.add(new Test('one', () => {
+  const tom = new Test('tom')
+  tom.add(new Test('one', () => {
     counts.push('one')
     throw new Error('broken')
   }))
-  root.add(new Test('two', () => counts.push('two')))
+  tom.add(new Test('two', () => counts.push('two')))
 
-  const runner = new TestRunner(root)
+  const runner = new TestRunner({ tom })
   runner.start()
-    .then(root => {
+    .then(tom => {
       throw new Error('should not reach here')
     })
     .catch(err => {
@@ -44,14 +44,14 @@ function halt (err) {
 
 { /* runner.start(): pass, events */
   let counts = []
-  const root = new Test('root')
-  root.add(new Test('one', () => true))
+  const tom = new Test('tom')
+  tom.add(new Test('one', () => true))
 
-  const runner = new TestRunner(root)
+  const runner = new TestRunner({ tom })
   a.strictEqual(runner.state, 'pending')
   runner.on('start', () => counts.push('start'))
   runner.start()
-    .then(root => {
+    .then(tom => {
       a.strictEqual(runner.state, 'end')
       counts.push('end')
       a.deepStrictEqual(counts, [ 'start', 'end' ])

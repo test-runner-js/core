@@ -29,11 +29,8 @@
     "dist:view": "rollup -c build/lib/view-base.config.js"
   },
   "dependencies": {
-    "composite-class": "file:../../75lb/composite-class",
-    "create-mixin": "file:../../75lb/create-mixin",
     "fsm-base": "^0.3.0",
-    "obso": "^0.3.0",
-    "race-timeout-anywhere": "^0.1.1"
+    "test-object-model": "file:../test-object-model"
   },
   "devDependencies": {
     "jsdoc-to-markdown": "^4.0.1",
