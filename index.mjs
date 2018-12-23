@@ -1,8 +1,5 @@
-import Test from './lib/test.mjs'
-import Emitter from './node_modules/obso/emitter.mjs'
 import consoleView from './lib/view-default.mjs'
-import mixin from './node_modules/create-mixin/index.mjs'
-import StateMachine from './node_modules/fsm-base/index.mjs'
+import StateMachine from 'fsm-base'
 import ViewBase from './lib/view-base.mjs'
 
 /**
@@ -20,12 +17,39 @@ import ViewBase from './lib/view-base.mjs'
  */
 class TestRunner extends StateMachine {
   constructor (tom, options) {
-    super()
+    options = options || {}
+    super([
+      { from: undefined, to: 'pending' },
+      { from: 'pending', to: 'start' },
+      { from: 'start', to: 'end' },
+    ])
+    this.state = 'pending'
     this.tom = tom
+    const ViewClass = (options.view || consoleView)(ViewBase)
+    this.view = new ViewClass()
+  }
+
+  set view (view) {
+    if (view) {
+      if (this._view) this._view.detach()
+      this._view = view
+      this._view.attach(this)
+    } else {
+      if (this._view) this._view.detach()
+      this._view = null
+    }
+  }
+
+  get view () {
+    return this._view
   }
 
   start () {
-    return this.runInParallel(this.tom)
+    this.state = 'start'
+    return this.runInParallel(this.tom).then(results => {
+      this.state = 'end'
+      return results
+    })
   }
 
   runInParallel (tom) {
