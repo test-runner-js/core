@@ -5,5 +5,5 @@ export default {
     format: 'umd',
     name: 'TestRunner'
   },
-  external: [ 'assert', 'events' ]
+  external: [ 'assert', 'events', 'fsm-base' ]
 }

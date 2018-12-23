@@ -8,15 +8,14 @@ import ViewBase from './lib/view-base.mjs'
 
 /**
  * @alias module:test-runner
+ @ @param {object} [options]
+ @ @param {function} [options.view]
+ @ @param {object} [options.tom]
  * @emits start
  * @emits end
- * @emits test-start
- * @emits test-end
- * @emits test-pass
- * @emits test-fail
  */
 class TestRunner extends StateMachine {
-  constructor (tom, options) {
+  constructor (options) {
     options = options || {}
     super([
       { from: undefined, to: 'pending' },
@@ -24,7 +23,7 @@ class TestRunner extends StateMachine {
       { from: 'start', to: 'end' },
     ])
     this.state = 'pending'
-    this.tom = tom
+    this.tom = options.tom
     const ViewClass = (options.view || consoleView)(ViewBase)
     this.view = new ViewClass()
   }

@@ -8,20 +8,20 @@
 
   var consoleView = ViewBase => class ConsoleView extends ViewBase {
     start (count) {
-      console.log(`Starting: ${count} tests`);
+      this.log(`Starting: ${count} tests`);
     }
     testPass (test, result) {
-      console.log('✓', test.name, result || 'ok');
+      this.log('✓', test.name, result || 'ok');
     }
     testSkip (test) {
-      console.log('-', test.name);
+      this.log('-', test.name);
     }
     testFail (test, err) {
-      console.log('⨯', test.name);
-      console.log(err);
+      this.log('⨯', test.name);
+      this.log(err);
     }
     end () {
-      console.log(`End`);
+      this.log(`End`);
     }
   };
 
@@ -55,6 +55,9 @@
       }
     }
 
+    log () {
+      console.log(...arguments);
+    }
     start (count) {
       throw new Error('not implemented')
     }
@@ -78,15 +81,14 @@
 
   /**
    * @alias module:test-runner
+   @ @param {object} [options]
+   @ @param {function} [options.view]
+   @ @param {object} [options.tom]
    * @emits start
    * @emits end
-   * @emits test-start
-   * @emits test-end
-   * @emits test-pass
-   * @emits test-fail
    */
   class TestRunner extends StateMachine {
-    constructor (tom, options) {
+    constructor (options) {
       options = options || {};
       super([
         { from: undefined, to: 'pending' },
@@ -94,7 +96,7 @@
         { from: 'start', to: 'end' },
       ]);
       this.state = 'pending';
-      this.tom = tom;
+      this.tom = options.tom;
       const ViewClass = (options.view || consoleView)(ViewBase);
       this.view = new ViewClass();
     }

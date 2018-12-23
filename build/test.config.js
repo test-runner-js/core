@@ -4,5 +4,5 @@ export default {
     file: 'dist/test.js',
     format: 'cjs'
   },
-  external: [ 'assert' ]
+  external: [ 'assert', 'fsm-base' ]
 }
