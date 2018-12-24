@@ -66,18 +66,13 @@ function halt (err) {
   tom.test('two', () => { throw new Error('fail') })
   tom.skip('three', () => true)
 
-  // tom.on(function () {
-  //   console.log(...arguments)
-  //   console.log(this.name)
-  // })
-
   const runner = new TestRunner({ tom })
   runner.tom.on('pass', () => counts.push('pass'))
   runner.tom.on('fail', () => counts.push('fail'))
   runner.tom.on('skip', () => counts.push('skip'))
   runner.start()
     .then(() => {
-      a.deepStrictEqual(counts, [ 'pass', 'fail', 'skip' ])
+      a.deepStrictEqual(counts, [ 'skip', 'pass', 'fail', 'skip' ])
     })
     .catch(halt)
 }
