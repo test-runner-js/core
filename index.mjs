@@ -1,5 +1,5 @@
 import consoleView from './lib/view-default.mjs'
-import StateMachine from 'fsm-base'
+import StateMachine from './node_modules/fsm-base/index.mjs'
 import ViewBase from './lib/view-base.mjs'
 
 /**
@@ -52,7 +52,12 @@ class TestRunner extends StateMachine {
   }
 
   runInParallel (tom) {
-    return Promise.all(Array.from(tom).map(test => test.run()))
+    return Promise.all(Array.from(tom).map(test => {
+      return test.run()
+        .catch(err => {
+          // keep going
+        })
+    }))
   }
 }
 
