@@ -20,6 +20,12 @@ function halt (err) {
     end () {
       counts.push('end')
     }
+    testPass (test, result) {
+    }
+    testFail (test, err) {
+    }
+    testSkip (test) {
+    }
   }
 
   const runner = new TestRunner({ view, tom: root })

@@ -17,7 +17,6 @@ var consoleView = ViewBase => class ConsoleView extends ViewBase {
   }
   testFail (test, err) {
     this.log('⨯', test.name);
-    this.log(err);
   }
   end () {
     this.log(`End`);
@@ -314,18 +313,25 @@ function flatten (prev, curr) {
 class ViewBase {
   attach (runner) {
     if (this.attachedTo !== runner) {
+      const view = this;
       this._callback = {
         start: this.start.bind(this),
         end: this.end.bind(this),
-        testPass: this.testPass.bind(this),
+        testPass: function () {
+          const test = this;
+          view.testPass(test, 'something');
+        },
         testFail: this.testFail.bind(this),
-        testSkip: this.testSkip.bind(this)
+        testSkip: function () {
+          const test = this;
+          view.testSkip(test);
+        }
       };
       runner.on('start', this._callback.start);
       runner.on('end', this._callback.end);
-      runner.on('pass', this._callback.testPass);
-      runner.on('fail', this._callback.testFail);
-      runner.on('skip', this._callback.testSkip);
+      runner.tom.on('pass', this._callback.testPass);
+      runner.tom.on('test-fail', this._callback.testFail);
+      runner.tom.on('skip', this._callback.testSkip);
       this.attachedTo = runner;
     }
   }
@@ -334,9 +340,9 @@ class ViewBase {
     if (this.attachedTo && this._callback) {
       this.attachedTo.removeEventListener('start', this._callback.start);
       this.attachedTo.removeEventListener('end', this._callback.end);
-      this.attachedTo.removeEventListener('pass', this._callback.testPass);
-      this.attachedTo.removeEventListener('fail', this._callback.testFail);
-      this.attachedTo.removeEventListener('skip', this._callback.testSkip);
+      this.attachedTo.tom.removeEventListener('pass', this._callback.testPass);
+      this.attachedTo.tom.removeEventListener('fail', this._callback.testFail);
+      this.attachedTo.tom.removeEventListener('skip', this._callback.testSkip);
       this.attachedTo = null;
     }
   }
@@ -344,10 +350,10 @@ class ViewBase {
   log () {
     console.log(...arguments);
   }
-  start (count) {
+  start () {
     throw new Error('not implemented')
   }
-  end (count) {
+  end () {
     throw new Error('not implemented')
   }
   testPass (test, result) {
@@ -413,9 +419,6 @@ class TestRunner extends StateMachine {
   runInParallel (tom) {
     return Promise.all(Array.from(tom).map(test => {
       return test.run()
-        .catch(err => {
-          // keep going
-        })
     }))
   }
 }
@@ -512,6 +515,12 @@ function halt$1 (err) {
     }
     end () {
       counts.push('end');
+    }
+    testPass (test, result) {
+    }
+    testFail (test, err) {
+    }
+    testSkip (test) {
     }
   };
 

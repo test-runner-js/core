@@ -16,7 +16,6 @@
     }
     testFail (test, err) {
       this.log('⨯', test.name);
-      this.log(err);
     }
     end () {
       this.log(`End`);
@@ -330,7 +329,7 @@
         runner.on('start', this._callback.start);
         runner.on('end', this._callback.end);
         runner.tom.on('pass', this._callback.testPass);
-        runner.tom.on('fail', this._callback.testFail);
+        runner.tom.on('test-fail', this._callback.testFail);
         runner.tom.on('skip', this._callback.testSkip);
         this.attachedTo = runner;
       }
@@ -419,9 +418,6 @@
     runInParallel (tom) {
       return Promise.all(Array.from(tom).map(test => {
         return test.run()
-          .catch(err => {
-            // keep going
-          })
       }))
     }
   }

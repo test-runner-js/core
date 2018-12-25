@@ -54,9 +54,6 @@ class TestRunner extends StateMachine {
   runInParallel (tom) {
     return Promise.all(Array.from(tom).map(test => {
       return test.run()
-        .catch(err => {
-          // keep going
-        })
     }))
   }
 }
