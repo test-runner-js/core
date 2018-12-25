@@ -76,3 +76,6 @@ function halt (err) {
     })
     .catch(halt)
 }
+
+{ /* runner.start(): already tested, second run */
+}
