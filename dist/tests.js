@@ -216,21 +216,6 @@ function arrayify (input) {
 /**
  * @module fsm-base
  * @typicalname stateMachine
- * @example
- * const StateMachine = require('fsm-base')
- *
- * class Stateful extends StateMachine {
- *  super([
- *    { from: undefined, to: 'one' },
- *    { from: 'one', to: 'two' },
- *    { from: 'two', to: 'three' },
- *    { from: [ 'one', 'three' ], to: 'four'}
- *  ])
- * }
- * const instance = new Stateful()
- * instance.state = 'one'  // valid state change
- * instance.state = 'two'  // valid state change
- * instance.state = 'four' // throws - invalid state change
  */
 
 const _state = new WeakMap();
@@ -243,7 +228,6 @@ const _state = new WeakMap();
 class StateMachine extends Emitter {
   constructor (validMoves) {
     super();
-
     this._validMoves = arrayify(validMoves).map(move => {
       if (!Array.isArray(move.from)) move.from = [ move.from ];
       if (!Array.isArray(move.to)) move.to = [ move.to ];
@@ -261,6 +245,14 @@ class StateMachine extends Emitter {
   }
 
   set state (state) {
+    this.setState(state);
+  }
+
+  /**
+   * Set the current state. The second arg onward will be sent as event args.
+   * @param {string} state
+   */
+  setState (state, ...args) {
     /* nothing to do */
     if (this.state === state) return
 
@@ -290,7 +282,7 @@ class StateMachine extends Emitter {
          * fired on every state change
          * @event module:fsm-base#&lt;state value&gt;
          */
-        this.emit(state);
+        this.emit(state, ...args);
       }
     });
     if (!moved) {
@@ -313,24 +305,17 @@ function flatten (prev, curr) {
 class ViewBase {
   attach (runner) {
     if (this.attachedTo !== runner) {
-      const view = this;
       this._callback = {
         start: this.start.bind(this),
         end: this.end.bind(this),
-        testPass: function () {
-          const test = this;
-          view.testPass(test, 'something');
-        },
+        testPass: this.testPass.bind(this),
         testFail: this.testFail.bind(this),
-        testSkip: function () {
-          const test = this;
-          view.testSkip(test);
-        }
+        testSkip: this.testSkip.bind(this)
       };
       runner.on('start', this._callback.start);
       runner.on('end', this._callback.end);
       runner.tom.on('pass', this._callback.testPass);
-      runner.tom.on('test-fail', this._callback.testFail);
+      runner.tom.on('fail', this._callback.testFail);
       runner.tom.on('skip', this._callback.testSkip);
       this.attachedTo = runner;
     }
@@ -350,7 +335,7 @@ class ViewBase {
   log () {
     console.log(...arguments);
   }
-  start () {
+  start (count) {
     throw new Error('not implemented')
   }
   end () {
@@ -409,7 +394,8 @@ class TestRunner extends StateMachine {
   }
 
   start () {
-    this.state = 'start';
+    const count = Array.from(this.tom).length;
+    this.setState('start', count);
     return this.runInParallel(this.tom).then(results => {
       this.state = 'end';
       return results
@@ -419,6 +405,9 @@ class TestRunner extends StateMachine {
   runInParallel (tom) {
     return Promise.all(Array.from(tom).map(test => {
       return test.run()
+        .catch(err => {
+          // keep going when tests fail but crash for programmer error
+        })
     }))
   }
 }

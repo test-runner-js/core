@@ -44,7 +44,8 @@ class TestRunner extends StateMachine {
   }
 
   start () {
-    this.state = 'start'
+    const count = Array.from(this.tom).length
+    this.setState('start', count)
     return this.runInParallel(this.tom).then(results => {
       this.state = 'end'
       return results
@@ -54,6 +55,9 @@ class TestRunner extends StateMachine {
   runInParallel (tom) {
     return Promise.all(Array.from(tom).map(test => {
       return test.run()
+        .catch(err => {
+          // keep going when tests fail but crash for programmer error
+        })
     }))
   }
 }
