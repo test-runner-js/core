@@ -30,7 +30,7 @@
   },
   "dependencies": {
     "fsm-base": "^0.4.1",
-    "test-object-model": "file:../test-object-model"
+    "test-object-model": "^0.1.1"
   },
   "devDependencies": {
     "jsdoc-to-markdown": "^4.0.1",
