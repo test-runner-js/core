@@ -15,7 +15,7 @@
       this.log('-', test.name);
     }
     testFail (test, err) {
-      this.log('⨯', test.name);
+      this.log(`⨯ ${test.name} [Error: ${err.message}]`);
     }
     end () {
       this.log(`End`);
@@ -88,7 +88,7 @@
       }
 
       /* bubble event up */
-      if (this.parent) this.parent.emitTarget(eventName, target || this, ...args);
+      if (this.parent) this.parent.emitTarget(target || this, eventName, ...args);
     }
 
      /**
@@ -218,6 +218,7 @@
    */
 
   const _state = new WeakMap();
+  const _validMoves = new WeakMap();
 
   /**
    * @class
@@ -227,11 +228,11 @@
   class StateMachine extends Emitter {
     constructor (validMoves) {
       super();
-      this._validMoves = arrayify(validMoves).map(move => {
+      _validMoves.set(this, arrayify(validMoves).map(move => {
         if (!Array.isArray(move.from)) move.from = [ move.from ];
         if (!Array.isArray(move.to)) move.to = [ move.to ];
         return move
-      });
+      }));
     }
 
     /**
@@ -255,7 +256,7 @@
       /* nothing to do */
       if (this.state === state) return
 
-      const validTo = this._validMoves.some(move => move.to.indexOf(state) > -1);
+      const validTo = _validMoves.get(this).some(move => move.to.indexOf(state) > -1);
       if (!validTo) {
         const msg = `Invalid state: ${state}`;
         const err = new Error(msg);
@@ -265,7 +266,7 @@
 
       let moved = false;
       const prevState = this.state;
-      this._validMoves.forEach(move => {
+      _validMoves.get(this).forEach(move => {
         if (move.from.indexOf(this.state) > -1 && move.to.indexOf(state) > -1) {
           _state.set(this, state);
           moved = true;
@@ -285,7 +286,7 @@
         }
       });
       if (!moved) {
-        let froms = this._validMoves
+        let froms = _validMoves.get(this)
           .filter(move => move.to.indexOf(state) > -1)
           .map(move => move.from.map(from => `'${from}'`))
           .reduce(flatten);
@@ -372,6 +373,7 @@
         { from: 'start', to: 'end' },
       ]);
       this.state = 'pending';
+      this.sequential = options.sequential;
       this.tom = options.tom;
       const ViewClass = (options.view || consoleView)(ViewBase);
       this.view = new ViewClass();
@@ -395,19 +397,48 @@
     start () {
       const count = Array.from(this.tom).length;
       this.setState('start', count);
-      return this.runInParallel(this.tom).then(results => {
-        this.state = 'end';
-        return results
-      })
+      if (this.sequential) {
+        return this.runSequential().then(results => {
+          this.state = 'end';
+          return results
+        })
+      } else {
+        return this.runInParallel().then(results => {
+          this.state = 'end';
+          return results
+        })
+      }
     }
 
-    runInParallel (tom) {
-      return Promise.all(Array.from(tom).map(test => {
+    runInParallel () {
+      return Promise.all(Array.from(this.tom).map(test => {
         return test.run()
           .catch(err => {
             // keep going when tests fail but crash for programmer error
           })
       }))
+    }
+
+    runSequential () {
+      const results = [];
+      return new Promise((resolve, reject) => {
+        const iterator = this.tom[Symbol.iterator]();
+        function runNext () {
+          const tom = iterator.next().value;
+          if (tom) {
+            tom.run()
+              .then(result => results.push(result))
+              // .catch(err => {
+              //   // console.error(err)
+              //   // keep going when tests fail but crash for programmer error
+              // })
+              .finally(() => runNext());
+          } else {
+            resolve(results);
+          }
+        }
+        runNext();
+      })
     }
   }
 

@@ -23,6 +23,7 @@ class TestRunner extends StateMachine {
       { from: 'start', to: 'end' },
     ])
     this.state = 'pending'
+    this.sequential = options.sequential
     this.tom = options.tom
     const ViewClass = (options.view || consoleView)(ViewBase)
     this.view = new ViewClass()
@@ -46,19 +47,48 @@ class TestRunner extends StateMachine {
   start () {
     const count = Array.from(this.tom).length
     this.setState('start', count)
-    return this.runInParallel(this.tom).then(results => {
-      this.state = 'end'
-      return results
-    })
+    if (this.sequential) {
+      return this.runSequential().then(results => {
+        this.state = 'end'
+        return results
+      })
+    } else {
+      return this.runInParallel().then(results => {
+        this.state = 'end'
+        return results
+      })
+    }
   }
 
-  runInParallel (tom) {
-    return Promise.all(Array.from(tom).map(test => {
+  runInParallel () {
+    return Promise.all(Array.from(this.tom).map(test => {
       return test.run()
         .catch(err => {
           // keep going when tests fail but crash for programmer error
         })
     }))
+  }
+
+  runSequential () {
+    const results = []
+    return new Promise((resolve, reject) => {
+      const iterator = this.tom[Symbol.iterator]()
+      function runNext () {
+        const tom = iterator.next().value
+        if (tom) {
+          tom.run()
+            .then(result => results.push(result))
+            // .catch(err => {
+            //   // console.error(err)
+            //   // keep going when tests fail but crash for programmer error
+            // })
+            .finally(() => runNext())
+        } else {
+          resolve(results)
+        }
+      }
+      runNext()
+    })
   }
 }
 

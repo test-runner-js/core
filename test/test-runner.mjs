@@ -79,3 +79,6 @@ function halt (err) {
 
 { /* runner.start(): already tested, second run */
 }
+
+{ /* runner.start(): throw if no .tom present */
+}
