@@ -1,13 +1,15 @@
 import TestRunner from '../index.mjs'
 import Tom from 'test-object-model'
 import a from 'assert'
+import http from 'http'
+import fetch from 'node-fetch'
 
 function halt (err) {
   console.log(err)
   process.exitCode = 1
 }
 
-{
+{ /* timeout tests */
   let counts = []
   const tom = new Tom('Sequential tests')
   tom.test('one', function () {

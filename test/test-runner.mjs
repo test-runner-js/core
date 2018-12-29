@@ -72,7 +72,7 @@ function halt (err) {
   runner.tom.on('skip', () => counts.push('skip'))
   runner.start()
     .then(() => {
-      a.deepStrictEqual(counts, [ 'skip', 'pass', 'fail', 'skip' ])
+      a.deepStrictEqual(counts, [ 'pass', 'fail', 'skip' ])
     })
     .catch(halt)
 }

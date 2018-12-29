@@ -78,10 +78,6 @@ class TestRunner extends StateMachine {
         if (tom) {
           tom.run()
             .then(result => results.push(result))
-            // .catch(err => {
-            //   // console.error(err)
-            //   // keep going when tests fail but crash for programmer error
-            // })
             .finally(() => runNext())
         } else {
           resolve(results)

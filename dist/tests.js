@@ -4,6 +4,8 @@ function _interopDefault (ex) { return (ex && (typeof ex === 'object') && 'defau
 
 var Tom = _interopDefault(require('test-object-model'));
 var a = _interopDefault(require('assert'));
+var http = _interopDefault(require('http'));
+var fetch = _interopDefault(require('node-fetch'));
 
 var consoleView = ViewBase => class ConsoleView extends ViewBase {
   start (count) {
@@ -16,7 +18,7 @@ var consoleView = ViewBase => class ConsoleView extends ViewBase {
     this.log('-', test.name);
   }
   testFail (test, err) {
-    this.log('⨯', test.name);
+    this.log(`⨯ ${test.name} [Error: ${err.message}]`);
   }
   end () {
     this.log(`End`);
@@ -89,7 +91,7 @@ class Emitter {
     }
 
     /* bubble event up */
-    if (this.parent) this.parent.emitTarget(eventName, target || this, ...args);
+    if (this.parent) this.parent.emitTarget(target || this, eventName, ...args);
   }
 
    /**
@@ -219,6 +221,7 @@ function arrayify (input) {
  */
 
 const _state = new WeakMap();
+const _validMoves = new WeakMap();
 
 /**
  * @class
@@ -228,11 +231,11 @@ const _state = new WeakMap();
 class StateMachine extends Emitter {
   constructor (validMoves) {
     super();
-    this._validMoves = arrayify(validMoves).map(move => {
+    _validMoves.set(this, arrayify(validMoves).map(move => {
       if (!Array.isArray(move.from)) move.from = [ move.from ];
       if (!Array.isArray(move.to)) move.to = [ move.to ];
       return move
-    });
+    }));
   }
 
   /**
@@ -256,7 +259,7 @@ class StateMachine extends Emitter {
     /* nothing to do */
     if (this.state === state) return
 
-    const validTo = this._validMoves.some(move => move.to.indexOf(state) > -1);
+    const validTo = _validMoves.get(this).some(move => move.to.indexOf(state) > -1);
     if (!validTo) {
       const msg = `Invalid state: ${state}`;
       const err = new Error(msg);
@@ -266,7 +269,7 @@ class StateMachine extends Emitter {
 
     let moved = false;
     const prevState = this.state;
-    this._validMoves.forEach(move => {
+    _validMoves.get(this).forEach(move => {
       if (move.from.indexOf(this.state) > -1 && move.to.indexOf(state) > -1) {
         _state.set(this, state);
         moved = true;
@@ -286,7 +289,7 @@ class StateMachine extends Emitter {
       }
     });
     if (!moved) {
-      let froms = this._validMoves
+      let froms = _validMoves.get(this)
         .filter(move => move.to.indexOf(state) > -1)
         .map(move => move.from.map(from => `'${from}'`))
         .reduce(flatten);
@@ -373,6 +376,7 @@ class TestRunner extends StateMachine {
       { from: 'start', to: 'end' },
     ]);
     this.state = 'pending';
+    this.sequential = options.sequential;
     this.tom = options.tom;
     const ViewClass = (options.view || consoleView)(ViewBase);
     this.view = new ViewClass();
@@ -396,19 +400,44 @@ class TestRunner extends StateMachine {
   start () {
     const count = Array.from(this.tom).length;
     this.setState('start', count);
-    return this.runInParallel(this.tom).then(results => {
-      this.state = 'end';
-      return results
-    })
+    if (this.sequential) {
+      return this.runSequential().then(results => {
+        this.state = 'end';
+        return results
+      })
+    } else {
+      return this.runInParallel().then(results => {
+        this.state = 'end';
+        return results
+      })
+    }
   }
 
-  runInParallel (tom) {
-    return Promise.all(Array.from(tom).map(test => {
+  runInParallel () {
+    return Promise.all(Array.from(this.tom).map(test => {
       return test.run()
         .catch(err => {
           // keep going when tests fail but crash for programmer error
         })
     }))
+  }
+
+  runSequential () {
+    const results = [];
+    return new Promise((resolve, reject) => {
+      const iterator = this.tom[Symbol.iterator]();
+      function runNext () {
+        const tom = iterator.next().value;
+        if (tom) {
+          tom.run()
+            .then(result => results.push(result))
+            .finally(() => runNext());
+        } else {
+          resolve(results);
+        }
+      }
+      runNext();
+    })
   }
 }
 
@@ -482,7 +511,7 @@ function halt (err) {
   runner.tom.on('skip', () => counts.push('skip'));
   runner.start()
     .then(() => {
-      a.deepStrictEqual(counts, [ 'skip', 'pass', 'fail', 'skip' ]);
+      a.deepStrictEqual(counts, [ 'pass', 'fail', 'skip' ]);
     })
     .catch(halt);
 }
@@ -517,4 +546,102 @@ function halt$1 (err) {
   runner.start()
     .then(root => a.deepStrictEqual(counts, [ 'start', 'one', 'two', 'end' ]))
     .catch(halt$1);
+}
+
+function halt$2 (err) {
+  console.log(err);
+  process.exitCode = 1;
+}
+
+{ /* timeout tests */
+  let counts = [];
+  const tom = new Tom('Sequential tests');
+  tom.test('one', function () {
+    a.deepStrictEqual(counts, []);
+    return new Promise((resolve, reject) => {
+      setTimeout(() => {
+        counts.push(1);
+        resolve(1);
+      }, 1000);
+    })
+  });
+
+  tom.test('two', function () {
+    a.deepStrictEqual(counts, [ 1 ]);
+    return new Promise((resolve, reject) => {
+      setTimeout(() => {
+        counts.push(2);
+        resolve(2);
+      }, 500);
+    })
+  });
+
+  tom.test('three', function () {
+    a.deepStrictEqual(counts, [ 1, 2 ]);
+    counts.push(3);
+    return 3
+  });
+
+  const runner = new TestRunner({ tom, sequential: true });
+  runner.start()
+    .then(results => {
+      a.deepStrictEqual(results, [ undefined, 1, 2, 3 ]);
+      a.deepStrictEqual(counts, [ 1, 2, 3 ]);
+    })
+    .catch(halt$2);
+}
+
+function halt$3 (err) {
+  console.log(err);
+  process.exitCode = 1;
+}
+
+{ /* server tests */
+  let counts = [];
+  const tom = new Tom('Sequential tests');
+  tom.test('one', function () {
+    const server = http.createServer((req, res) => {
+      setTimeout(() => {
+        res.writeHead(200);
+        res.end();
+      }, 100);
+    });
+    server.listen(9000);
+    return new Promise((resolve, reject) => {
+      setImmediate(() => {
+        fetch('http://localhost:9000/').then(response => {
+          counts.push(response.status);
+          resolve(response.status);
+          server.close();
+        });
+      });
+    })
+  });
+
+  tom.test('two', function () {
+    const server = http.createServer((req, res) => {
+      setTimeout(() => {
+        res.writeHead(201);
+        res.end();
+      }, 10);
+    });
+    server.listen(9000);
+    return new Promise((resolve, reject) => {
+      setImmediate(() => {
+        fetch('http://localhost:9000/').then(response => {
+          counts.push(response.status);
+          resolve(response.status);
+          server.close();
+        });
+      });
+    })
+  });
+
+  const runner = new TestRunner({ tom, sequential: true });
+  runner.start()
+    .then(results => {
+      a.deepStrictEqual(results, [ undefined, 200, 201 ]);
+      a.deepStrictEqual(counts, [ 200, 201 ]);
+    })
+    .catch(halt$3);
 }
