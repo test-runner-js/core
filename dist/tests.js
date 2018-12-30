@@ -91,7 +91,7 @@ class Emitter {
     }
 
     /* bubble event up */
-    if (this.parent) this.parent.emitTarget(target || this, eventName, ...args);
+    if (this.parent) this.parent.emitTarget(eventName, target || this, ...args);
   }
 
    /**
@@ -431,6 +431,9 @@ class TestRunner extends StateMachine {
         if (tom) {
           tom.run()
             .then(result => results.push(result))
+            .catch(err => {
+              // keep going when tests fail but crash for programmer error
+            })
             .finally(() => runNext());
         } else {
           resolve(results);
