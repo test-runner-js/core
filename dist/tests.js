@@ -3,6 +3,7 @@
 function _interopDefault (ex) { return (ex && (typeof ex === 'object') && 'default' in ex) ? ex['default'] : ex; }
 
 var a = _interopDefault(require('assert'));
+require('util');
 var http = _interopDefault(require('http'));
 var fetch = _interopDefault(require('node-fetch'));
 
@@ -369,10 +370,12 @@ class ViewBase {
 class TestRunner extends StateMachine {
   constructor (options) {
     options = options || {};
+    if (!options.tom) throw new Error('tom required')
     super([
       { from: undefined, to: 'pending' },
       { from: 'pending', to: 'start' },
-      { from: 'start', to: 'end' },
+      { from: 'start', to: 'pass' },
+      { from: 'start', to: 'fail' }
     ]);
     this.state = 'pending';
     this.sequential = options.sequential;
@@ -401,21 +404,22 @@ class TestRunner extends StateMachine {
     this.setState('start', count);
     if (this.sequential) {
       return this.runSequential().then(results => {
-        this.state = 'end';
+        if (this.state !== 'fail') this.state = 'pass';
         return results
       })
     } else {
       return this.runInParallel().then(results => {
-        this.state = 'end';
+        if (this.state !== 'fail') this.state = 'pass';
         return results
       })
     }
   }
 
   runInParallel () {
-    return Promise.all(Array.from(this.tom).map(test => {
+    return Promise.all(Array.from(this.tom).filter(t => t.testFn).map(test => {
       return test.run()
         .catch(err => {
+          this.state = 'fail';
           // keep going when tests fail but crash for programmer error
         })
     }))
@@ -940,6 +944,7 @@ class Test extends createMixin(Composite)(StateMachine$1) {
       testFn = name;
       name = '';
     }
+    options = options || {};
     name = name || 'tom';
     super ([
       { from: undefined, to: 'pending' },
@@ -958,8 +963,9 @@ class Test extends createMixin(Composite)(StateMachine$1) {
     this.options = Object.assign({ timeout: 10000 }, options);
     this.index = 1;
     this.state = 'pending';
+    this._markSkip = options._markSkip;
     this._skip = null;
-    this._only = null;
+    this._only = options.only;
   }
 
   toString () {
@@ -975,23 +981,41 @@ class Test extends createMixin(Composite)(StateMachine$1) {
     const test = new this.constructor(name, testFn, options);
     this.add(test);
     test.index = this.children.length;
+    this.skipLogic();
     return test
   }
 
+  onlyExists () {
+    return Array.from(this.root()).some(t => t._only)
+  }
+
+  skipLogic () {
+    if (this.onlyExists()) {
+      for (const test of this.root()) {
+        if (test._markSkip) {
+          test._skip = true;
+        } else {
+          test._skip = !test._only;
+        }
+      }
+    } else {
+      for (const test of this.root()) {
+        test._skip = test._markSkip;
+      }
+    }
+  }
+
   skip (name, testFn, options) {
+    options = options || {};
+    options._markSkip = true;
     const test = this.test(name, testFn, options);
-    test._skip = true;
     return test
   }
 
   only (name, testFn, options) {
-    for (const test of this) {
-      if (!test._only) {
-        test._skip = true;
-      }
-    }
+    options = options || {};
+    options.only = true;
     const test = this.test(name, testFn, options);
-    test._only = true;
     return test
   }
 
@@ -1077,61 +1101,89 @@ function halt (err) {
   process.exitCode = 1;
 }
 
-{ /* runner.start(): pass */
+{ /* new TestRunner: no tom */
+  try {
+    const runner = new TestRunner();
+  } catch (err) {
+    if (!/tom required/i.test(err.message)) halt(err);
+  }
+}
+
+{ /* runner.start(): pass state */
+  const tom = new Test();
+  tom.test('one', () => 1);
+
+  const runner = new TestRunner({ tom });
+  a.strictEqual(runner.state, 'pending');
+  runner.start()
+    .then(() => {
+      a.strictEqual(runner.state, 'pass');
+    })
+    .catch(halt);
+  a.strictEqual(runner.state, 'start');
+}
+
+{ /* runner.start(): fail state */
+  const tom = new Test();
+  tom.test('one', () => {
+    throw new Error('broken')
+  });
+
+  const runner = new TestRunner({ tom });
+  a.strictEqual(runner.state, 'pending');
+  runner.start()
+    .then(() => {
+      a.strictEqual(runner.state, 'fail');
+    })
+    .catch(halt);
+  a.strictEqual(runner.state, 'start');
+}
+
+{ /* runner.start(): pass results and events */
   let counts = [];
-  const tom = new Test('tom');
-  tom.test('one', () => counts.push('one'));
-  tom.test('two', () => counts.push('two'));
+  const tom = new Test();
+  tom.test('one', () => {
+    counts.push('one');
+    return 1
+  });
+  tom.test('two', () => {
+    counts.push('two');
+    return 2
+  });
 
   const runner = new TestRunner({ tom });
   runner.start()
-    .then(() => {
+    .then(results => {
+      a.deepStrictEqual(results, [ 1, 2 ]);
       a.deepStrictEqual(counts, [ 'one', 'two' ]);
-      a.strictEqual(tom.children[0].state, 'pass');
-      a.strictEqual(tom.children[1].state, 'pass');
     })
     .catch(halt);
 }
 
-{ /* runner.start(): fail */
+{ /* runner.start(): fail results and events */
   let counts = [];
-  const tom = new Test('tom');
+  const tom = new Test();
   tom.test('one', () => {
     counts.push('one');
     throw new Error('broken')
   });
-  tom.test('two', () => counts.push('two'));
+  tom.test('two', () => {
+    counts.push('two');
+    throw new Error('broken2')
+  });
 
   const runner = new TestRunner({ tom });
   runner.start()
-    .then(() => {
+    .then(results => {
+      a.deepStrictEqual(results, [ undefined, undefined ]);
       a.deepStrictEqual(counts, [ 'one', 'two' ]);
-      a.strictEqual(tom.children[0].state, 'fail');
-      a.strictEqual(tom.children[1].state, 'pass');
     })
     .catch(halt);
 }
 
-{ /* runner.start(): pass, events */
+{ /* runner.start(): pass, fail, skip events */
   let counts = [];
-  const tom = new Test('tom');
-  tom.test(new Test('one', () => true));
-
-  const runner = new TestRunner({ tom });
-  a.strictEqual(runner.state, 'pending');
-  runner.on('start', () => counts.push('start'));
-  runner.start()
-    .then(() => {
-      a.strictEqual(runner.state, 'end');
-      counts.push('end');
-      a.deepStrictEqual(counts, [ 'start', 'end' ]);
-    })
-    .catch(halt);
-}
-
-{ /* runner.start(): test events */
-  let counts = [];
-  const tom = new Test('tom');
+  const tom = new Test();
   tom.test('one', () => true);
   tom.test('two', () => { throw new Error('fail') });
   tom.skip('three', () => true);
@@ -1147,6 +1199,87 @@ function halt (err) {
     .catch(halt);
 }
 
+{ /* runner.start(): only */
+  let counts = [];
+  const tom = new Test();
+  tom.test('one', () => 1);
+  tom.test('two', () => 2);
+  tom.only('three', () => 3);
+
+  const runner = new TestRunner({ tom });
+  runner.tom.on('pass', () => counts.push('pass'));
+  runner.tom.on('fail', () => counts.push('fail'));
+  runner.tom.on('skip', () => counts.push('skip'));
+  runner.start()
+    .then(results => {
+      a.deepStrictEqual(results, [ undefined, undefined, 3 ]);
+      a.deepStrictEqual(counts, [ 'skip', 'skip', 'pass' ]);
+    })
+    .catch(halt);
+}
+
+{ /* runner.start(): deep only */
+  let counts = [];
+  const tom = new Test();
+  const one = tom.only('one', () => 1);
+  const two = one.test('two', () => 2);
+  const three = two.only('three', () => 3);
+
+  const runner = new TestRunner({ tom });
+  runner.tom.on('pass', () => counts.push('pass'));
+  runner.tom.on('fail', () => counts.push('fail'));
+  runner.tom.on('skip', () => counts.push('skip'));
+  runner.start()
+    .then(results => {
+      a.deepStrictEqual(results, [ 1, undefined, 3 ]);
+      a.deepStrictEqual(counts, [ 'pass', 'skip', 'pass' ]);
+    })
+    .catch(halt);
+}
+
+{ /* runner.start(): deep only with fail */
+  let counts = [];
+  const tom = new Test();
+  const one = tom.only('one', () => 1);
+  const two = one.test('two', () => 2);
+  const three = two.only('three', () => {
+    throw new Error('broken')
+  });
+
+  const runner = new TestRunner({ tom });
+  runner.tom.on('pass', () => counts.push('pass'));
+  runner.tom.on('fail', () => counts.push('fail'));
+  runner.tom.on('skip', () => counts.push('skip'));
+  runner.start()
+    .then(results => {
+      a.deepStrictEqual(results, [ 1, undefined, undefined ]);
+      a.deepStrictEqual(counts, [ 'pass', 'skip', 'fail' ]);
+    })
+    .catch(halt);
+}
+
+{ /* runner.start(): deep only with skipped fail */
+  let counts = [];
+  const tom = new Test();
+  const one = tom.only('one', () => 1);
+  const two = one.test('two', () => 2);
+  const three = two.skip('three', () => {
+    throw new Error('broken')
+  });
+
+  console.log(Array.from(tom));
+  const runner = new TestRunner({ tom });
+  runner.tom.on('pass', () => counts.push('pass'));
+  runner.tom.on('fail', () => counts.push('fail'));
+  runner.tom.on('skip', () => counts.push('skip'));
+  runner.start()
+    .then(results => {
+      a.deepStrictEqual(results, [ 1, undefined, undefined ]);
+      a.deepStrictEqual(counts, [ 'pass', 'skip', 'skip' ]);
+    })
+    .catch(halt);
+}
+
 function halt$1 (err) {
   console.log(err);
   process.exitCode = 1;
@@ -1154,9 +1287,9 @@ function halt$1 (err) {
 
 { /* custom view */
   let counts = [];
-  const root = new Test('root');
-  root.add(new Test('one', () => counts.push('one')));
-  root.add(new Test('two', () => counts.push('two')));
+  const tom = new Test();
+  tom.test('one', () => counts.push('one'));
+  tom.test('two', () => counts.push('two'));
 
   const view = ViewBase => class extends ViewBase {
     start () {
@@ -1166,16 +1299,19 @@ function halt$1 (err) {
       counts.push('end');
     }
     testPass (test, result) {
+      counts.push('testPass');
     }
     testFail (test, err) {
+      counts.push('testFail');
     }
     testSkip (test) {
+      counts.push('testSkip');
     }
   };
 
-  const runner = new TestRunner({ view, tom: root });
+  const runner = new TestRunner({ view, tom });
   runner.start()
-    .then(root => a.deepStrictEqual(counts, [ 'start', 'one', 'two', 'end' ]))
+    .then(() => a.deepStrictEqual(counts, [ 'start', 'one', 'testPass', 'two', 'testPass', 'end' ]))
     .catch(halt$1);
 }
 

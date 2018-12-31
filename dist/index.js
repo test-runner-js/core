@@ -371,7 +371,8 @@
       super([
         { from: undefined, to: 'pending' },
         { from: 'pending', to: 'start' },
-        { from: 'start', to: 'end' },
+        { from: 'start', to: 'pass' },
+        { from: 'start', to: 'fail' }
       ]);
       this.state = 'pending';
       this.sequential = options.sequential;
@@ -400,21 +401,22 @@
       this.setState('start', count);
       if (this.sequential) {
         return this.runSequential().then(results => {
-          this.state = 'end';
+          if (this.state !== 'fail') this.state = 'pass';
           return results
         })
       } else {
         return this.runInParallel().then(results => {
-          this.state = 'end';
+          if (this.state !== 'fail') this.state = 'pass';
           return results
         })
       }
     }
 
     runInParallel () {
-      return Promise.all(Array.from(this.tom).map(test => {
+      return Promise.all(Array.from(this.tom).filter(t => t.testFn).map(test => {
         return test.run()
           .catch(err => {
+            this.state = 'fail';
             // keep going when tests fail but crash for programmer error
           })
       }))
