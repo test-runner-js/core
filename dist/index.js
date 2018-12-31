@@ -372,7 +372,9 @@
         { from: undefined, to: 'pending' },
         { from: 'pending', to: 'start' },
         { from: 'start', to: 'pass' },
-        { from: 'start', to: 'fail' }
+        { from: 'start', to: 'fail' },
+        { from: 'pass', to: 'end' },
+        { from: 'fail', to: 'end' }
       ]);
       this.state = 'pending';
       this.sequential = options.sequential;
@@ -402,11 +404,13 @@
       if (this.sequential) {
         return this.runSequential().then(results => {
           if (this.state !== 'fail') this.state = 'pass';
+          this.state = 'end';
           return results
         })
       } else {
         return this.runInParallel().then(results => {
           if (this.state !== 'fail') this.state = 'pass';
+          this.state = 'end';
           return results
         })
       }

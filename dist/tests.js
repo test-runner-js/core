@@ -3,7 +3,6 @@
 function _interopDefault (ex) { return (ex && (typeof ex === 'object') && 'default' in ex) ? ex['default'] : ex; }
 
 var a = _interopDefault(require('assert'));
-require('util');
 var http = _interopDefault(require('http'));
 var fetch = _interopDefault(require('node-fetch'));
 
@@ -375,7 +374,9 @@ class TestRunner extends StateMachine {
       { from: undefined, to: 'pending' },
       { from: 'pending', to: 'start' },
       { from: 'start', to: 'pass' },
-      { from: 'start', to: 'fail' }
+      { from: 'start', to: 'fail' },
+      { from: 'pass', to: 'end' },
+      { from: 'fail', to: 'end' }
     ]);
     this.state = 'pending';
     this.sequential = options.sequential;
@@ -405,11 +406,13 @@ class TestRunner extends StateMachine {
     if (this.sequential) {
       return this.runSequential().then(results => {
         if (this.state !== 'fail') this.state = 'pass';
+        this.state = 'end';
         return results
       })
     } else {
       return this.runInParallel().then(results => {
         if (this.state !== 'fail') this.state = 'pass';
+        this.state = 'end';
         return results
       })
     }
@@ -1110,33 +1113,41 @@ function halt (err) {
 }
 
 { /* runner.start(): pass state */
+  let counts = [];
   const tom = new Test();
   tom.test('one', () => 1);
 
   const runner = new TestRunner({ tom });
-  a.strictEqual(runner.state, 'pending');
+  runner.on('pass', () => counts.push(runner.state));
+  runner.on('fail', () => counts.push(runner.state));
+  counts.push(runner.state);
   runner.start()
     .then(() => {
-      a.strictEqual(runner.state, 'pass');
+      counts.push(runner.state);
+      a.deepStrictEqual(counts, [ 'pending', 'start', 'pass', 'end' ]);
     })
     .catch(halt);
-  a.strictEqual(runner.state, 'start');
+  counts.push(runner.state);
 }
 
-{ /* runner.start(): fail state */
+{ /* runner.start(): pass state */
+  let counts = [];
   const tom = new Test();
   tom.test('one', () => {
     throw new Error('broken')
   });
 
   const runner = new TestRunner({ tom });
-  a.strictEqual(runner.state, 'pending');
+  runner.on('pass', () => counts.push(runner.state));
+  runner.on('fail', () => counts.push(runner.state));
+  counts.push(runner.state);
   runner.start()
     .then(() => {
-      a.strictEqual(runner.state, 'fail');
+      counts.push(runner.state);
+      a.deepStrictEqual(counts, [ 'pending', 'start', 'fail', 'end' ]);
     })
     .catch(halt);
-  a.strictEqual(runner.state, 'start');
+  counts.push(runner.state);
 }
 
 { /* runner.start(): pass results and events */
@@ -1267,7 +1278,6 @@ function halt (err) {
     throw new Error('broken')
   });
 
-  console.log(Array.from(tom));
   const runner = new TestRunner({ tom });
   runner.tom.on('pass', () => counts.push('pass'));
   runner.tom.on('fail', () => counts.push('fail'));

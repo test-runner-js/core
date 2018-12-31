@@ -21,16 +21,19 @@ function halt (err) {
   tom.test('one', () => 1)
 
   const runner = new TestRunner({ tom })
-  a.strictEqual(runner.state, 'pending')
+  runner.on('pass', () => counts.push(runner.state))
+  runner.on('fail', () => counts.push(runner.state))
+  counts.push(runner.state)
   runner.start()
     .then(() => {
-      a.strictEqual(runner.state, 'pass')
+      counts.push(runner.state)
+      a.deepStrictEqual(counts, [ 'pending', 'start', 'pass', 'end' ])
     })
     .catch(halt)
-  a.strictEqual(runner.state, 'start')
+  counts.push(runner.state)
 }
 
-{ /* runner.start(): fail state */
+{ /* runner.start(): pass state */
   let counts = []
   const tom = new Tom()
   tom.test('one', () => {
@@ -38,13 +41,16 @@ function halt (err) {
   })
 
   const runner = new TestRunner({ tom })
-  a.strictEqual(runner.state, 'pending')
+  runner.on('pass', () => counts.push(runner.state))
+  runner.on('fail', () => counts.push(runner.state))
+  counts.push(runner.state)
   runner.start()
     .then(() => {
-      a.strictEqual(runner.state, 'fail')
+      counts.push(runner.state)
+      a.deepStrictEqual(counts, [ 'pending', 'start', 'fail', 'end' ])
     })
     .catch(halt)
-  a.strictEqual(runner.state, 'start')
+  counts.push(runner.state)
 }
 
 { /* runner.start(): pass results and events */
