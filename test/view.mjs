@@ -1,5 +1,5 @@
 import TestRunner from '../index.mjs'
-import Test from 'test-object-model'
+import Tom from '../node_modules/test-object-model/index.mjs'
 import a from 'assert'
 
 function halt (err) {
@@ -9,9 +9,9 @@ function halt (err) {
 
 { /* custom view */
   let counts = []
-  const root = new Test('root')
-  root.add(new Test('one', () => counts.push('one')))
-  root.add(new Test('two', () => counts.push('two')))
+  const root = new Tom('root')
+  root.add(new Tom('one', () => counts.push('one')))
+  root.add(new Tom('two', () => counts.push('two')))
 
   const view = ViewBase => class extends ViewBase {
     start () {

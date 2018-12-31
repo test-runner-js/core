@@ -4,5 +4,5 @@ export default {
     file: 'dist/tests.js',
     format: 'cjs'
   },
-  external: [ 'assert' ]
+  external: [ 'assert', 'http', 'node-fetch' ]
 }

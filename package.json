@@ -29,13 +29,13 @@
     "dist:view": "rollup -c build/lib/view-base.config.js"
   },
   "dependencies": {
-    "fsm-base": "^0.4.3"
+    "fsm-base": "^0.4.3",
+    "test-object-model": "^0.2.1"
   },
   "devDependencies": {
     "jsdoc-to-markdown": "^4.0.1",
     "node-fetch": "^2.3.0",
-    "rollup": "^1.0.0",
-    "test-object-model": "^0.2.1"
+    "rollup": "^1.0.0"
   },
   "standard": {
     "ignore": [

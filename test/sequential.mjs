@@ -1,5 +1,5 @@
 import TestRunner from '../index.mjs'
-import Tom from 'test-object-model'
+import Tom from '../node_modules/test-object-model/index.mjs'
 import a from 'assert'
 import http from 'http'
 import fetch from 'node-fetch'

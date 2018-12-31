@@ -7,8 +7,5 @@ matrix:
       script: "npm test"
     - node_js: 8
       script: "npm test"
-    - node_js: 6
-      script: "npm run test:js"
-cache:
-  directories:
-    - "node_modules"
+    # - node_js: 6
+    #   script: "npm run test:js"
