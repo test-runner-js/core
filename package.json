@@ -3,7 +3,7 @@
   "author": "Lloyd Brookes <75pound@gmail.com>",
   "version": "0.6.0-1",
   "description": "Minimal, extensible test runner.",
-  "repository": "https://github.com/75lb/test-runner.git",
+  "repository": "https://github.com/test-runner-js/core",
   "license": "MIT",
   "keywords": [
     "test",

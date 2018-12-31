@@ -77,11 +77,14 @@ class TestRunner extends StateMachine {
         const tom = iterator.next().value
         if (tom) {
           tom.run()
-            .then(result => results.push(result))
+            .then(result => {
+              results.push(result)
+              runNext()
+            })
             .catch(err => {
               // keep going when tests fail but crash for programmer error
+              runNext()
             })
-            .finally(() => runNext())
         } else {
           resolve(results)
         }

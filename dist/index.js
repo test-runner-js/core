@@ -427,11 +427,14 @@
           const tom = iterator.next().value;
           if (tom) {
             tom.run()
-              .then(result => results.push(result))
+              .then(result => {
+                results.push(result);
+                runNext();
+              })
               .catch(err => {
                 // keep going when tests fail but crash for programmer error
-              })
-              .finally(() => runNext());
+                runNext();
+              });
           } else {
             resolve(results);
           }
