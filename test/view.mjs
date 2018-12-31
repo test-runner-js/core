@@ -9,9 +9,9 @@ function halt (err) {
 
 { /* custom view */
   let counts = []
-  const root = new Tom('root')
-  root.add(new Tom('one', () => counts.push('one')))
-  root.add(new Tom('two', () => counts.push('two')))
+  const tom = new Tom()
+  tom.test('one', () => counts.push('one'))
+  tom.test('two', () => counts.push('two'))
 
   const view = ViewBase => class extends ViewBase {
     start () {
@@ -21,15 +21,18 @@ function halt (err) {
       counts.push('end')
     }
     testPass (test, result) {
+      counts.push('testPass')
     }
     testFail (test, err) {
+      counts.push('testFail')
     }
     testSkip (test) {
+      counts.push('testSkip')
     }
   }
 
-  const runner = new TestRunner({ view, tom: root })
+  const runner = new TestRunner({ view, tom })
   runner.start()
-    .then(root => a.deepStrictEqual(counts, [ 'start', 'one', 'two', 'end' ]))
+    .then(() => a.deepStrictEqual(counts, [ 'start', 'one', 'testPass', 'two', 'testPass', 'end' ]))
     .catch(halt)
 }

@@ -17,6 +17,7 @@ import ViewBase from './lib/view-base.mjs'
 class TestRunner extends StateMachine {
   constructor (options) {
     options = options || {}
+    if (!options.tom) throw new Error('tom required')
     super([
       { from: undefined, to: 'pending' },
       { from: 'pending', to: 'start' },

@@ -7,9 +7,17 @@ function halt (err) {
   process.exitCode = 1
 }
 
+{ /* runner.start(): no tom */
+  try {
+    const runner = new TestRunner()
+  } catch (err) {
+    if (!/tom required/i.test(err.message)) halt(err)
+  }
+}
+
 { /* runner.start(): pass */
   let counts = []
-  const tom = new Tom('tom')
+  const tom = new Tom()
   tom.test('one', () => counts.push('one'))
   tom.test('two', () => counts.push('two'))
 
@@ -25,7 +33,7 @@ function halt (err) {
 
 { /* runner.start(): fail */
   let counts = []
-  const tom = new Tom('tom')
+  const tom = new Tom()
   tom.test('one', () => {
     counts.push('one')
     throw new Error('broken')
@@ -44,7 +52,7 @@ function halt (err) {
 
 { /* runner.start(): pass, events */
   let counts = []
-  const tom = new Tom('tom')
+  const tom = new Tom()
   tom.test(new Tom('one', () => true))
 
   const runner = new TestRunner({ tom })
@@ -61,7 +69,7 @@ function halt (err) {
 
 { /* runner.start(): test events */
   let counts = []
-  const tom = new Tom('tom')
+  const tom = new Tom()
   tom.test('one', () => true)
   tom.test('two', () => { throw new Error('fail') })
   tom.skip('three', () => true)
