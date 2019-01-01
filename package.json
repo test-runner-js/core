@@ -46,6 +46,7 @@
   },
   "files": [
     "lib",
-    "dist"
+    "dist/index.js",
+    "index.mjs"
   ]
 }

@@ -430,9 +430,9 @@ class TestRunner extends StateMachine {
   }
 
   async start () {
-    const count = Array.from(this.tom).length;
-    this.setState('start', count);
-    const jobs = Array.from(this.tom).filter(t => t.testFn).map(test => {
+    const tests = Array.from(this.tom).filter(t => t.testFn);
+    this.setState('start', tests.length);
+    const jobs = tests.map(test => {
       return () => {
         return test.run()
           .catch(err => {
