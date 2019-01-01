@@ -15,6 +15,8 @@ import { halt } from './lib/util.mjs'
   let counts = []
   const tom = new Tom()
   tom.test('one', () => 1)
+  tom.on('pass', () => counts.push('test-pass'))
+  tom.on('fail', () => counts.push('test-fail'))
 
   const runner = new TestRunner({ tom })
   runner.on('pass', () => counts.push(runner.state))
@@ -23,7 +25,7 @@ import { halt } from './lib/util.mjs'
   runner.start()
     .then(() => {
       counts.push(runner.state)
-      a.deepStrictEqual(counts, [ 'pending', 'start', 'pass', 'end' ])
+      a.deepStrictEqual(counts, [ 'pending', 'start', 'test-pass', 'pass', 'end' ])
     })
     .catch(halt)
   counts.push(runner.state)
@@ -35,6 +37,8 @@ import { halt } from './lib/util.mjs'
   tom.test('one', () => {
     throw new Error('broken')
   })
+  tom.on('pass', () => counts.push('test-pass'))
+  tom.on('fail', () => counts.push('test-fail'))
 
   const runner = new TestRunner({ tom })
   runner.on('pass', () => counts.push(runner.state))
@@ -43,7 +47,29 @@ import { halt } from './lib/util.mjs'
   runner.start()
     .then(() => {
       counts.push(runner.state)
-      a.deepStrictEqual(counts, [ 'pending', 'start', 'fail', 'end' ])
+      a.deepStrictEqual(counts, [ 'pending', 'start', 'test-fail', 'fail', 'end' ])
+    })
+    .catch(halt)
+  counts.push(runner.state)
+}
+
+{ /* runner states: fail, reject */
+  let counts = []
+  const tom = new Tom()
+  tom.test('one', function () {
+    return Promise.reject(new Error('broken'))
+  })
+  tom.on('pass', () => counts.push('test-pass'))
+  tom.on('fail', () => counts.push('test-fail'))
+
+  const runner = new TestRunner({ tom })
+  runner.on('pass', () => counts.push(runner.state))
+  runner.on('fail', () => counts.push(runner.state))
+  counts.push(runner.state)
+  runner.start()
+    .then(() => {
+      counts.push(runner.state)
+      a.deepStrictEqual(counts, [ 'pending', 'start', 'test-fail', 'fail', 'end' ])
     })
     .catch(halt)
   counts.push(runner.state)

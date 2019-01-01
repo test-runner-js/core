@@ -50,25 +50,29 @@ class TestRunner extends StateMachine {
   }
 
   async start () {
-    const tests = Array.from(this.tom).filter(t => t.testFn)
-    this.setState('start', tests.length)
-    const jobs = tests.map(test => {
-      return () => {
-        return test.run()
-          .catch(err => {
-            this.state = 'fail'
-            // keep going when tests fail but crash for programmer error
-          })
-      }
+    return new Promise((resolve, reject) => {
+      const tests = Array.from(this.tom).filter(t => t.testFn)
+      this.setState('start', tests.length)
+      const jobs = tests.map(test => {
+        return () => {
+          return test.run()
+            .catch(err => {
+              this.state = 'fail'
+              // keep going when tests fail but crash for programmer error
+            })
+        }
+      })
+      setImmediate(async () => {
+        const queue = new Queue(jobs, this.tom.options.concurrency)
+        const results = []
+        for await (const result of queue) {
+          results.push(result)
+        }
+        if (this.state !== 'fail') this.state = 'pass'
+        this.state = 'end'
+        return resolve(results)
+      })
     })
-    const queue = new Queue(jobs, this.tom.options.concurrency)
-    const results = []
-    for await (const result of queue) {
-      results.push(result)
-    }
-    if (this.state !== 'fail') this.state = 'pass'
-    this.state = 'end'
-    return results
   }
 }
 
