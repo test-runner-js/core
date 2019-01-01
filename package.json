@@ -1,11 +1,10 @@
 {
   "name": "test-runner",
   "author": "Lloyd Brookes <75pound@gmail.com>",
-  "version": "0.5.1",
+  "version": "0.6.0-3",
   "description": "Minimal, extensible test runner.",
-  "repository": "https://github.com/75lb/test-runner.git",
+  "repository": "https://github.com/test-runner-js/core",
   "license": "MIT",
-  "bin": "bin/cli.js",
   "keywords": [
     "test",
     "runner",
@@ -17,28 +16,37 @@
     "ava",
     "mocha"
   ],
+  "main": "./dist/index.js",
   "engines": {
-    "node": ">=4"
+    "node": ">=6"
   },
   "scripts": {
-    "test": "node test.js",
-    "docs": "jsdoc2md -t jsdoc2md/README.hbs lib/*.js > README.md; echo"
+    "test": "npm run test:js && npm run test:mjs",
+    "test:js": "rollup -c build/tests.config.js && node dist/tests.js",
+    "test:mjs": "node --experimental-modules test/tests.mjs",
+    "docs": "jsdoc2md -c build/jsdoc.conf -t README.hbs index.mjs > README.md; echo",
+    "dist": "rollup -w -c build/index.config.js",
+    "i": "rm -rf node_modules package-lock.json && npm i --legacy-bundling test-object-model && npm i --legacy-bundling fsm-base && npm install",
+    "pre": "npm version prerelease && tag=next pub"
   },
   "dependencies": {
-    "ansi-escape-sequences": "^4.0.0",
-    "array-back": "^2.0.0",
-    "command-line-args": "^5.0.2",
-    "command-line-usage": "^4.1.0",
-    "file-set": "^1.1.1",
-    "reduce-flatten": "^1.0.1"
+    "fsm-base": "^0.4.3",
+    "test-object-model": "^0.2.4"
   },
   "devDependencies": {
-    "jsdoc-to-markdown": "^4.0.1"
+    "jsdoc-to-markdown": "^4.0.1",
+    "node-fetch": "^2.3.0",
+    "rollup": "^1.0.0"
   },
   "standard": {
     "ignore": [
-      "es5",
-      "tmp"
+      "tmp",
+      "dist"
     ]
-  }
+  },
+  "files": [
+    "lib",
+    "dist/index.js",
+    "index.mjs"
+  ]
 }
