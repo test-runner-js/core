@@ -354,6 +354,35 @@ class ViewBase {
   }
 }
 
+class Queue {
+  constructor (jobs, maxConcurrency) {
+    this.jobs = jobs;
+    this.activeCount = 0;
+    this.maxConcurrency = maxConcurrency || 10;
+  }
+
+  async * [Symbol.asyncIterator] () {
+    while (this.jobs.length) {
+      const slotsAvailable = this.maxConcurrency - this.activeCount;
+      if (slotsAvailable > 0) {
+        const toRun = [];
+        for (let i = 0; i < slotsAvailable; i++) {
+          const job = this.jobs.shift();
+          if (job) {
+            toRun.push(job());
+            this.activeCount++;
+          }
+        }
+        const results = await Promise.all(toRun);
+        this.activeCount -= results.length;
+        for (const result of results) {
+          yield result;
+        }
+      }
+    }
+  }
+}
+
 /**
  * @module test-runner
  */
@@ -379,7 +408,7 @@ class TestRunner extends StateMachine {
       { from: 'fail', to: 'end' }
     ]);
     this.state = 'pending';
-    this.sequential = options.sequential;
+    this.options = options;
     this.tom = options.tom;
     const ViewClass = (options.view || consoleView)(ViewBase);
     this.view = new ViewClass();
@@ -400,56 +429,26 @@ class TestRunner extends StateMachine {
     return this._view
   }
 
-  start () {
+  async start () {
     const count = Array.from(this.tom).length;
     this.setState('start', count);
-    if (this.sequential) {
-      return this.runSequential().then(results => {
-        if (this.state !== 'fail') this.state = 'pass';
-        this.state = 'end';
-        return results
-      })
-    } else {
-      return this.runInParallel().then(results => {
-        if (this.state !== 'fail') this.state = 'pass';
-        this.state = 'end';
-        return results
-      })
-    }
-  }
-
-  runInParallel () {
-    return Promise.all(Array.from(this.tom).filter(t => t.testFn).map(test => {
-      return test.run()
-        .catch(err => {
-          this.state = 'fail';
-          // keep going when tests fail but crash for programmer error
-        })
-    }))
-  }
-
-  runSequential () {
-    const results = [];
-    return new Promise((resolve, reject) => {
-      const iterator = this.tom[Symbol.iterator]();
-      function runNext () {
-        const tom = iterator.next().value;
-        if (tom) {
-          tom.run()
-            .then(result => {
-              results.push(result);
-              runNext();
-            })
-            .catch(err => {
-              // keep going when tests fail but crash for programmer error
-              runNext();
-            });
-        } else {
-          resolve(results);
-        }
+    const jobs = Array.from(this.tom).filter(t => t.testFn).map(test => {
+      return () => {
+        return test.run()
+          .catch(err => {
+            this.state = 'fail';
+            // keep going when tests fail but crash for programmer error
+          })
       }
-      runNext();
-    })
+    });
+    const queue = new Queue(jobs, this.tom.options.concurrency);
+    const results = [];
+    for await (const result of queue) {
+      results.push(result);
+    }
+    if (this.state !== 'fail') this.state = 'pass';
+    this.state = 'end';
+    return results
   }
 }
 
@@ -942,9 +941,13 @@ function flatten$1 (prev, curr) {
  */
 class Test extends createMixin(Composite)(StateMachine$1) {
   constructor (name, testFn, options) {
-    if (typeof name !== 'string') {
+    if (typeof name === 'string') ; else if (typeof name === 'function') {
       options = testFn;
       testFn = name;
+      name = '';
+    } else if (typeof name === 'object') {
+      options = name;
+      testFn = undefined;
       name = '';
     }
     options = options || {};
@@ -1112,7 +1115,7 @@ function halt (err) {
   }
 }
 
-{ /* runner.start(): pass state */
+{ /* runner states: pass */
   let counts = [];
   const tom = new Test();
   tom.test('one', () => 1);
@@ -1130,7 +1133,7 @@ function halt (err) {
   counts.push(runner.state);
 }
 
-{ /* runner.start(): pass state */
+{ /* runner states: fail */
   let counts = [];
   const tom = new Test();
   tom.test('one', () => {
@@ -1325,14 +1328,9 @@ function halt$1 (err) {
     .catch(halt$1);
 }
 
-function halt$2 (err) {
-  console.log(err);
-  process.exitCode = 1;
-}
-
 { /* timeout tests */
   let counts = [];
-  const tom = new Test('Sequential tests');
+  const tom = new Test('Sequential tests', null, { concurrency: 1 });
   tom.test('one', function () {
     a.deepStrictEqual(counts, []);
     return new Promise((resolve, reject) => {
@@ -1359,23 +1357,18 @@ function halt$2 (err) {
     return 3
   });
 
-  const runner = new TestRunner({ tom, sequential: true });
+  const runner = new TestRunner({ tom });
   runner.start()
     .then(results => {
-      a.deepStrictEqual(results, [ undefined, 1, 2, 3 ]);
+      a.deepStrictEqual(results, [ 1, 2, 3 ]);
       a.deepStrictEqual(counts, [ 1, 2, 3 ]);
     })
-    .catch(halt$2);
-}
-
-function halt$3 (err) {
-  console.log(err);
-  process.exitCode = 1;
+    .catch(halt);
 }
 
 { /* server tests */
   let counts = [];
-  const tom = new Test('Sequential tests');
+  const tom = new Test('Sequential tests', null, { concurrency: 1 });
   tom.test('one', function () {
     const server = http.createServer((req, res) => {
       setTimeout(() => {
@@ -1414,11 +1407,11 @@ function halt$3 (err) {
     })
   });
 
-  const runner = new TestRunner({ tom, sequential: true });
+  const runner = new TestRunner({ tom });
   runner.start()
     .then(results => {
-      a.deepStrictEqual(results, [ undefined, 200, 201 ]);
+      a.deepStrictEqual(results, [ 200, 201 ]);
       a.deepStrictEqual(counts, [ 200, 201 ]);
     })
-    .catch(halt$3);
+    .catch(halt);
 }

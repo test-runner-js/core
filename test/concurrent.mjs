@@ -1,11 +1,7 @@
 import TestRunner from '../index.mjs'
 import Tom from '../node_modules/test-object-model/index.mjs'
 import a from 'assert'
-
-function halt (err) {
-  console.log(err)
-  process.exitCode = 1
-}
+import { halt } from './lib/util.mjs'
 
 { /* new TestRunner: no tom */
   try {
@@ -15,7 +11,7 @@ function halt (err) {
   }
 }
 
-{ /* runner.start(): pass state */
+{ /* runner states: pass */
   let counts = []
   const tom = new Tom()
   tom.test('one', () => 1)
@@ -33,7 +29,7 @@ function halt (err) {
   counts.push(runner.state)
 }
 
-{ /* runner.start(): pass state */
+{ /* runner states: fail */
   let counts = []
   const tom = new Tom()
   tom.test('one', () => {

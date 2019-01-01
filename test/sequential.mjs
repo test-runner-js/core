@@ -3,15 +3,11 @@ import Tom from '../node_modules/test-object-model/index.mjs'
 import a from 'assert'
 import http from 'http'
 import fetch from 'node-fetch'
-
-function halt (err) {
-  console.log(err)
-  process.exitCode = 1
-}
+import { halt } from './lib/util.mjs'
 
 { /* timeout tests */
   let counts = []
-  const tom = new Tom('Sequential tests')
+  const tom = new Tom('Sequential tests', null, { concurrency: 1 })
   tom.test('one', function () {
     a.deepStrictEqual(counts, [])
     return new Promise((resolve, reject) => {
@@ -38,10 +34,10 @@ function halt (err) {
     return 3
   })
 
-  const runner = new TestRunner({ tom, sequential: true })
+  const runner = new TestRunner({ tom })
   runner.start()
     .then(results => {
-      a.deepStrictEqual(results, [ undefined, 1, 2, 3 ])
+      a.deepStrictEqual(results, [ 1, 2, 3 ])
       a.deepStrictEqual(counts, [ 1, 2, 3 ])
     })
     .catch(halt)

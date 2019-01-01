@@ -1,6 +1,7 @@
 import consoleView from './lib/view-default.mjs'
 import StateMachine from './node_modules/fsm-base/index.mjs'
 import ViewBase from './lib/view-base.mjs'
+import Queue from './lib/queue.mjs'
 
 /**
  * @module test-runner
@@ -27,7 +28,7 @@ class TestRunner extends StateMachine {
       { from: 'fail', to: 'end' }
     ])
     this.state = 'pending'
-    this.sequential = options.sequential
+    this.options = options
     this.tom = options.tom
     const ViewClass = (options.view || consoleView)(ViewBase)
     this.view = new ViewClass()
@@ -48,56 +49,26 @@ class TestRunner extends StateMachine {
     return this._view
   }
 
-  start () {
+  async start () {
     const count = Array.from(this.tom).length
     this.setState('start', count)
-    if (this.sequential) {
-      return this.runSequential().then(results => {
-        if (this.state !== 'fail') this.state = 'pass'
-        this.state = 'end'
-        return results
-      })
-    } else {
-      return this.runInParallel().then(results => {
-        if (this.state !== 'fail') this.state = 'pass'
-        this.state = 'end'
-        return results
-      })
-    }
-  }
-
-  runInParallel () {
-    return Promise.all(Array.from(this.tom).filter(t => t.testFn).map(test => {
-      return test.run()
-        .catch(err => {
-          this.state = 'fail'
-          // keep going when tests fail but crash for programmer error
-        })
-    }))
-  }
-
-  runSequential () {
-    const results = []
-    return new Promise((resolve, reject) => {
-      const iterator = this.tom[Symbol.iterator]()
-      function runNext () {
-        const tom = iterator.next().value
-        if (tom) {
-          tom.run()
-            .then(result => {
-              results.push(result)
-              runNext()
-            })
-            .catch(err => {
-              // keep going when tests fail but crash for programmer error
-              runNext()
-            })
-        } else {
-          resolve(results)
-        }
+    const jobs = Array.from(this.tom).filter(t => t.testFn).map(test => {
+      return () => {
+        return test.run()
+          .catch(err => {
+            this.state = 'fail'
+            // keep going when tests fail but crash for programmer error
+          })
       }
-      runNext()
     })
+    const queue = new Queue(jobs, this.tom.options.concurrency)
+    const results = []
+    for await (const result of queue) {
+      results.push(result)
+    }
+    if (this.state !== 'fail') this.state = 'pass'
+    this.state = 'end'
+    return results
   }
 }
 
