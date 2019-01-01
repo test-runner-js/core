@@ -440,7 +440,7 @@
               })
           }
         });
-        setImmediate(async () => {
+        setTimeout(async () => {
           const queue = new Queue(jobs, this.tom.options.concurrency);
           const results = [];
           for await (const result of queue) {
@@ -449,7 +449,7 @@
           if (this.state !== 'fail') this.state = 'pass';
           this.state = 'end';
           return resolve(results)
-        });
+        }, 0);
       })
     }
   }

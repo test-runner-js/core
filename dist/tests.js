@@ -442,7 +442,7 @@ class TestRunner extends StateMachine {
             })
         }
       });
-      setImmediate(async () => {
+      setTimeout(async () => {
         const queue = new Queue(jobs, this.tom.options.concurrency);
         const results = [];
         for await (const result of queue) {
@@ -451,7 +451,7 @@ class TestRunner extends StateMachine {
         if (this.state !== 'fail') this.state = 'pass';
         this.state = 'end';
         return resolve(results)
-      });
+      }, 0);
     })
   }
 }
