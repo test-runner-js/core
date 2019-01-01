@@ -1,5 +1,5 @@
 {
-  "name": "test-runner",
+  "name": "test-runner-core",
   "author": "Lloyd Brookes <75pound@gmail.com>",
   "version": "0.6.0-4",
   "description": "Minimal, extensible test runner.",
