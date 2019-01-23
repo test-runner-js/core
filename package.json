@@ -24,7 +24,8 @@
     "test": "npm run test:js && npm run test:mjs",
     "test:js": "rollup -c build/tests.config.js && node dist/tests.js",
     "test:mjs": "node --experimental-modules test/tests.mjs",
-    "dist": "rollup -w -c build/index.config.js"
+    "dist": "rollup -w -c build/index.config.js",
+    "postinstall": "cd node_modules/test-object-model && npm i --legacy-bundling --production"
   },
   "dependencies": {
     "fsm-base": "^0.4.3",

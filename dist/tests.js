@@ -401,17 +401,16 @@ class TestRunner extends StateMachine {
     if (!options.tom) throw new Error('tom required')
     super([
       { from: undefined, to: 'pending' },
-      { from: 'pending', to: 'start' },
-      { from: 'start', to: 'pass' },
-      { from: 'start', to: 'fail' },
-      { from: 'pass', to: 'end' },
-      { from: 'fail', to: 'end' }
+      { from: 'pending', to: 'in-progress' },
+      { from: 'in-progress', to: 'pass' },
+      { from: 'in-progress', to: 'fail' }
     ]);
     this.state = 'pending';
     this.options = options;
     this.tom = options.tom;
     const ViewClass = (options.view || consoleView)(ViewBase);
     this.view = new ViewClass();
+    this.ended = false;
   }
 
   set view (view) {
@@ -432,14 +431,13 @@ class TestRunner extends StateMachine {
   async start () {
     return new Promise((resolve, reject) => {
       const tests = Array.from(this.tom).filter(t => t.testFn);
-      this.setState('start', tests.length);
+      this.setState('in-progress', tests.length);
       const jobs = tests.map(test => {
         return () => {
-          return test.run()
-            .catch(err => {
-              this.state = 'fail';
-              // keep going when tests fail but crash for programmer error
-            })
+          return test.run().catch(err => {
+            this.state = 'fail';
+            // keep going when tests fail but crash for programmer error
+          })
         }
       });
       setTimeout(async () => {
@@ -448,8 +446,8 @@ class TestRunner extends StateMachine {
         for await (const result of queue) {
           results.push(result);
         }
+        this.ended = true;
         if (this.state !== 'fail') this.state = 'pass';
-        this.state = 'end';
         return resolve(results)
       }, 0);
     })
@@ -937,13 +935,17 @@ function flatten$1 (prev, curr) {
 }
 
 /**
- * Test function class.
- * @param {string} name
- * @param {function} testFn
+ * @module test-object-model
+ */
+
+/**
+ * @param {string} [name]
+ * @param {function} [testFn]
  * @param {object} [options]
  * @param {number} [options.timeout]
+ * @alias module:test-object-model
  */
-class Test extends createMixin(Composite)(StateMachine$1) {
+class Tom extends createMixin(Composite)(StateMachine$1) {
   constructor (name, testFn, options) {
     if (typeof name === 'string') ; else if (typeof name === 'function') {
       options = testFn;
@@ -968,20 +970,40 @@ class Test extends createMixin(Composite)(StateMachine$1) {
       { from: 'fail', to: 'pending' },
       { from: 'skip', to: 'pending' },
     ]);
+    /**
+     * Test name
+     * @type {string}
+     */
     this.name = name;
+
+    /**
+     * Test function
+     * @type {function}
+     */
     this.testFn = testFn;
-    this.options = Object.assign({ timeout: 10000 }, options);
+
+    /**
+     * Position of this test within its parents children
+     */
     this.index = 1;
+
+    /**
+     * Test state: pending, start, skip, pass or fail.
+     */
     this.state = 'pending';
     this._markSkip = options._markSkip;
     this._skip = null;
     this._only = options.only;
+    this.options = Object.assign({ timeout: 10000 }, options);
   }
 
   toString () {
     return `${this.name}`
   }
 
+  /**
+   * Add a test.
+   */
   test (name, testFn, options) {
     for (const child of this) {
       if (child.name === name) {
@@ -991,16 +1013,36 @@ class Test extends createMixin(Composite)(StateMachine$1) {
     const test = new this.constructor(name, testFn, options);
     this.add(test);
     test.index = this.children.length;
-    this.skipLogic();
+    this._skipLogic();
     return test
   }
 
-  onlyExists () {
+  /**
+   * Add a skipped test
+   */
+  skip (name, testFn, options) {
+    options = options || {};
+    options._markSkip = true;
+    const test = this.test(name, testFn, options);
+    return test
+  }
+
+  /**
+   * Add an only test
+   */
+  only (name, testFn, options) {
+    options = options || {};
+    options.only = true;
+    const test = this.test(name, testFn, options);
+    return test
+  }
+
+  _onlyExists () {
     return Array.from(this.root()).some(t => t._only)
   }
 
-  skipLogic () {
-    if (this.onlyExists()) {
+  _skipLogic () {
+    if (this._onlyExists()) {
       for (const test of this.root()) {
         if (test._markSkip) {
           test._skip = true;
@@ -1013,20 +1055,6 @@ class Test extends createMixin(Composite)(StateMachine$1) {
         test._skip = test._markSkip;
       }
     }
-  }
-
-  skip (name, testFn, options) {
-    options = options || {};
-    options._markSkip = true;
-    const test = this.test(name, testFn, options);
-    return test
-  }
-
-  only (name, testFn, options) {
-    options = options || {};
-    options.only = true;
-    const test = this.test(name, testFn, options);
-    return test
   }
 
   /**
@@ -1073,6 +1101,9 @@ class Test extends createMixin(Composite)(StateMachine$1) {
     }
   }
 
+  /**
+   * Reset state
+   */
   reset (deep) {
     if (deep) {
       for (const tom of this) {
@@ -1086,6 +1117,12 @@ class Test extends createMixin(Composite)(StateMachine$1) {
     }
   }
 
+  /**
+   * Combine several TOM instances into a common root
+   * @param {Array.<Tom>} toms
+   * @param {string} [name]
+   * @return {Tom}
+   */
   static combine (toms, name) {
     if (toms.length > 1) {
       const tom = new this(name);
@@ -1114,81 +1151,32 @@ function halt (err) {
   process.exitCode = 1;
 }
 
-{ /* new TestRunner: no tom */
-  try {
-    const runner = new TestRunner();
-  } catch (err) {
-    if (!/tom required/i.test(err.message)) halt(err);
-  }
+function sleep (ms, result) {
+  return new Promise((resolve, reject) => {
+    setTimeout(() => resolve(result), ms);
+  })
 }
 
-{ /* runner states: pass */
-  let counts = [];
-  const tom = new Test();
-  tom.test('one', () => 1);
-  tom.on('pass', () => counts.push('test-pass'));
-  tom.on('fail', () => counts.push('test-fail'));
+{ /* concurrency usage */
+  const tom = new Tom({ concurrency: 1 });
+  tom
+    .test(() => sleep(30, 1))
+    .test(() => sleep(20, 1.1))
+    .test(() => sleep(50, 1.2));
+  tom
+    .test(() => sleep(10, 2))
+    .test(() => sleep(40, 2.1))
+    .test(() => sleep(60, 2.2));
 
   const runner = new TestRunner({ tom });
-  runner.on('pass', () => counts.push(runner.state));
-  runner.on('fail', () => counts.push(runner.state));
-  counts.push(runner.state);
-  runner.start()
-    .then(() => {
-      counts.push(runner.state);
-      a.deepStrictEqual(counts, [ 'pending', 'start', 'test-pass', 'pass', 'end' ]);
-    })
-    .catch(halt);
-  counts.push(runner.state);
-}
-
-{ /* runner states: fail */
-  let counts = [];
-  const tom = new Test();
-  tom.test('one', () => {
-    throw new Error('broken')
+  runner.start().then(results => {
+    a.deepStrictEqual(results, [ 1, 1.1, 1.2, 2, 2.1, 2.2 ]);
   });
-  tom.on('pass', () => counts.push('test-pass'));
-  tom.on('fail', () => counts.push('test-fail'));
-
-  const runner = new TestRunner({ tom });
-  runner.on('pass', () => counts.push(runner.state));
-  runner.on('fail', () => counts.push(runner.state));
-  counts.push(runner.state);
-  runner.start()
-    .then(() => {
-      counts.push(runner.state);
-      a.deepStrictEqual(counts, [ 'pending', 'start', 'test-fail', 'fail', 'end' ]);
-    })
-    .catch(halt);
-  counts.push(runner.state);
-}
-
-{ /* runner states: fail, reject */
-  let counts = [];
-  const tom = new Test();
-  tom.test('one', function () {
-    return Promise.reject(new Error('broken'))
-  });
-  tom.on('pass', () => counts.push('test-pass'));
-  tom.on('fail', () => counts.push('test-fail'));
-
-  const runner = new TestRunner({ tom });
-  runner.on('pass', () => counts.push(runner.state));
-  runner.on('fail', () => counts.push(runner.state));
-  counts.push(runner.state);
-  runner.start()
-    .then(() => {
-      counts.push(runner.state);
-      a.deepStrictEqual(counts, [ 'pending', 'start', 'test-fail', 'fail', 'end' ]);
-    })
-    .catch(halt);
-  counts.push(runner.state);
 }
 
 { /* runner.start(): pass results and events */
   let counts = [];
-  const tom = new Test();
+  const tom = new Tom();
   tom.test('one', () => {
     counts.push('one');
     return 1
@@ -1209,7 +1197,7 @@ function halt (err) {
 
 { /* runner.start(): fail results and events */
   let counts = [];
-  const tom = new Test();
+  const tom = new Tom();
   tom.test('one', () => {
     counts.push('one');
     throw new Error('broken')
@@ -1230,7 +1218,7 @@ function halt (err) {
 
 { /* runner.start(): pass, fail, skip events */
   let counts = [];
-  const tom = new Test();
+  const tom = new Tom();
   tom.test('one', () => true);
   tom.test('two', () => { throw new Error('fail') });
   tom.skip('three', () => true);
@@ -1248,7 +1236,7 @@ function halt (err) {
 
 { /* runner.start(): only */
   let counts = [];
-  const tom = new Test();
+  const tom = new Tom();
   tom.test('one', () => 1);
   tom.test('two', () => 2);
   tom.only('three', () => 3);
@@ -1267,7 +1255,7 @@ function halt (err) {
 
 { /* runner.start(): deep only */
   let counts = [];
-  const tom = new Test();
+  const tom = new Tom();
   const one = tom.only('one', () => 1);
   const two = one.test('two', () => 2);
   const three = two.only('three', () => 3);
@@ -1286,7 +1274,7 @@ function halt (err) {
 
 { /* runner.start(): deep only with fail */
   let counts = [];
-  const tom = new Test();
+  const tom = new Tom();
   const one = tom.only('one', () => 1);
   const two = one.test('two', () => 2);
   const three = two.only('three', () => {
@@ -1307,7 +1295,7 @@ function halt (err) {
 
 { /* runner.start(): deep only with skipped fail */
   let counts = [];
-  const tom = new Test();
+  const tom = new Tom();
   const one = tom.only('one', () => 1);
   const two = one.test('two', () => 2);
   const three = two.skip('three', () => {
@@ -1326,44 +1314,17 @@ function halt (err) {
     .catch(halt);
 }
 
-function halt$1 (err) {
-  console.log(err);
-  process.exitCode = 1;
-}
-
-{ /* custom view */
-  let counts = [];
-  const tom = new Test();
-  tom.test('one', () => counts.push('one'));
-  tom.test('two', () => counts.push('two'));
-
-  const view = ViewBase => class extends ViewBase {
-    start () {
-      counts.push('start');
-    }
-    end () {
-      counts.push('end');
-    }
-    testPass (test, result) {
-      counts.push('testPass');
-    }
-    testFail (test, err) {
-      counts.push('testFail');
-    }
-    testSkip (test) {
-      counts.push('testSkip');
-    }
-  };
-
-  const runner = new TestRunner({ view, tom });
-  runner.start()
-    .then(() => a.deepStrictEqual(counts, [ 'start', 'one', 'testPass', 'two', 'testPass', 'end' ]))
-    .catch(halt$1);
+{ /* new TestRunner: no tom */
+  try {
+    const runner = new TestRunner();
+  } catch (err) {
+    if (!/tom required/i.test(err.message)) halt(err);
+  }
 }
 
 { /* timeout tests */
   let counts = [];
-  const tom = new Test('Sequential tests', null, { concurrency: 1 });
+  const tom = new Tom('Sequential tests', null, { concurrency: 1 });
   tom.test('one', function () {
     a.deepStrictEqual(counts, []);
     return new Promise((resolve, reject) => {
@@ -1401,7 +1362,7 @@ function halt$1 (err) {
 
 { /* server tests */
   let counts = [];
-  const tom = new Test('Sequential tests', null, { concurrency: 1 });
+  const tom = new Tom('Sequential tests', null, { concurrency: 1 });
   tom.test('one', function () {
     const server = http.createServer((req, res) => {
       setTimeout(() => {
@@ -1448,3 +1409,75 @@ function halt$1 (err) {
     })
     .catch(halt);
 }
+
+{ /* runner states: pass */
+  let counts = [];
+  const tom = new Tom();
+  tom.test('one', () => 1);
+  tom.test('two', () => 2);
+  tom.on('pass', () => counts.push('test-pass'));
+  tom.on('fail', () => counts.push('test-fail'));
+
+  const runner = new TestRunner({ tom });
+  counts.push('prop:' + runner.state);
+  runner.on('state', state => counts.push('event:' + state));
+  a.deepStrictEqual(runner.ended, false);
+  runner.start()
+    .then(() => {
+      counts.push('prop:' + runner.state);
+      a.deepStrictEqual(counts, [ 'prop:pending', 'event:in-progress', 'prop:in-progress', 'test-pass', 'test-pass', 'event:pass', 'prop:pass' ]);
+      a.deepStrictEqual(runner.ended, true);
+    })
+    .catch(halt);
+  counts.push('prop:' + runner.state);
+}
+
+{ /* runner states: fail */
+  let counts = [];
+  const tom = new Tom();
+  tom.test('one', () => {
+    throw new Error('broken')
+  });
+  tom.test('two', () => 2);
+  tom.on('pass', () => counts.push('test-pass'));
+  tom.on('fail', () => counts.push('test-fail'));
+
+  const runner = new TestRunner({ tom });
+  counts.push('prop:' + runner.state);
+  runner.on('state', state => counts.push('event:' + state));
+  a.deepStrictEqual(runner.ended, false);
+  runner.start()
+    .then(() => {
+      counts.push('prop:' + runner.state);
+      a.deepStrictEqual(counts, [ 'prop:pending', 'event:in-progress', 'prop:in-progress', 'test-fail', 'test-pass', 'event:fail', 'prop:fail' ]);
+      a.deepStrictEqual(runner.ended, true);
+    })
+    .catch(halt);
+  counts.push('prop:' + runner.state);
+}
+
+{ /* runner states: fail, reject */
+  let counts = [];
+  const tom = new Tom();
+  tom.test('one', () => {
+    return Promise.reject(new Error('broken'))
+  });
+  tom.test('two', () => 2);
+  tom.on('pass', () => counts.push('test-pass'));
+  tom.on('fail', () => counts.push('test-fail'));
+
+  const runner = new TestRunner({ tom });
+  counts.push('prop:' + runner.state);
+  runner.on('state', state => counts.push('event:' + state));
+  a.deepStrictEqual(runner.ended, false);
+  runner.start()
+    .then(() => {
+      counts.push('prop:' + runner.state);
+      a.deepStrictEqual(counts, [ 'prop:pending', 'event:in-progress', 'prop:in-progress', 'test-pass', 'test-fail', 'event:fail', 'prop:fail' ]);
+      a.deepStrictEqual(runner.ended, true);
+    })
+    .catch(halt);
+  counts.push('prop:' + runner.state);
+}
+
+// import './view.mjs'
