@@ -6,24 +6,6 @@ var a = _interopDefault(require('assert'));
 var http = _interopDefault(require('http'));
 var fetch = _interopDefault(require('node-fetch'));
 
-var consoleView = ViewBase => class ConsoleView extends ViewBase {
-  start (count) {
-    this.log(`Starting: ${count} tests`);
-  }
-  testPass (test, result) {
-    this.log('✓', test.name, result || 'ok');
-  }
-  testSkip (test) {
-    this.log('-', test.name);
-  }
-  testFail (test, err) {
-    this.log(`⨯ ${test.name} [Error: ${err.message}]`);
-  }
-  end () {
-    this.log(`End`);
-  }
-};
-
 /**
  * @module obso
  */
@@ -408,8 +390,10 @@ class TestRunner extends StateMachine {
     this.state = 'pending';
     this.options = options;
     this.tom = options.tom;
-    const ViewClass = (options.view || consoleView)(ViewBase);
-    this.view = new ViewClass();
+    if (options.view) {
+      const ViewClass = options.view(ViewBase);
+      this.view = new ViewClass();
+    }
     this.ended = false;
   }
 
@@ -1497,4 +1481,32 @@ function sleep (ms, result) {
   counts.push('prop:' + runner.state);
 }
 
-// import './view.mjs'
+{ /* custom view */
+  let counts = [];
+  const tom = new Tom();
+  tom.test('one', () => counts.push('one'));
+  tom.test('two', () => counts.push('two'));
+
+  const view = ViewBase => class extends ViewBase {
+    start () {
+      counts.push('start');
+    }
+    end () {
+      counts.push('end');
+    }
+    testPass (test, result) {
+      counts.push('testPass');
+    }
+    testFail (test, err) {
+      counts.push('testFail');
+    }
+    testSkip (test) {
+      counts.push('testSkip');
+    }
+  };
+
+  const runner = new TestRunner({ view, tom });
+  runner.start()
+    .then(() => a.deepStrictEqual(counts, [ 'start', 'one', 'testPass', 'two', 'testPass', 'end' ]))
+    .catch(halt);
+}

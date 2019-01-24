@@ -28,8 +28,10 @@ class TestRunner extends StateMachine {
     this.state = 'pending'
     this.options = options
     this.tom = options.tom
-    const ViewClass = (options.view || consoleView)(ViewBase)
-    this.view = new ViewClass()
+    if (options.view) {
+      const ViewClass = options.view(ViewBase)
+      this.view = new ViewClass()
+    }
     this.ended = false
   }
 
