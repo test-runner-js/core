@@ -429,17 +429,18 @@ class TestRunner extends StateMachine {
   }
 
   async start () {
+    const tests = Array.from(this.tom).filter(t => t.testFn);
+    this.setState('in-progress', tests.length);
+    this.emit('start', tests.length);
+    const jobs = tests.map(test => {
+      return () => {
+        return test.run().catch(err => {
+          this.state = 'fail';
+          // keep going when tests fail but crash for programmer error
+        })
+      }
+    });
     return new Promise((resolve, reject) => {
-      const tests = Array.from(this.tom).filter(t => t.testFn);
-      this.setState('in-progress', tests.length);
-      const jobs = tests.map(test => {
-        return () => {
-          return test.run().catch(err => {
-            this.state = 'fail';
-            // keep going when tests fail but crash for programmer error
-          })
-        }
-      });
       setTimeout(async () => {
         const queue = new Queue(jobs, this.tom.options.concurrency);
         const results = [];
@@ -448,6 +449,7 @@ class TestRunner extends StateMachine {
         }
         this.ended = true;
         if (this.state !== 'fail') this.state = 'pass';
+        this.emit('end');
         return resolve(results)
       }, 0);
     })
@@ -1320,6 +1322,21 @@ function sleep (ms, result) {
   } catch (err) {
     if (!/tom required/i.test(err.message)) halt(err);
   }
+}
+
+{ /* runner events: start */
+  let counts = [];
+  const tom = new Tom();
+  tom.test('one', () => 1);
+  tom.test('two', () => 2);
+
+  const runner = new TestRunner({ tom });
+  runner.on('start', () => counts.push('start'));
+  runner.on('end', () => counts.push('end'));
+  setTimeout(() => {
+    a.deepStrictEqual(counts, [ 'start', 'end' ]);
+  }, 100);
+  runner.start();
 }
 
 { /* timeout tests */

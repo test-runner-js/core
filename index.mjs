@@ -49,17 +49,18 @@ class TestRunner extends StateMachine {
   }
 
   async start () {
+    const tests = Array.from(this.tom).filter(t => t.testFn)
+    this.setState('in-progress', tests.length)
+    this.emit('start', tests.length)
+    const jobs = tests.map(test => {
+      return () => {
+        return test.run().catch(err => {
+          this.state = 'fail'
+          // keep going when tests fail but crash for programmer error
+        })
+      }
+    })
     return new Promise((resolve, reject) => {
-      const tests = Array.from(this.tom).filter(t => t.testFn)
-      this.setState('in-progress', tests.length)
-      const jobs = tests.map(test => {
-        return () => {
-          return test.run().catch(err => {
-            this.state = 'fail'
-            // keep going when tests fail but crash for programmer error
-          })
-        }
-      })
       setTimeout(async () => {
         const queue = new Queue(jobs, this.tom.options.concurrency)
         const results = []
@@ -68,6 +69,7 @@ class TestRunner extends StateMachine {
         }
         this.ended = true
         if (this.state !== 'fail') this.state = 'pass'
+        this.emit('end')
         return resolve(results)
       }, 0)
     })
