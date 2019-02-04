@@ -5,7 +5,7 @@ import http from 'http'
 import fetch from 'node-fetch'
 import { halt } from './lib/util.mjs'
 
-{ /* server tests */
+{ /* http server tests */
   let counts = []
   const tom = new Tom('Sequential tests', null, { concurrency: 1 })
   tom.test('one', function () {

@@ -4,24 +4,6 @@
   (global = global || self, global.TestRunner = factory());
 }(this, function () { 'use strict';
 
-  var consoleView = ViewBase => class ConsoleView extends ViewBase {
-    start (count) {
-      this.log(`Starting: ${count} tests`);
-    }
-    testPass (test, result) {
-      this.log('✓', test.name, result || 'ok');
-    }
-    testSkip (test) {
-      this.log('-', test.name);
-    }
-    testFail (test, err) {
-      this.log(`⨯ ${test.name} [Error: ${err.message}]`);
-    }
-    end () {
-      this.log(`End`);
-    }
-  };
-
   /**
    * @module obso
    */
@@ -406,8 +388,10 @@
       this.state = 'pending';
       this.options = options;
       this.tom = options.tom;
-      const ViewClass = (options.view || consoleView)(ViewBase);
-      this.view = new ViewClass();
+      if (options.view) {
+        const ViewClass = options.view(ViewBase);
+        this.view = new ViewClass();
+      }
       this.ended = false;
     }
 
@@ -427,17 +411,18 @@
     }
 
     async start () {
+      const tests = Array.from(this.tom).filter(t => t.testFn);
+      this.setState('in-progress', tests.length);
+      this.emit('start', tests.length);
+      const jobs = tests.map(test => {
+        return () => {
+          return test.run().catch(err => {
+            this.state = 'fail';
+            // keep going when tests fail but crash for programmer error
+          })
+        }
+      });
       return new Promise((resolve, reject) => {
-        const tests = Array.from(this.tom).filter(t => t.testFn);
-        this.setState('in-progress', tests.length);
-        const jobs = tests.map(test => {
-          return () => {
-            return test.run().catch(err => {
-              this.state = 'fail';
-              // keep going when tests fail but crash for programmer error
-            })
-          }
-        });
         setTimeout(async () => {
           const queue = new Queue(jobs, this.tom.options.concurrency);
           const results = [];
@@ -446,6 +431,7 @@
           }
           this.ended = true;
           if (this.state !== 'fail') this.state = 'pass';
+          this.emit('end');
           return resolve(results)
         }, 0);
       })

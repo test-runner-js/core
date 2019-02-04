@@ -1361,7 +1361,7 @@ function sleep (ms, result) {
     .catch(halt);
 }
 
-{ /* server tests */
+{ /* http server tests */
   let counts = [];
   const tom = new Tom('Sequential tests', null, { concurrency: 1 });
   tom.test('one', function () {
