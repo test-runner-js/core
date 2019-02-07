@@ -366,14 +366,14 @@ class Queue {
 }
 
 /**
- * @module test-runner
+ * @module test-runner-core
  */
 
 /**
- * @alias module:test-runner
- @ @param {object} [options]
- @ @param {function} [options.view]
- @ @param {object} [options.tom]
+ * @alias module:test-runner-core
+ * @param {object} [options]
+ * @param {function} [options.view]
+ * @param {object} [options.tom]
  * @emits start
  * @emits end
  */
@@ -412,13 +412,34 @@ class TestRunner extends StateMachine {
     return this._view
   }
 
+  /**
+   * Start the runner
+   * @returns {Promise}
+   */
   async start () {
     const tests = Array.from(this.tom).filter(t => t.testFn);
+
+    /**
+     * in-progress
+     * @event module:test-runner-core#in-progress
+     * @param testCount {number} - the numbers of tests
+     */
     this.setState('in-progress', tests.length);
+
+    /**
+     * Start
+     * @event module:test-runner-core#start
+     * @param testCount {number} - the numbers of tests
+     */
     this.emit('start', tests.length);
+
     const jobs = tests.map(test => {
       return () => {
         return test.run().catch(err => {
+          /**
+           * Test suite failed
+           * @event module:test-runner-core#fail
+           */
           this.state = 'fail';
           // keep going when tests fail but crash for programmer error
         })
@@ -432,7 +453,17 @@ class TestRunner extends StateMachine {
           results.push(result);
         }
         this.ended = true;
-        if (this.state !== 'fail') this.state = 'pass';
+        if (this.state !== 'fail') {
+          /**
+           * Test suite passed
+           * @event module:test-runner-core#pass
+           */
+          this.state = 'pass';
+        }
+        /**
+         * Test suite ended
+         * @event module:test-runner-core#end
+         */
         this.emit('end');
         return resolve(results)
       }, 0);
