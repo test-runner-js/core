@@ -16,7 +16,7 @@ var fetch = _interopDefault(require('node-fetch'));
 class Emitter {
   /**
    * Emit an event.
-   * @param {string} [eventName] - the event name to emit, omitting the name will catch all events.
+   * @param {string} eventName - the event name to emit.
    * @param ...args {*} - args to pass to the event handler
    */
   emit (eventName, ...args) {
@@ -44,10 +44,10 @@ class Emitter {
     }
 
     /* bubble event up */
-    if (this.parent) this.parent.emitTarget(eventName, this, ...args);
+    if (this.parent) this.parent._emitTarget(eventName, this, ...args);
   }
 
-  emitTarget (eventName, target, ...args) {
+  _emitTarget (eventName, target, ...args) {
     if (this._listeners && this._listeners.length > 0) {
       const toRemove = [];
 
@@ -72,15 +72,15 @@ class Emitter {
     }
 
     /* bubble event up */
-    if (this.parent) this.parent.emitTarget(eventName, target || this, ...args);
+    if (this.parent) this.parent._emitTarget(eventName, target || this, ...args);
   }
 
    /**
     * Register an event listener.
-    * @param {string} eventName - the event name to watch
-    * @param {function} handler - the event handler
+    * @param {string} [eventName] - The event name to watch. Omitting the name will catch all events.
+    * @param {function} handler - The function to be called when `eventName` is emitted. Invocated with `this` set to `emitter`.
     * @param {object} [options]
-    * @param {boolean} [options.once]
+    * @param {boolean} [options.once] - If `true`, the handler will be invoked once then removed.
     */
   on (eventName, handler, options) {
     createListenersArray(this);
@@ -89,7 +89,13 @@ class Emitter {
       handler = eventName;
       eventName = '__ALL__';
     }
-    this._listeners.push({ eventName, handler: handler, once: options.once });
+    if (!handler) {
+      throw new Error('handler function required')
+    } else if (handler && typeof handler !== 'function') {
+      throw new Error('handler arg must be a function')
+    } else {
+      this._listeners.push({ eventName, handler: handler, once: options.once });
+    }
   }
 
   /**
@@ -968,7 +974,7 @@ function flatten$1 (prev, curr) {
  * @param {number} [options.timeout]
  * @alias module:test-object-model
  */
-class Tom extends createMixin(Composite)(StateMachine$1) {
+class Test extends createMixin(Composite)(StateMachine$1) {
   constructor (name, testFn, options) {
     if (typeof name === 'string') ; else if (typeof name === 'function') {
       options = testFn;
@@ -983,15 +989,17 @@ class Tom extends createMixin(Composite)(StateMachine$1) {
     name = name || 'tom';
     super ([
       { from: undefined, to: 'pending' },
-      { from: 'pending', to: 'start' },
+      { from: 'pending', to: 'in-progress' },
       { from: 'pending', to: 'skip' },
-      { from: 'start', to: 'pass' },
-      { from: 'start', to: 'fail' },
+      { from: 'pending', to: 'ignored' },
+      { from: 'in-progress', to: 'pass' },
+      { from: 'in-progress', to: 'fail' },
       /* reset */
-      { from: 'start', to: 'pending' },
+      { from: 'in-progress', to: 'pending' },
       { from: 'pass', to: 'pending' },
       { from: 'fail', to: 'pending' },
       { from: 'skip', to: 'pending' },
+      { from: 'ignored', to: 'pending' },
     ]);
     /**
      * Test name
@@ -1018,6 +1026,11 @@ class Tom extends createMixin(Composite)(StateMachine$1) {
     this._skip = null;
     this._only = options.only;
     this.options = Object.assign({ timeout: 10000 }, options);
+
+    /**
+     * True if ended
+     */
+    this.ended = false;
   }
 
   toString () {
@@ -1080,6 +1093,16 @@ class Tom extends createMixin(Composite)(StateMachine$1) {
     }
   }
 
+  setState (state, target, data) {
+    if (state === 'pass' || state === 'fail') {
+      this.ended = true;
+    }
+    super.setState(state, target, data);
+    if (state === 'pass' || state === 'fail') {
+      this.emit('end');
+    }
+  }
+
   /**
    * Execute the stored test function.
    * @returns {Promise}
@@ -1090,7 +1113,8 @@ class Tom extends createMixin(Composite)(StateMachine$1) {
         this.setState('skip', this);
         return Promise.resolve()
       } else {
-        this.state = 'start';
+        this.setState('in-progress', this);
+        this.emit('start');
         const testFnResult = new Promise((resolve, reject) => {
           try {
             const result = this.testFn.call(new TestContext({
@@ -1120,6 +1144,7 @@ class Tom extends createMixin(Composite)(StateMachine$1) {
         return Promise.race([ testFnResult, raceTimeout(this.options.timeout) ])
       }
     } else {
+      this.setState('ignored', this);
       return Promise.resolve()
     }
   }
@@ -1142,20 +1167,23 @@ class Tom extends createMixin(Composite)(StateMachine$1) {
 
   /**
    * Combine several TOM instances into a common root
-   * @param {Array.<Tom>} toms
+   * @param {Array.<Test>} tests
    * @param {string} [name]
-   * @return {Tom}
+   * @return {Test}
    */
-  static combine (toms, name) {
-    if (toms.length > 1) {
-      const tom = new this(name);
-      for (const subTom of toms) {
-        tom.add(subTom);
+  static combine (tests, name) {
+    let test;
+    if (tests.length > 1) {
+      test = new this(name);
+      for (const subTom of tests) {
+        test.add(subTom);
       }
-      return tom
+
     } else {
-      return toms[0]
+      test = tests[0];
     }
+    test._skipLogic();
+    return test
   }
 }
 
@@ -1181,7 +1209,7 @@ function sleep (ms, result) {
 }
 
 { /* concurrency usage */
-  const tom = new Tom({ concurrency: 1 });
+  const tom = new Test({ concurrency: 1 });
   tom
     .test(() => sleep(30, 1))
     .test(() => sleep(20, 1.1))
@@ -1199,7 +1227,7 @@ function sleep (ms, result) {
 
 { /* runner.start(): pass results and events */
   let counts = [];
-  const tom = new Tom();
+  const tom = new Test();
   tom.test('one', () => {
     counts.push('one');
     return 1
@@ -1220,7 +1248,7 @@ function sleep (ms, result) {
 
 { /* runner.start(): fail results and events */
   let counts = [];
-  const tom = new Tom();
+  const tom = new Test();
   tom.test('one', () => {
     counts.push('one');
     throw new Error('broken')
@@ -1241,7 +1269,7 @@ function sleep (ms, result) {
 
 { /* runner.start(): pass, fail, skip events */
   let counts = [];
-  const tom = new Tom();
+  const tom = new Test();
   tom.test('one', () => true);
   tom.test('two', () => { throw new Error('fail') });
   tom.skip('three', () => true);
@@ -1259,7 +1287,7 @@ function sleep (ms, result) {
 
 { /* runner.start(): only */
   let counts = [];
-  const tom = new Tom();
+  const tom = new Test();
   tom.test('one', () => 1);
   tom.test('two', () => 2);
   tom.only('three', () => 3);
@@ -1278,7 +1306,7 @@ function sleep (ms, result) {
 
 { /* runner.start(): deep only */
   let counts = [];
-  const tom = new Tom();
+  const tom = new Test();
   const one = tom.only('one', () => 1);
   const two = one.test('two', () => 2);
   const three = two.only('three', () => 3);
@@ -1297,7 +1325,7 @@ function sleep (ms, result) {
 
 { /* runner.start(): deep only with fail */
   let counts = [];
-  const tom = new Tom();
+  const tom = new Test();
   const one = tom.only('one', () => 1);
   const two = one.test('two', () => 2);
   const three = two.only('three', () => {
@@ -1318,7 +1346,7 @@ function sleep (ms, result) {
 
 { /* runner.start(): deep only with skipped fail */
   let counts = [];
-  const tom = new Tom();
+  const tom = new Test();
   const one = tom.only('one', () => 1);
   const two = one.test('two', () => 2);
   const three = two.skip('three', () => {
@@ -1347,7 +1375,7 @@ function sleep (ms, result) {
 
 { /* runner events: start */
   let counts = [];
-  const tom = new Tom();
+  const tom = new Test();
   tom.test('one', () => 1);
   tom.test('two', () => 2);
 
@@ -1362,7 +1390,7 @@ function sleep (ms, result) {
 
 { /* timeout tests */
   let counts = [];
-  const tom = new Tom('Sequential tests', null, { concurrency: 1 });
+  const tom = new Test('Sequential tests', null, { concurrency: 1 });
   tom.test('one', function () {
     a.deepStrictEqual(counts, []);
     return new Promise((resolve, reject) => {
@@ -1400,7 +1428,7 @@ function sleep (ms, result) {
 
 { /* http server tests */
   let counts = [];
-  const tom = new Tom('Sequential tests', null, { concurrency: 1 });
+  const tom = new Test('Sequential tests', null, { concurrency: 1 });
   tom.test('one', function () {
     const server = http.createServer((req, res) => {
       setTimeout(() => {
@@ -1450,7 +1478,7 @@ function sleep (ms, result) {
 
 { /* runner states: pass */
   let counts = [];
-  const tom = new Tom();
+  const tom = new Test();
   tom.test('one', () => 1);
   tom.test('two', () => 2);
   tom.on('pass', () => counts.push('test-pass'));
@@ -1472,7 +1500,7 @@ function sleep (ms, result) {
 
 { /* runner states: fail */
   let counts = [];
-  const tom = new Tom();
+  const tom = new Test();
   tom.test('one', () => {
     throw new Error('broken')
   });
@@ -1496,7 +1524,7 @@ function sleep (ms, result) {
 
 { /* runner states: fail, reject */
   let counts = [];
-  const tom = new Tom();
+  const tom = new Test();
   tom.test('one', () => {
     return Promise.reject(new Error('broken'))
   });
@@ -1520,7 +1548,7 @@ function sleep (ms, result) {
 
 { /* custom view */
   let counts = [];
-  const tom = new Tom();
+  const tom = new Test();
   tom.test('one', () => counts.push('one'));
   tom.test('two', () => counts.push('two'));
 
