@@ -5,6 +5,10 @@
 * [test-runner-core](#module_test-runner-core)
     * [TestRunner](#exp_module_test-runner-core--TestRunner) ⏏
         * [new TestRunner([options])](#new_module_test-runner-core--TestRunner_new)
+        * [.state](#module_test-runner-core--TestRunner+state) : <code>string</code>
+        * [.tom](#module_test-runner-core--TestRunner+tom) : <code>TestObjectModel</code>
+        * [.ended](#module_test-runner-core--TestRunner+ended) : <code>boolean</code>
+        * [.view](#module_test-runner-core--TestRunner+view) : <code>function</code>
         * [.start()](#module_test-runner-core--TestRunner+start) ⇒ <code>Promise</code>
         * ["in-progress" (testCount)](#module_test-runner-core--TestRunner+event_in-progress)
         * ["start" (testCount)](#module_test-runner-core--TestRunner+event_start)
@@ -27,6 +31,30 @@
 | [options.view] | <code>function</code> | 
 | [options.tom] | <code>object</code> | 
 
+<a name="module_test-runner-core--TestRunner+state"></a>
+
+#### testRunner.state : <code>string</code>
+State machine: pending -> in-progress -> pass or fail
+
+**Kind**: instance property of [<code>TestRunner</code>](#exp_module_test-runner-core--TestRunner)  
+<a name="module_test-runner-core--TestRunner+tom"></a>
+
+#### testRunner.tom : <code>TestObjectModel</code>
+Test Object Model
+
+**Kind**: instance property of [<code>TestRunner</code>](#exp_module_test-runner-core--TestRunner)  
+<a name="module_test-runner-core--TestRunner+ended"></a>
+
+#### testRunner.ended : <code>boolean</code>
+Ended flag
+
+**Kind**: instance property of [<code>TestRunner</code>](#exp_module_test-runner-core--TestRunner)  
+<a name="module_test-runner-core--TestRunner+view"></a>
+
+#### testRunner.view : <code>function</code>
+View
+
+**Kind**: instance property of [<code>TestRunner</code>](#exp_module_test-runner-core--TestRunner)  
 <a name="module_test-runner-core--TestRunner+start"></a>
 
 #### testRunner.start() ⇒ <code>Promise</code>

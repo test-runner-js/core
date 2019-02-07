@@ -1,10 +1,10 @@
-[![view on npm](https://img.shields.io/npm/v/test-runner.svg)](https://www.npmjs.org/package/test-runner)
-[![npm module downloads](https://img.shields.io/npm/dt/test-runner.svg)](https://www.npmjs.org/package/test-runner)
+[![view on npm](https://img.shields.io/npm/v/test-runner-core.svg)](https://www.npmjs.org/package/test-runner-core)
+[![npm module downloads](https://img.shields.io/npm/dt/test-runner-core.svg)](https://www.npmjs.org/package/test-runner-core)
 [![Build Status](https://travis-ci.org/test-runner-js/core.svg?branch=master)](https://travis-ci.org/test-runner-js/core)
 [![Dependency Status](https://badgen.net/david/dep/test-runner-js/core)](https://david-dm.org/test-runner-js/core)
 [![js-standard-style](https://img.shields.io/badge/code%20style-standard-brightgreen.svg)](https://github.com/feross/standard)
 
-# test-runner
+# test-runner-core
 
 Work in progress.
 

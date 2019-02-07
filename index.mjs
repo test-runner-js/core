@@ -25,16 +25,35 @@ class TestRunner extends StateMachine {
       { from: 'in-progress', to: 'pass' },
       { from: 'in-progress', to: 'fail' }
     ])
+
+    /**
+     * State machine: pending -> in-progress -> pass or fail
+     * @type {string}
+     */
     this.state = 'pending'
     this.options = options
+
+    /**
+     * Test Object Model
+     * @type {TestObjectModel}
+     */
     this.tom = options.tom
     if (options.view) {
       const ViewClass = options.view(ViewBase)
       this.view = new ViewClass()
     }
+
+    /**
+     * Ended flag
+     * @type {boolean}
+     */
     this.ended = false
   }
 
+  /**
+   * View
+   * @type {function}
+   */
   set view (view) {
     if (view) {
       if (this._view) this._view.detach()
