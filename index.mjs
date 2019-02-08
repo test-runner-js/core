@@ -1,7 +1,7 @@
-import consoleView from './lib/view-default.mjs'
 import StateMachine from './node_modules/fsm-base/index.mjs'
 import ViewBase from './lib/view-base.mjs'
 import Queue from './lib/queue.mjs'
+import { performance } from 'perf_hooks'
 
 /**
  * @module test-runner-core
@@ -15,7 +15,7 @@ import Queue from './lib/queue.mjs'
  * @emits start
  * @emits end
  */
-class TestRunner extends StateMachine {
+class TestRunnerCore extends StateMachine {
   constructor (options) {
     options = options || {}
     if (!options.tom) throw new Error('tom required')
@@ -48,6 +48,15 @@ class TestRunner extends StateMachine {
      * @type {boolean}
      */
     this.ended = false
+
+    this.tom.on('pass', (...args) => this.emit('test-pass', ...args))
+    this.tom.on('fail', (...args) => this.emit('test-fail', ...args))
+    this.tom.on('skip', (...args) => this.emit('test-skip', ...args))
+
+    this.stats = {
+      start: 0,
+      end: 0
+    }
   }
 
   /**
@@ -74,6 +83,7 @@ class TestRunner extends StateMachine {
    * @returns {Promise}
    */
   async start () {
+    this.stats.start = performance.now()
     const tests = Array.from(this.tom).filter(t => t.testFn)
 
     /**
@@ -121,6 +131,7 @@ class TestRunner extends StateMachine {
          * Test suite ended
          * @event module:test-runner-core#end
          */
+        this.stats.end = performance.now()
         this.emit('end')
         return resolve(results)
       }, 0)
@@ -128,4 +139,4 @@ class TestRunner extends StateMachine {
   }
 }
 
-export default TestRunner
+export default TestRunnerCore

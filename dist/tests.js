@@ -2,6 +2,7 @@
 
 function _interopDefault (ex) { return (ex && (typeof ex === 'object') && 'default' in ex) ? ex['default'] : ex; }
 
+var perf_hooks = require('perf_hooks');
 var a = _interopDefault(require('assert'));
 var http = _interopDefault(require('http'));
 var fetch = _interopDefault(require('node-fetch'));
@@ -383,7 +384,7 @@ class Queue {
  * @emits start
  * @emits end
  */
-class TestRunner extends StateMachine {
+class TestRunnerCore extends StateMachine {
   constructor (options) {
     options = options || {};
     if (!options.tom) throw new Error('tom required')
@@ -393,16 +394,44 @@ class TestRunner extends StateMachine {
       { from: 'in-progress', to: 'pass' },
       { from: 'in-progress', to: 'fail' }
     ]);
+
+    /**
+     * State machine: pending -> in-progress -> pass or fail
+     * @type {string}
+     */
     this.state = 'pending';
     this.options = options;
+
+    /**
+     * Test Object Model
+     * @type {TestObjectModel}
+     */
     this.tom = options.tom;
     if (options.view) {
       const ViewClass = options.view(ViewBase);
       this.view = new ViewClass();
     }
+
+    /**
+     * Ended flag
+     * @type {boolean}
+     */
     this.ended = false;
+
+    this.tom.on('pass', (...args) => this.emit('test-pass', ...args));
+    this.tom.on('fail', (...args) => this.emit('test-fail', ...args));
+    this.tom.on('skip', (...args) => this.emit('test-skip', ...args));
+
+    this.stats = {
+      start: 0,
+      end: 0
+    };
   }
 
+  /**
+   * View
+   * @type {function}
+   */
   set view (view) {
     if (view) {
       if (this._view) this._view.detach();
@@ -423,6 +452,7 @@ class TestRunner extends StateMachine {
    * @returns {Promise}
    */
   async start () {
+    this.stats.start = perf_hooks.performance.now();
     const tests = Array.from(this.tom).filter(t => t.testFn);
 
     /**
@@ -470,6 +500,7 @@ class TestRunner extends StateMachine {
          * Test suite ended
          * @event module:test-runner-core#end
          */
+        this.stats.end = perf_hooks.performance.now();
         this.emit('end');
         return resolve(results)
       }, 0);
@@ -1219,7 +1250,7 @@ function sleep (ms, result) {
     .test(() => sleep(40, 2.1))
     .test(() => sleep(60, 2.2));
 
-  const runner = new TestRunner({ tom });
+  const runner = new TestRunnerCore({ tom });
   runner.start().then(results => {
     a.deepStrictEqual(results, [ 1, 1.1, 1.2, 2, 2.1, 2.2 ]);
   });
@@ -1237,7 +1268,7 @@ function sleep (ms, result) {
     return 2
   });
 
-  const runner = new TestRunner({ tom });
+  const runner = new TestRunnerCore({ tom });
   runner.start()
     .then(results => {
       a.deepStrictEqual(results, [ 1, 2 ]);
@@ -1258,7 +1289,7 @@ function sleep (ms, result) {
     throw new Error('broken2')
   });
 
-  const runner = new TestRunner({ tom });
+  const runner = new TestRunnerCore({ tom });
   runner.start()
     .then(results => {
       a.deepStrictEqual(results, [ undefined, undefined ]);
@@ -1274,7 +1305,7 @@ function sleep (ms, result) {
   tom.test('two', () => { throw new Error('fail') });
   tom.skip('three', () => true);
 
-  const runner = new TestRunner({ tom });
+  const runner = new TestRunnerCore({ tom });
   runner.tom.on('pass', () => counts.push('pass'));
   runner.tom.on('fail', () => counts.push('fail'));
   runner.tom.on('skip', () => counts.push('skip'));
@@ -1292,7 +1323,7 @@ function sleep (ms, result) {
   tom.test('two', () => 2);
   tom.only('three', () => 3);
 
-  const runner = new TestRunner({ tom });
+  const runner = new TestRunnerCore({ tom });
   runner.tom.on('pass', () => counts.push('pass'));
   runner.tom.on('fail', () => counts.push('fail'));
   runner.tom.on('skip', () => counts.push('skip'));
@@ -1311,7 +1342,7 @@ function sleep (ms, result) {
   const two = one.test('two', () => 2);
   const three = two.only('three', () => 3);
 
-  const runner = new TestRunner({ tom });
+  const runner = new TestRunnerCore({ tom });
   runner.tom.on('pass', () => counts.push('pass'));
   runner.tom.on('fail', () => counts.push('fail'));
   runner.tom.on('skip', () => counts.push('skip'));
@@ -1332,7 +1363,7 @@ function sleep (ms, result) {
     throw new Error('broken')
   });
 
-  const runner = new TestRunner({ tom });
+  const runner = new TestRunnerCore({ tom });
   runner.tom.on('pass', () => counts.push('pass'));
   runner.tom.on('fail', () => counts.push('fail'));
   runner.tom.on('skip', () => counts.push('skip'));
@@ -1353,7 +1384,7 @@ function sleep (ms, result) {
     throw new Error('broken')
   });
 
-  const runner = new TestRunner({ tom });
+  const runner = new TestRunnerCore({ tom });
   runner.tom.on('pass', () => counts.push('pass'));
   runner.tom.on('fail', () => counts.push('fail'));
   runner.tom.on('skip', () => counts.push('skip'));
@@ -1367,7 +1398,7 @@ function sleep (ms, result) {
 
 { /* new TestRunner: no tom */
   try {
-    const runner = new TestRunner();
+    const runner = new TestRunnerCore();
   } catch (err) {
     if (!/tom required/i.test(err.message)) halt(err);
   }
@@ -1379,7 +1410,7 @@ function sleep (ms, result) {
   tom.test('one', () => 1);
   tom.test('two', () => 2);
 
-  const runner = new TestRunner({ tom });
+  const runner = new TestRunnerCore({ tom });
   runner.on('start', () => counts.push('start'));
   runner.on('end', () => counts.push('end'));
   setTimeout(() => {
@@ -1417,7 +1448,7 @@ function sleep (ms, result) {
     return 3
   });
 
-  const runner = new TestRunner({ tom });
+  const runner = new TestRunnerCore({ tom });
   runner.start()
     .then(results => {
       a.deepStrictEqual(results, [ 1, 2, 3 ]);
@@ -1467,7 +1498,7 @@ function sleep (ms, result) {
     })
   });
 
-  const runner = new TestRunner({ tom });
+  const runner = new TestRunnerCore({ tom });
   runner.start()
     .then(results => {
       a.deepStrictEqual(results, [ 200, 201 ]);
@@ -1484,7 +1515,7 @@ function sleep (ms, result) {
   tom.on('pass', () => counts.push('test-pass'));
   tom.on('fail', () => counts.push('test-fail'));
 
-  const runner = new TestRunner({ tom });
+  const runner = new TestRunnerCore({ tom });
   counts.push('prop:' + runner.state);
   runner.on('state', state => counts.push('event:' + state));
   a.deepStrictEqual(runner.ended, false);
@@ -1508,7 +1539,7 @@ function sleep (ms, result) {
   tom.on('pass', () => counts.push('test-pass'));
   tom.on('fail', () => counts.push('test-fail'));
 
-  const runner = new TestRunner({ tom });
+  const runner = new TestRunnerCore({ tom });
   counts.push('prop:' + runner.state);
   runner.on('state', state => counts.push('event:' + state));
   a.deepStrictEqual(runner.ended, false);
@@ -1532,7 +1563,7 @@ function sleep (ms, result) {
   tom.on('pass', () => counts.push('test-pass'));
   tom.on('fail', () => counts.push('test-fail'));
 
-  const runner = new TestRunner({ tom });
+  const runner = new TestRunnerCore({ tom });
   counts.push('prop:' + runner.state);
   runner.on('state', state => counts.push('event:' + state));
   a.deepStrictEqual(runner.ended, false);
@@ -1570,7 +1601,7 @@ function sleep (ms, result) {
     }
   };
 
-  const runner = new TestRunner({ view, tom });
+  const runner = new TestRunnerCore({ view, tom });
   runner.start()
     .then(() => a.deepStrictEqual(counts, [ 'start', 'one', 'testPass', 'two', 'testPass', 'end' ]))
     .catch(halt);

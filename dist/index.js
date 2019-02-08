@@ -1,8 +1,8 @@
 (function (global, factory) {
-  typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory() :
-  typeof define === 'function' && define.amd ? define(factory) :
-  (global = global || self, global.TestRunner = factory());
-}(this, function () { 'use strict';
+  typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory(require('perf_hooks')) :
+  typeof define === 'function' && define.amd ? define(['perf_hooks'], factory) :
+  (global = global || self, global.TestRunner = factory(global.perf_hooks));
+}(this, function (perf_hooks) { 'use strict';
 
   /**
    * @module obso
@@ -381,7 +381,7 @@
    * @emits start
    * @emits end
    */
-  class TestRunner extends StateMachine {
+  class TestRunnerCore extends StateMachine {
     constructor (options) {
       options = options || {};
       if (!options.tom) throw new Error('tom required')
@@ -391,16 +391,44 @@
         { from: 'in-progress', to: 'pass' },
         { from: 'in-progress', to: 'fail' }
       ]);
+
+      /**
+       * State machine: pending -> in-progress -> pass or fail
+       * @type {string}
+       */
       this.state = 'pending';
       this.options = options;
+
+      /**
+       * Test Object Model
+       * @type {TestObjectModel}
+       */
       this.tom = options.tom;
       if (options.view) {
         const ViewClass = options.view(ViewBase);
         this.view = new ViewClass();
       }
+
+      /**
+       * Ended flag
+       * @type {boolean}
+       */
       this.ended = false;
+
+      this.tom.on('pass', (...args) => this.emit('test-pass', ...args));
+      this.tom.on('fail', (...args) => this.emit('test-fail', ...args));
+      this.tom.on('skip', (...args) => this.emit('test-skip', ...args));
+
+      this.stats = {
+        start: 0,
+        end: 0
+      };
     }
 
+    /**
+     * View
+     * @type {function}
+     */
     set view (view) {
       if (view) {
         if (this._view) this._view.detach();
@@ -421,6 +449,7 @@
      * @returns {Promise}
      */
     async start () {
+      this.stats.start = perf_hooks.performance.now();
       const tests = Array.from(this.tom).filter(t => t.testFn);
 
       /**
@@ -468,6 +497,7 @@
            * Test suite ended
            * @event module:test-runner-core#end
            */
+          this.stats.end = perf_hooks.performance.now();
           this.emit('end');
           return resolve(results)
         }, 0);
@@ -475,6 +505,6 @@
     }
   }
 
-  return TestRunner;
+  return TestRunnerCore;
 
 }));
