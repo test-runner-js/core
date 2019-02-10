@@ -1,4 +1,4 @@
-import TestRunner from '../index.mjs'
+import TestRunnerCore from '../index.mjs'
 import Tom from '../node_modules/test-object-model/index.mjs'
 import a from 'assert'
 import { halt } from './lib/util.mjs'
@@ -9,7 +9,7 @@ import { halt } from './lib/util.mjs'
   tom.test('one', () => counts.push('one'))
   tom.test('two', () => counts.push('two'))
 
-  const view = ViewBase => class extends ViewBase {
+  class View {
     start () {
       counts.push('start')
     }
@@ -27,7 +27,7 @@ import { halt } from './lib/util.mjs'
     }
   }
 
-  const runner = new TestRunner({ view, tom })
+  const runner = new TestRunnerCore({ view: new View(), tom })
   runner.start()
     .then(() => a.deepStrictEqual(counts, [ 'start', 'one', 'testPass', 'two', 'testPass', 'end' ]))
     .catch(halt)

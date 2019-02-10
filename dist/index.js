@@ -290,56 +290,6 @@
     return prev.concat(curr)
   }
 
-  class ViewBase {
-    attach (runner) {
-      if (this.attachedTo !== runner) {
-        this._callback = {
-          start: this.start.bind(this),
-          end: this.end.bind(this),
-          testPass: this.testPass.bind(this),
-          testFail: this.testFail.bind(this),
-          testSkip: this.testSkip.bind(this)
-        };
-        runner.on('start', this._callback.start);
-        runner.on('end', this._callback.end);
-        runner.tom.on('pass', this._callback.testPass);
-        runner.tom.on('fail', this._callback.testFail);
-        runner.tom.on('skip', this._callback.testSkip);
-        this.attachedTo = runner;
-      }
-    }
-
-    detach () {
-      if (this.attachedTo && this._callback) {
-        this.attachedTo.removeEventListener('start', this._callback.start);
-        this.attachedTo.removeEventListener('end', this._callback.end);
-        this.attachedTo.tom.removeEventListener('pass', this._callback.testPass);
-        this.attachedTo.tom.removeEventListener('fail', this._callback.testFail);
-        this.attachedTo.tom.removeEventListener('skip', this._callback.testSkip);
-        this.attachedTo = null;
-      }
-    }
-
-    log () {
-      console.log(...arguments);
-    }
-    start (count) {
-      throw new Error('not implemented')
-    }
-    end () {
-      throw new Error('not implemented')
-    }
-    testPass (test, result) {
-      throw new Error('not implemented')
-    }
-    testFail (test, err) {
-      throw new Error('not implemented')
-    }
-    testSkip (test) {
-      throw new Error('not implemented')
-    }
-  }
-
   class Queue {
     constructor (jobs, maxConcurrency) {
       this.jobs = jobs;
@@ -404,16 +354,18 @@
        * @type {TestObjectModel}
        */
       this.tom = options.tom;
-      if (options.view) {
-        const ViewClass = options.view(ViewBase);
-        this.view = new ViewClass();
-      }
 
       /**
        * Ended flag
        * @type {boolean}
        */
       this.ended = false;
+
+      /**
+       * View
+       * @type {View}
+       */
+      this.view = options.view;
 
       /**
        * Runner stats
@@ -424,8 +376,30 @@
         pass: 0,
         fail: 0,
         skip: 0,
-        ignore: 0
+        ignore: 0,
+        timeElapsed: function () {
+          return this.end - this.start
+        }
       };
+
+      this.on('start', (...args) => {
+        if (this.view && this.view.start) this.view.start(...args);
+      });
+      this.on('end', (...args) => {
+        if (this.view && this.view.end) this.view.end(...args);
+      });
+      this.on('test-pass', (...args) => {
+        if (this.view && this.view.testPass) this.view.testPass(...args);
+      });
+      this.on('test-fail', (...args) => {
+        if (this.view && this.view.testFail) this.view.testFail(...args);
+      });
+      this.on('test-skip', (...args) => {
+        if (this.view && this.view.testSkip) this.view.testSkip(...args);
+      });
+      this.on('test-ignore', (...args) => {
+        if (this.view && this.view.testIgnore) this.view.testIgnore(...args);
+      });
 
       this.tom.on('pass', (...args) => {
         this.stats.pass++;
@@ -443,25 +417,6 @@
         this.stats.ignore++;
         this.emit('test-ignore', ...args);
       });
-    }
-
-    /**
-     * View
-     * @type {function}
-     */
-    set view (view) {
-      if (view) {
-        if (this._view) this._view.detach();
-        this._view = view;
-        this._view.attach(this);
-      } else {
-        if (this._view) this._view.detach();
-        this._view = null;
-      }
-    }
-
-    get view () {
-      return this._view
     }
 
     /**
@@ -518,7 +473,7 @@
            * @event module:test-runner-core#end
            */
           this.stats.end = Date.now();
-          this.emit('end');
+          this.emit('end', this.stats);
           return resolve(results)
         }, 0);
       })
