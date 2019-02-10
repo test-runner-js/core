@@ -8,17 +8,14 @@ import { halt } from './lib/util.mjs'
   const tom = new Tom()
   tom.test('one', () => {
     counts.push('one')
-    return 1
   })
   tom.test('two', () => {
     counts.push('two')
-    return 2
   })
 
   const runner = new TestRunner({ tom })
   runner.start()
-    .then(results => {
-      a.deepStrictEqual(results, [ 1, 2 ])
+    .then(() => {
       a.deepStrictEqual(counts, [ 'one', 'two' ])
     })
     .catch(halt)
@@ -38,8 +35,7 @@ import { halt } from './lib/util.mjs'
 
   const runner = new TestRunner({ tom })
   runner.start()
-    .then(results => {
-      a.deepStrictEqual(results, [ undefined, undefined ])
+    .then(() => {
       a.deepStrictEqual(counts, [ 'one', 'two' ])
     })
     .catch(halt)
@@ -75,8 +71,7 @@ import { halt } from './lib/util.mjs'
   runner.tom.on('fail', () => counts.push('fail'))
   runner.tom.on('skip', () => counts.push('skip'))
   runner.start()
-    .then(results => {
-      a.deepStrictEqual(results, [ undefined, undefined, 3 ])
+    .then(() => {
       a.deepStrictEqual(counts, [ 'skip', 'skip', 'pass' ])
     })
     .catch(halt)
@@ -94,8 +89,7 @@ import { halt } from './lib/util.mjs'
   runner.tom.on('fail', () => counts.push('fail'))
   runner.tom.on('skip', () => counts.push('skip'))
   runner.start()
-    .then(results => {
-      a.deepStrictEqual(results, [ 1, undefined, 3 ])
+    .then(() => {
       a.deepStrictEqual(counts, [ 'pass', 'skip', 'pass' ])
     })
     .catch(halt)
@@ -115,8 +109,7 @@ import { halt } from './lib/util.mjs'
   runner.tom.on('fail', () => counts.push('fail'))
   runner.tom.on('skip', () => counts.push('skip'))
   runner.start()
-    .then(results => {
-      a.deepStrictEqual(results, [ 1, undefined, undefined ])
+    .then(() => {
       a.deepStrictEqual(counts, [ 'pass', 'skip', 'fail' ])
     })
     .catch(halt)
@@ -136,8 +129,7 @@ import { halt } from './lib/util.mjs'
   runner.tom.on('fail', () => counts.push('fail'))
   runner.tom.on('skip', () => counts.push('skip'))
   runner.start()
-    .then(results => {
-      a.deepStrictEqual(results, [ 1, undefined, undefined ])
+    .then(() => {
       a.deepStrictEqual(counts, [ 'pass', 'skip', 'skip' ])
     })
     .catch(halt)

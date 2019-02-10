@@ -1,7 +1,6 @@
 import StateMachine from './node_modules/fsm-base/index.mjs'
 import ViewBase from './lib/view-base.mjs'
 import Queue from './lib/queue.mjs'
-import { performance } from 'perf_hooks'
 
 /**
  * @module test-runner-core
@@ -49,14 +48,34 @@ class TestRunnerCore extends StateMachine {
      */
     this.ended = false
 
-    this.tom.on('pass', (...args) => this.emit('test-pass', ...args))
-    this.tom.on('fail', (...args) => this.emit('test-fail', ...args))
-    this.tom.on('skip', (...args) => this.emit('test-skip', ...args))
-
+    /**
+     * Runner stats
+     */
     this.stats = {
       start: 0,
-      end: 0
+      end: 0,
+      pass: 0,
+      fail: 0,
+      skip: 0,
+      ignore: 0
     }
+
+    this.tom.on('pass', (...args) => {
+      this.stats.pass++
+      this.emit('test-pass', ...args)
+    })
+    this.tom.on('fail', (...args) => {
+      this.stats.fail++
+      this.emit('test-fail', ...args)
+    })
+    this.tom.on('skip', (...args) => {
+      this.stats.skip++
+      this.emit('test-skip', ...args)
+    })
+    this.tom.on('ignored', (...args) => {
+      this.stats.ignore++
+      this.emit('test-ignore', ...args)
+    })
   }
 
   /**
@@ -83,8 +102,8 @@ class TestRunnerCore extends StateMachine {
    * @returns {Promise}
    */
   async start () {
-    this.stats.start = performance.now()
-    const tests = Array.from(this.tom).filter(t => t.testFn)
+    this.stats.start = Date.now()
+    const tests = Array.from(this.tom)
 
     /**
      * in-progress
@@ -131,7 +150,7 @@ class TestRunnerCore extends StateMachine {
          * Test suite ended
          * @event module:test-runner-core#end
          */
-        this.stats.end = performance.now()
+        this.stats.end = Date.now()
         this.emit('end')
         return resolve(results)
       }, 0)

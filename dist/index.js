@@ -1,8 +1,8 @@
 (function (global, factory) {
-  typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory(require('perf_hooks')) :
-  typeof define === 'function' && define.amd ? define(['perf_hooks'], factory) :
-  (global = global || self, global.TestRunner = factory(global.perf_hooks));
-}(this, function (perf_hooks) { 'use strict';
+  typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory() :
+  typeof define === 'function' && define.amd ? define(factory) :
+  (global = global || self, global.TestRunner = factory());
+}(this, function () { 'use strict';
 
   /**
    * @module obso
@@ -415,14 +415,34 @@
        */
       this.ended = false;
 
-      this.tom.on('pass', (...args) => this.emit('test-pass', ...args));
-      this.tom.on('fail', (...args) => this.emit('test-fail', ...args));
-      this.tom.on('skip', (...args) => this.emit('test-skip', ...args));
-
+      /**
+       * Runner stats
+       */
       this.stats = {
         start: 0,
-        end: 0
+        end: 0,
+        pass: 0,
+        fail: 0,
+        skip: 0,
+        ignore: 0
       };
+
+      this.tom.on('pass', (...args) => {
+        this.stats.pass++;
+        this.emit('test-pass', ...args);
+      });
+      this.tom.on('fail', (...args) => {
+        this.stats.fail++;
+        this.emit('test-fail', ...args);
+      });
+      this.tom.on('skip', (...args) => {
+        this.stats.skip++;
+        this.emit('test-skip', ...args);
+      });
+      this.tom.on('ignored', (...args) => {
+        this.stats.ignore++;
+        this.emit('test-ignore', ...args);
+      });
     }
 
     /**
@@ -449,8 +469,8 @@
      * @returns {Promise}
      */
     async start () {
-      this.stats.start = perf_hooks.performance.now();
-      const tests = Array.from(this.tom).filter(t => t.testFn);
+      this.stats.start = Date.now();
+      const tests = Array.from(this.tom);
 
       /**
        * in-progress
@@ -497,7 +517,7 @@
            * Test suite ended
            * @event module:test-runner-core#end
            */
-          this.stats.end = perf_hooks.performance.now();
+          this.stats.end = Date.now();
           this.emit('end');
           return resolve(results)
         }, 0);
