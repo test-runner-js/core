@@ -1,7 +1,7 @@
 {
   "name": "test-runner-core",
   "author": "Lloyd Brookes <75pound@gmail.com>",
-  "version": "0.6.0-10",
+  "version": "0.6.0-11",
   "description": "Minimal, extensible test runner.",
   "repository": "https://github.com/test-runner-js/core",
   "license": "MIT",
