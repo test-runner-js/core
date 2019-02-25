@@ -17,3 +17,19 @@ import { halt } from './lib/util.mjs'
   }, 100)
   runner.start()
 }
+
+{ /* runner events: start, test-pass, end */
+  let counts = []
+  const tom = new Tom()
+  tom.test('one', () => 1)
+  tom.test('two', () => 2)
+
+  const runner = new TestRunner({ tom })
+  runner.on('start', () => counts.push('start'))
+  runner.on('end', () => counts.push('end'))
+  runner.on('test-pass', () => counts.push('test-pass'))
+  setTimeout(() => {
+    a.deepStrictEqual(counts, [ 'start', 'test-pass', 'test-pass', 'end' ])
+  }, 100)
+  runner.start()
+}

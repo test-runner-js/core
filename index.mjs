@@ -1,5 +1,4 @@
 import StateMachine from './node_modules/fsm-base/index.mjs'
-import ViewBase from './lib/view-base.mjs'
 import Queue from './lib/queue.mjs'
 
 /**
@@ -133,6 +132,10 @@ class TestRunnerCore extends StateMachine {
            */
           this.state = 'fail'
           // keep going when tests fail but crash for programmer error
+          // if (err.code !== 'ERR_ASSERTION') {
+          //   console.error('TEST ERROR')
+          //   console.error(err)
+          // }
         })
       }
     })

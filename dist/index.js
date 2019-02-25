@@ -1,7 +1,7 @@
 (function (global, factory) {
   typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory() :
   typeof define === 'function' && define.amd ? define(factory) :
-  (global = global || self, global.TestRunner = factory());
+  (global = global || self, global.TestRunnerCore = factory());
 }(this, function () { 'use strict';
 
   /**
@@ -450,6 +450,10 @@
              */
             this.state = 'fail';
             // keep going when tests fail but crash for programmer error
+            // if (err.code !== 'ERR_ASSERTION') {
+            //   console.error('TEST ERROR')
+            //   console.error(err)
+            // }
           })
         }
       });

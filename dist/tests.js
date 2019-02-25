@@ -452,6 +452,10 @@ class TestRunnerCore extends StateMachine {
            */
           this.state = 'fail';
           // keep going when tests fail but crash for programmer error
+          // if (err.code !== 'ERR_ASSERTION') {
+          //   console.error('TEST ERROR')
+          //   console.error(err)
+          // }
         })
       }
     });
@@ -479,6 +483,25 @@ class TestRunnerCore extends StateMachine {
         return resolve(results)
       }, 0);
     })
+  }
+}
+
+function halt (err) {
+  console.log(err);
+  process.exitCode = 1;
+}
+
+function sleep (ms, result) {
+  return new Promise((resolve, reject) => {
+    setTimeout(() => resolve(result), ms);
+  })
+}
+
+{ /* new TestRunner: no tom */
+  try {
+    const runner = new TestRunnerCore();
+  } catch (err) {
+    if (!/tom required/i.test(err.message)) halt(err);
   }
 }
 
@@ -1202,15 +1225,35 @@ class TestContext {
   }
 }
 
-function halt (err) {
-  console.log(err);
-  process.exitCode = 1;
+{ /* runner events: start */
+  let counts = [];
+  const tom = new Test();
+  tom.test('one', () => 1);
+  tom.test('two', () => 2);
+
+  const runner = new TestRunnerCore({ tom });
+  runner.on('start', () => counts.push('start'));
+  runner.on('end', () => counts.push('end'));
+  setTimeout(() => {
+    a.deepStrictEqual(counts, [ 'start', 'end' ]);
+  }, 100);
+  runner.start();
 }
 
-function sleep (ms, result) {
-  return new Promise((resolve, reject) => {
-    setTimeout(() => resolve(result), ms);
-  })
+{ /* runner events: start, test-pass, end */
+  let counts = [];
+  const tom = new Test();
+  tom.test('one', () => 1);
+  tom.test('two', () => 2);
+
+  const runner = new TestRunnerCore({ tom });
+  runner.on('start', () => counts.push('start'));
+  runner.on('end', () => counts.push('end'));
+  runner.on('test-pass', () => counts.push('test-pass'));
+  setTimeout(() => {
+    a.deepStrictEqual(counts, [ 'start', 'test-pass', 'test-pass', 'end' ]);
+  }, 100);
+  runner.start();
 }
 
 { /* concurrency usage */
@@ -1379,29 +1422,6 @@ function sleep (ms, result) {
       a.deepStrictEqual(counts, [ 'pass', 'skip', 'skip' ]);
     })
     .catch(halt);
-}
-
-{ /* new TestRunner: no tom */
-  try {
-    const runner = new TestRunnerCore();
-  } catch (err) {
-    if (!/tom required/i.test(err.message)) halt(err);
-  }
-}
-
-{ /* runner events: start */
-  let counts = [];
-  const tom = new Test();
-  tom.test('one', () => 1);
-  tom.test('two', () => 2);
-
-  const runner = new TestRunnerCore({ tom });
-  runner.on('start', () => counts.push('start'));
-  runner.on('end', () => counts.push('end'));
-  setTimeout(() => {
-    a.deepStrictEqual(counts, [ 'start', 'end' ]);
-  }, 100);
-  runner.start();
 }
 
 { /* timeout tests */
