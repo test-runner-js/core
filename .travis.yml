@@ -9,4 +9,3 @@ matrix:
     #   script: "npm test"
     # - node_js: 6
     #   script: "npm run test:js"
-before_script: npm run i
