@@ -1219,7 +1219,7 @@ class TestContext {
   }
 }
 
-{ /* runner events: start */
+{ /* runner events: start, end */
   let counts = [];
   const tom = new Test();
   tom.test('one', () => 1);
@@ -1248,6 +1248,122 @@ class TestContext {
     a.deepStrictEqual(counts, [ 'start', 'test-pass', 'test-pass', 'end' ]);
   }, 100);
   runner.start();
+}
+
+{ /* runner events: start, test-fail, end */
+  let counts = [];
+  const tom = new Test();
+  tom.test('one', () => {
+    throw new Error('broken')
+  });
+  tom.test('two', () => {
+    throw new Error('broken2')
+  });
+
+  const runner = new TestRunnerCore({ tom });
+  runner.on('start', () => counts.push('start'));
+  runner.on('end', () => counts.push('end'));
+  runner.on('test-pass', () => counts.push('test-pass'));
+  runner.on('test-fail', () => counts.push('test-fail'));
+  /* why is this in a timeout? */
+  setTimeout(() => {
+    a.deepStrictEqual(counts, [ 'start', 'test-fail', 'test-fail', 'end' ]);
+  }, 100);
+  runner.start();
+}
+
+{ /* runner.start(): pass, fail, skip events */
+  let counts = [];
+  const tom = new Test();
+  tom.test('one', () => true);
+  tom.test('two', () => { throw new Error('fail') });
+  tom.skip('three', () => true);
+
+  const runner = new TestRunnerCore({ tom });
+  runner.on('test-pass', () => counts.push('test-pass'));
+  runner.on('test-fail', () => counts.push('test-fail'));
+  runner.on('test-skip', () => counts.push('test-skip'));
+  runner.start()
+    .then(() => {
+      a.deepStrictEqual(counts, [ 'test-pass', 'test-fail', 'test-skip' ]);
+    })
+    .catch(halt);
+}
+
+{ /* runner.start(): only */
+  let counts = [];
+  const tom = new Test();
+  tom.test('one', () => 1);
+  tom.test('two', () => 2);
+  tom.only('three', () => 3);
+
+  const runner = new TestRunnerCore({ tom });
+  runner.on('test-pass', () => counts.push('test-pass'));
+  runner.on('test-fail', () => counts.push('test-fail'));
+  runner.on('test-skip', () => counts.push('test-skip'));
+  runner.start()
+    .then(() => {
+      a.deepStrictEqual(counts, [ 'test-skip', 'test-skip', 'test-pass' ]);
+    })
+    .catch(halt);
+}
+
+{ /* runner.start(): deep only */
+  let counts = [];
+  const tom = new Test();
+  const one = tom.only('one', () => 1);
+  const two = one.test('two', () => 2);
+  const three = two.only('three', () => 3);
+
+  const runner = new TestRunnerCore({ tom });
+  runner.on('test-pass', () => counts.push('test-pass'));
+  runner.on('test-fail', () => counts.push('test-fail'));
+  runner.on('test-skip', () => counts.push('test-skip'));
+  runner.start()
+    .then(() => {
+      a.deepStrictEqual(counts, [ 'test-pass', 'test-skip', 'test-pass' ]);
+    })
+    .catch(halt);
+}
+
+{ /* runner.start(): deep only with fail */
+  let counts = [];
+  const tom = new Test();
+  const one = tom.only('one', () => 1);
+  const two = one.test('two', () => 2);
+  const three = two.only('three', () => {
+    throw new Error('broken')
+  });
+
+  const runner = new TestRunnerCore({ tom });
+  runner.on('test-pass', () => counts.push('test-pass'));
+  runner.on('test-fail', () => counts.push('test-fail'));
+  runner.on('test-skip', () => counts.push('test-skip'));
+  runner.start()
+    .then(() => {
+      a.deepStrictEqual(counts, [ 'test-pass', 'test-skip', 'test-fail' ]);
+    })
+    .catch(halt);
+}
+
+{ /* runner.start(): deep only with skipped fail */
+  let counts = [];
+  const tom = new Test();
+  const one = tom.only('one', () => 1);
+  const two = one.test('two', () => 2);
+  const three = two.skip('three', () => {
+    throw new Error('broken')
+  });
+
+  const runner = new TestRunnerCore({ tom });
+  runner.on('test-pass', () => counts.push('test-pass'));
+  runner.on('test-fail', () => counts.push('test-fail'));
+  runner.on('test-skip', () => counts.push('test-skip'));
+  runner.start()
+    .then(() => {
+      a.deepStrictEqual(counts, [ 'test-pass', 'test-skip', 'test-skip' ]);
+    })
+    .catch(halt);
 }
 
 { /* concurrency usage */
@@ -1286,7 +1402,7 @@ class TestContext {
   });
 }
 
-{ /* runner.start(): pass results and events */
+{ /* runner.start(): execution order */
   let counts = [];
   const tom = new Test();
   tom.test('one', () => {
@@ -1304,7 +1420,7 @@ class TestContext {
     .catch(halt);
 }
 
-{ /* runner.start(): fail results and events */
+{ /* runner.start(): execution order 2 */
   let counts = [];
   const tom = new Test();
   tom.test('one', () => {
@@ -1320,100 +1436,6 @@ class TestContext {
   runner.start()
     .then(() => {
       a.deepStrictEqual(counts, [ 'one', 'two' ]);
-    })
-    .catch(halt);
-}
-
-{ /* runner.start(): pass, fail, skip events */
-  let counts = [];
-  const tom = new Test();
-  tom.test('one', () => true);
-  tom.test('two', () => { throw new Error('fail') });
-  tom.skip('three', () => true);
-
-  const runner = new TestRunnerCore({ tom });
-  runner.tom.on('pass', () => counts.push('pass'));
-  runner.tom.on('fail', () => counts.push('fail'));
-  runner.tom.on('skip', () => counts.push('skip'));
-  runner.start()
-    .then(() => {
-      a.deepStrictEqual(counts, [ 'pass', 'fail', 'skip' ]);
-    })
-    .catch(halt);
-}
-
-{ /* runner.start(): only */
-  let counts = [];
-  const tom = new Test();
-  tom.test('one', () => 1);
-  tom.test('two', () => 2);
-  tom.only('three', () => 3);
-
-  const runner = new TestRunnerCore({ tom });
-  runner.tom.on('pass', () => counts.push('pass'));
-  runner.tom.on('fail', () => counts.push('fail'));
-  runner.tom.on('skip', () => counts.push('skip'));
-  runner.start()
-    .then(() => {
-      a.deepStrictEqual(counts, [ 'skip', 'skip', 'pass' ]);
-    })
-    .catch(halt);
-}
-
-{ /* runner.start(): deep only */
-  let counts = [];
-  const tom = new Test();
-  const one = tom.only('one', () => 1);
-  const two = one.test('two', () => 2);
-  const three = two.only('three', () => 3);
-
-  const runner = new TestRunnerCore({ tom });
-  runner.tom.on('pass', () => counts.push('pass'));
-  runner.tom.on('fail', () => counts.push('fail'));
-  runner.tom.on('skip', () => counts.push('skip'));
-  runner.start()
-    .then(() => {
-      a.deepStrictEqual(counts, [ 'pass', 'skip', 'pass' ]);
-    })
-    .catch(halt);
-}
-
-{ /* runner.start(): deep only with fail */
-  let counts = [];
-  const tom = new Test();
-  const one = tom.only('one', () => 1);
-  const two = one.test('two', () => 2);
-  const three = two.only('three', () => {
-    throw new Error('broken')
-  });
-
-  const runner = new TestRunnerCore({ tom });
-  runner.tom.on('pass', () => counts.push('pass'));
-  runner.tom.on('fail', () => counts.push('fail'));
-  runner.tom.on('skip', () => counts.push('skip'));
-  runner.start()
-    .then(() => {
-      a.deepStrictEqual(counts, [ 'pass', 'skip', 'fail' ]);
-    })
-    .catch(halt);
-}
-
-{ /* runner.start(): deep only with skipped fail */
-  let counts = [];
-  const tom = new Test();
-  const one = tom.only('one', () => 1);
-  const two = one.test('two', () => 2);
-  const three = two.skip('three', () => {
-    throw new Error('broken')
-  });
-
-  const runner = new TestRunnerCore({ tom });
-  runner.tom.on('pass', () => counts.push('pass'));
-  runner.tom.on('fail', () => counts.push('fail'));
-  runner.tom.on('skip', () => counts.push('skip'));
-  runner.start()
-    .then(() => {
-      a.deepStrictEqual(counts, [ 'pass', 'skip', 'skip' ]);
     })
     .catch(halt);
 }

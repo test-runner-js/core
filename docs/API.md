@@ -3,27 +3,28 @@
 ## test-runner-core
 
 * [test-runner-core](#module_test-runner-core)
-    * [TestRunner](#exp_module_test-runner-core--TestRunner) ⏏
-        * [new TestRunner([options])](#new_module_test-runner-core--TestRunner_new)
-        * [.state](#module_test-runner-core--TestRunner+state) : <code>string</code>
-        * [.tom](#module_test-runner-core--TestRunner+tom) : <code>TestObjectModel</code>
-        * [.ended](#module_test-runner-core--TestRunner+ended) : <code>boolean</code>
-        * [.view](#module_test-runner-core--TestRunner+view) : <code>function</code>
-        * [.start()](#module_test-runner-core--TestRunner+start) ⇒ <code>Promise</code>
-        * ["in-progress" (testCount)](#module_test-runner-core--TestRunner+event_in-progress)
-        * ["start" (testCount)](#module_test-runner-core--TestRunner+event_start)
-        * ["fail"](#module_test-runner-core--TestRunner+event_fail)
-        * ["pass"](#module_test-runner-core--TestRunner+event_pass)
-        * ["end"](#module_test-runner-core--TestRunner+event_end)
+    * [TestRunnerCore](#exp_module_test-runner-core--TestRunnerCore) ⏏
+        * [new TestRunnerCore([options])](#new_module_test-runner-core--TestRunnerCore_new)
+        * [.state](#module_test-runner-core--TestRunnerCore+state) : <code>string</code>
+        * [.tom](#module_test-runner-core--TestRunnerCore+tom) : <code>TestObjectModel</code>
+        * [.ended](#module_test-runner-core--TestRunnerCore+ended) : <code>boolean</code>
+        * [.view](#module_test-runner-core--TestRunnerCore+view) : <code>View</code>
+        * [.stats](#module_test-runner-core--TestRunnerCore+stats)
+        * [.start()](#module_test-runner-core--TestRunnerCore+start) ⇒ <code>Promise</code>
+        * ["in-progress" (testCount)](#module_test-runner-core--TestRunnerCore+event_in-progress)
+        * ["start" (testCount)](#module_test-runner-core--TestRunnerCore+event_start)
+        * ["fail"](#module_test-runner-core--TestRunnerCore+event_fail)
+        * ["pass"](#module_test-runner-core--TestRunnerCore+event_pass)
+        * ["end"](#module_test-runner-core--TestRunnerCore+event_end)
 
-<a name="exp_module_test-runner-core--TestRunner"></a>
+<a name="exp_module_test-runner-core--TestRunnerCore"></a>
 
-### TestRunner ⏏
+### TestRunnerCore ⏏
 **Kind**: Exported class  
 **Emits**: <code>event:start</code>, <code>event:end</code>  
-<a name="new_module_test-runner-core--TestRunner_new"></a>
+<a name="new_module_test-runner-core--TestRunnerCore_new"></a>
 
-#### new TestRunner([options])
+#### new TestRunnerCore([options])
 
 | Param | Type |
 | --- | --- |
@@ -31,73 +32,79 @@
 | [options.view] | <code>function</code> | 
 | [options.tom] | <code>object</code> | 
 
-<a name="module_test-runner-core--TestRunner+state"></a>
+<a name="module_test-runner-core--TestRunnerCore+state"></a>
 
-#### testRunner.state : <code>string</code>
+#### testRunnerCore.state : <code>string</code>
 State machine: pending -> in-progress -> pass or fail
 
-**Kind**: instance property of [<code>TestRunner</code>](#exp_module_test-runner-core--TestRunner)  
-<a name="module_test-runner-core--TestRunner+tom"></a>
+**Kind**: instance property of [<code>TestRunnerCore</code>](#exp_module_test-runner-core--TestRunnerCore)  
+<a name="module_test-runner-core--TestRunnerCore+tom"></a>
 
-#### testRunner.tom : <code>TestObjectModel</code>
+#### testRunnerCore.tom : <code>TestObjectModel</code>
 Test Object Model
 
-**Kind**: instance property of [<code>TestRunner</code>](#exp_module_test-runner-core--TestRunner)  
-<a name="module_test-runner-core--TestRunner+ended"></a>
+**Kind**: instance property of [<code>TestRunnerCore</code>](#exp_module_test-runner-core--TestRunnerCore)  
+<a name="module_test-runner-core--TestRunnerCore+ended"></a>
 
-#### testRunner.ended : <code>boolean</code>
+#### testRunnerCore.ended : <code>boolean</code>
 Ended flag
 
-**Kind**: instance property of [<code>TestRunner</code>](#exp_module_test-runner-core--TestRunner)  
-<a name="module_test-runner-core--TestRunner+view"></a>
+**Kind**: instance property of [<code>TestRunnerCore</code>](#exp_module_test-runner-core--TestRunnerCore)  
+<a name="module_test-runner-core--TestRunnerCore+view"></a>
 
-#### testRunner.view : <code>function</code>
+#### testRunnerCore.view : <code>View</code>
 View
 
-**Kind**: instance property of [<code>TestRunner</code>](#exp_module_test-runner-core--TestRunner)  
-<a name="module_test-runner-core--TestRunner+start"></a>
+**Kind**: instance property of [<code>TestRunnerCore</code>](#exp_module_test-runner-core--TestRunnerCore)  
+<a name="module_test-runner-core--TestRunnerCore+stats"></a>
 
-#### testRunner.start() ⇒ <code>Promise</code>
+#### testRunnerCore.stats
+Runner stats
+
+**Kind**: instance property of [<code>TestRunnerCore</code>](#exp_module_test-runner-core--TestRunnerCore)  
+<a name="module_test-runner-core--TestRunnerCore+start"></a>
+
+#### testRunnerCore.start() ⇒ <code>Promise</code>
 Start the runner
 
-**Kind**: instance method of [<code>TestRunner</code>](#exp_module_test-runner-core--TestRunner)  
-<a name="module_test-runner-core--TestRunner+event_in-progress"></a>
+**Kind**: instance method of [<code>TestRunnerCore</code>](#exp_module_test-runner-core--TestRunnerCore)  
+<a name="module_test-runner-core--TestRunnerCore+event_in-progress"></a>
 
 #### "in-progress" (testCount)
 in-progress
 
-**Kind**: event emitted by [<code>TestRunner</code>](#exp_module_test-runner-core--TestRunner)  
+**Kind**: event emitted by [<code>TestRunnerCore</code>](#exp_module_test-runner-core--TestRunnerCore)  
 
 | Param | Type | Description |
 | --- | --- | --- |
 | testCount | <code>number</code> | the numbers of tests |
 
-<a name="module_test-runner-core--TestRunner+event_start"></a>
+<a name="module_test-runner-core--TestRunnerCore+event_start"></a>
 
 #### "start" (testCount)
 Start
 
-**Kind**: event emitted by [<code>TestRunner</code>](#exp_module_test-runner-core--TestRunner)  
+**Kind**: event emitted by [<code>TestRunnerCore</code>](#exp_module_test-runner-core--TestRunnerCore)  
 
 | Param | Type | Description |
 | --- | --- | --- |
 | testCount | <code>number</code> | the numbers of tests |
 
-<a name="module_test-runner-core--TestRunner+event_fail"></a>
+<a name="module_test-runner-core--TestRunnerCore+event_fail"></a>
 
 #### "fail"
 Test suite failed
 
-**Kind**: event emitted by [<code>TestRunner</code>](#exp_module_test-runner-core--TestRunner)  
-<a name="module_test-runner-core--TestRunner+event_pass"></a>
+**Kind**: event emitted by [<code>TestRunnerCore</code>](#exp_module_test-runner-core--TestRunnerCore)  
+<a name="module_test-runner-core--TestRunnerCore+event_pass"></a>
 
 #### "pass"
 Test suite passed
 
-**Kind**: event emitted by [<code>TestRunner</code>](#exp_module_test-runner-core--TestRunner)  
-<a name="module_test-runner-core--TestRunner+event_end"></a>
+**Kind**: event emitted by [<code>TestRunnerCore</code>](#exp_module_test-runner-core--TestRunnerCore)  
+<a name="module_test-runner-core--TestRunnerCore+event_end"></a>
 
 #### "end"
 Test suite ended
 
-**Kind**: event emitted by [<code>TestRunner</code>](#exp_module_test-runner-core--TestRunner)  
+**Kind**: event emitted by [<code>TestRunnerCore</code>](#exp_module_test-runner-core--TestRunnerCore)  

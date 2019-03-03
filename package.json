@@ -25,7 +25,6 @@
     "test:js": "rollup -c build/tests.config.js && node dist/tests.js",
     "test:mjs": "node --experimental-modules test/tests.mjs",
     "dist": "rollup -w -c build/index.config.js",
-    "i": "cd node_modules/test-object-model && npm i --legacy-bundling --production && rm package-lock.json && npm i --package-lock-only",
     "docs": "jsdoc2md -c build/jsdoc.conf index.mjs > docs/API.md"
   },
   "dependencies": {
