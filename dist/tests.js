@@ -715,7 +715,7 @@ function isComposite (item) {
 class Emitter$1 {
   /**
    * Emit an event.
-   * @param {string} eventName - the event name to emit.
+   * @param {string} [eventName] - the event name to emit, omitting the name will catch all events.
    * @param ...args {*} - args to pass to the event handler
    */
   emit (eventName, ...args) {
@@ -743,10 +743,10 @@ class Emitter$1 {
     }
 
     /* bubble event up */
-    if (this.parent) this.parent._emitTarget(eventName, this, ...args);
+    if (this.parent) this.parent.emitTarget(eventName, this, ...args);
   }
 
-  _emitTarget (eventName, target, ...args) {
+  emitTarget (eventName, target, ...args) {
     if (this._listeners && this._listeners.length > 0) {
       const toRemove = [];
 
@@ -771,15 +771,15 @@ class Emitter$1 {
     }
 
     /* bubble event up */
-    if (this.parent) this.parent._emitTarget(eventName, target || this, ...args);
+    if (this.parent) this.parent.emitTarget(eventName, target || this, ...args);
   }
 
    /**
     * Register an event listener.
-    * @param {string} [eventName] - The event name to watch. Omitting the name will catch all events.
-    * @param {function} handler - The function to be called when `eventName` is emitted. Invocated with `this` set to `emitter`.
+    * @param {string} eventName - the event name to watch
+    * @param {function} handler - the event handler
     * @param {object} [options]
-    * @param {boolean} [options.once] - If `true`, the handler will be invoked once then removed.
+    * @param {boolean} [options.once]
     */
   on (eventName, handler, options) {
     createListenersArray$1(this);
@@ -788,13 +788,7 @@ class Emitter$1 {
       handler = eventName;
       eventName = '__ALL__';
     }
-    if (!handler) {
-      throw new Error('handler function required')
-    } else if (handler && typeof handler !== 'function') {
-      throw new Error('handler arg must be a function')
-    } else {
-      this._listeners.push({ eventName, handler: handler, once: options.once });
-    }
+    this._listeners.push({ eventName, handler: handler, once: options.once });
   }
 
   /**

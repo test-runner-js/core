@@ -1,4 +1,4 @@
-import StateMachine from './node_modules/fsm-base/index.mjs'
+import StateMachine from './node_modules/fsm-base/dist/index.mjs'
 import Queue from './lib/queue.mjs'
 
 /**

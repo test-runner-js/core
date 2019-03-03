@@ -1,5 +1,5 @@
 import TestRunner from '../index.mjs'
-import Test from '../node_modules/test-object-model/index.mjs'
+import Test from '../node_modules/test-object-model/dist/index.mjs'
 import a from 'assert'
 import { halt, sleep } from './lib/util.mjs'
 

@@ -1,5 +1,5 @@
 import TestRunnerCore from '../index.mjs'
-import Tom from '../node_modules/test-object-model/index.mjs'
+import Tom from '../node_modules/test-object-model/dist/index.mjs'
 import a from 'assert'
 import { halt } from './lib/util.mjs'
 
