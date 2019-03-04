@@ -427,19 +427,22 @@
       this.stats.start = Date.now();
       const tests = Array.from(this.tom);
 
+      /* encapsulate this in TOM? */
+      const testCount = tests.filter(t => t.testFn).length;
+
       /**
        * in-progress
        * @event module:test-runner-core#in-progress
        * @param testCount {number} - the numbers of tests
        */
-      this.setState('in-progress', tests.length);
+      this.setState('in-progress', testCount);
 
       /**
        * Start
        * @event module:test-runner-core#start
        * @param testCount {number} - the numbers of tests
        */
-      this.emit('start', tests.length);
+      this.emit('start', testCount);
 
       const jobs = tests.map(test => {
         return () => {

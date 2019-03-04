@@ -10,7 +10,10 @@ import { halt } from './lib/util.mjs'
   tom.test('two', () => 2)
 
   const runner = new TestRunner({ tom })
-  runner.on('start', () => counts.push('start'))
+  runner.on('start', count => {
+    counts.push('start')
+    a.strictEqual(count, 2)
+  })
   runner.on('end', () => counts.push('end'))
   setTimeout(() => {
     a.deepStrictEqual(counts, [ 'start', 'end' ])
