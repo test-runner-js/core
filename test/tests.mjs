@@ -1,7 +1,6 @@
 import './constructor.mjs'
 import './events.mjs'
 import './queue.mjs'
-import './queue-v10.mjs'
 import './start-concurrency.mjs'
 import './start-concurrent.mjs'
 /* skip assertions on results until decided what results should be */
