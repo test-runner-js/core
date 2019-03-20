@@ -145,10 +145,7 @@ class TestRunnerCore extends StateMachine {
     return new Promise((resolve, reject) => {
       setTimeout(async () => {
         const queue = new Queue(jobs, this.tom.options.concurrency)
-        const results = []
-        for await (const result of queue) {
-          results.push(result)
-        }
+        const results = await queue.process()
         this.ended = true
         if (this.state !== 'fail') {
           /**

@@ -291,13 +291,18 @@
   }
 
   class Queue {
+    /**
+     * @param {function[]} jobs - An array of functions, each of which return a Promise
+     * @param {number} maxConcurrency
+     */
     constructor (jobs, maxConcurrency) {
       this.jobs = jobs;
       this.activeCount = 0;
       this.maxConcurrency = maxConcurrency || 10;
     }
 
-    async * [Symbol.asyncIterator] () {
+    async process () {
+      let output = [];
       while (this.jobs.length) {
         const slotsAvailable = this.maxConcurrency - this.activeCount;
         if (slotsAvailable > 0) {
@@ -311,11 +316,10 @@
           }
           const results = await Promise.all(toRun);
           this.activeCount -= results.length;
-          for (const result of results) {
-            yield result;
-          }
+          output = output.concat(results);
         }
       }
+      return output
     }
   }
 
@@ -463,10 +467,7 @@
       return new Promise((resolve, reject) => {
         setTimeout(async () => {
           const queue = new Queue(jobs, this.tom.options.concurrency);
-          const results = [];
-          for await (const result of queue) {
-            results.push(result);
-          }
+          const results = await queue.process();
           this.ended = true;
           if (this.state !== 'fail') {
             /**

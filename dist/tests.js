@@ -293,13 +293,18 @@ function flatten (prev, curr) {
 }
 
 class Queue {
+  /**
+   * @param {function[]} jobs - An array of functions, each of which return a Promise
+   * @param {number} maxConcurrency
+   */
   constructor (jobs, maxConcurrency) {
     this.jobs = jobs;
     this.activeCount = 0;
     this.maxConcurrency = maxConcurrency || 10;
   }
 
-  async * [Symbol.asyncIterator] () {
+  async process () {
+    let output = [];
     while (this.jobs.length) {
       const slotsAvailable = this.maxConcurrency - this.activeCount;
       if (slotsAvailable > 0) {
@@ -313,11 +318,10 @@ class Queue {
         }
         const results = await Promise.all(toRun);
         this.activeCount -= results.length;
-        for (const result of results) {
-          yield result;
-        }
+        output = output.concat(results);
       }
     }
+    return output
   }
 }
 
@@ -465,10 +469,7 @@ class TestRunnerCore extends StateMachine {
     return new Promise((resolve, reject) => {
       setTimeout(async () => {
         const queue = new Queue(jobs, this.tom.options.concurrency);
-        const results = [];
-        for await (const result of queue) {
-          results.push(result);
-        }
+        const results = await queue.process();
         this.ended = true;
         if (this.state !== 'fail') {
           /**
@@ -1378,7 +1379,35 @@ class TestContext {
     .catch(halt);
 }
 
+function sleep$1 (ms, returnValue) {
+  return new Promise(resolve => setTimeout(() => resolve(returnValue), ms))
+}
+
+async function start () { 
+  {
+    /* process(), maxConcurrency 1 */
+    // TODO: ensure only one test runs at a time
+    function createJob (ms, result) {
+      return function () {
+        sleep$1(ms);
+        return result
+      }
+    }
+    const queue = new Queue([
+      createJob(30, 1),
+      createJob(20, 1.1),
+      createJob(50, 1.2),
+    ], 1);
+
+    const results = await queue.process();
+    a.deepStrictEqual(results, [ 1, 1.1, 1.2 ]);
+  }
+}
+
+start().catch(halt);
+
 { /* concurrency usage */
+  // TODO: ensure only one test runs at a time
   let counts = [];
   const tom = new Test({ concurrency: 1 });
   tom
@@ -1409,9 +1438,11 @@ class TestContext {
     });
 
   const runner = new TestRunnerCore({ tom });
-  runner.start().then(() => {
-    a.deepStrictEqual(counts, [ 1, 1.1, 1.2, 2, 2.1, 2.2 ]);
-  });
+  runner.start()
+    .then(() => {
+      a.deepStrictEqual(counts, [ 1, 1.1, 1.2, 2, 2.1, 2.2 ]);
+    })
+    .catch(halt);
 }
 
 { /* runner.start(): execution order */

@@ -4,6 +4,7 @@ import a from 'assert'
 import { halt, sleep } from './lib/util.mjs'
 
 { /* concurrency usage */
+  // TODO: ensure only one test runs at a time
   let counts = []
   const tom = new Test({ concurrency: 1 })
   tom
@@ -34,7 +35,9 @@ import { halt, sleep } from './lib/util.mjs'
     })
 
   const runner = new TestRunner({ tom })
-  runner.start().then(() => {
-    a.deepStrictEqual(counts, [ 1, 1.1, 1.2, 2, 2.1, 2.2 ])
-  })
+  runner.start()
+    .then(() => {
+      a.deepStrictEqual(counts, [ 1, 1.1, 1.2, 2, 2.1, 2.2 ])
+    })
+    .catch(halt)
 }
