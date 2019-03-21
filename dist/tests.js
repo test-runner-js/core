@@ -1008,7 +1008,12 @@ function flatten$1 (prev, curr) {
  */
 class Test extends createMixin(Composite)(StateMachine$1) {
   constructor (name, testFn, options) {
-    if (typeof name === 'string') ; else if (typeof name === 'function') {
+    if (typeof name === 'string') {
+      if (isPlainObject(testFn)) {
+        options = testFn;
+        testFn = undefined;
+      }
+    } else if (typeof name === 'function') {
       options = testFn;
       testFn = name;
       name = '';
@@ -1227,6 +1232,10 @@ class TestContext {
     this.name = context.name;
     this.index = context.index;
   }
+}
+
+function isPlainObject (input) {
+  return input !== null && typeof input === 'object' && input.constructor === Object
 }
 
 { /* runner events: start, end */
