@@ -1,5 +1,6 @@
 import StateMachine from './node_modules/fsm-base/dist/index.mjs'
 import Queue from './lib/queue.mjs'
+import Stats from './lib/stats.mjs'
 
 /**
  * @module test-runner-core
@@ -52,17 +53,7 @@ class TestRunnerCore extends StateMachine {
     /**
      * Runner stats
      */
-    this.stats = {
-      start: 0,
-      end: 0,
-      pass: 0,
-      fail: 0,
-      skip: 0,
-      ignore: 0,
-      timeElapsed: function () {
-        return this.end - this.start
-      }
-    }
+    this.stats = new Stats()
 
     this.on('start', (...args) => {
       if (this.view && this.view.start) this.view.start(...args)
@@ -83,6 +74,7 @@ class TestRunnerCore extends StateMachine {
       if (this.view && this.view.testIgnore) this.view.testIgnore(...args)
     })
 
+    /* translate tom to runner events */
     this.tom.on('pass', (...args) => {
       this.stats.pass++
       this.emit('test-pass', ...args)
@@ -104,6 +96,7 @@ class TestRunnerCore extends StateMachine {
   /**
    * Start the runner
    * @returns {Promise}
+   * @fulfil {Array<Array>} - Fulfils with an array of arrays containing results for each batch of concurrently run tests.
    */
   async start () {
     this.stats.start = Date.now()
@@ -126,6 +119,7 @@ class TestRunnerCore extends StateMachine {
      */
     this.emit('start', testCount)
 
+    /* create array of job functions */
     const jobs = tests.map(test => {
       return () => {
         return test.run().catch(err => {
@@ -143,6 +137,7 @@ class TestRunnerCore extends StateMachine {
       }
     })
     return new Promise((resolve, reject) => {
+      /* isomorphic nextTick */
       setTimeout(async () => {
         const queue = new Queue(jobs, this.tom.options.concurrency)
         const results = await queue.process()

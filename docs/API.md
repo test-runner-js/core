@@ -1,3 +1,17 @@
+## Modules
+
+<dl>
+<dt><a href="#module_test-runner-core">test-runner-core</a></dt>
+<dd></dd>
+</dl>
+
+## Classes
+
+<dl>
+<dt><a href="#Queue">Queue</a></dt>
+<dd></dd>
+</dl>
+
 <a name="module_test-runner-core"></a>
 
 ## test-runner-core
@@ -68,6 +82,7 @@ Runner stats
 Start the runner
 
 **Kind**: instance method of [<code>TestRunnerCore</code>](#exp_module_test-runner-core--TestRunnerCore)  
+**Fulfil**: <code>Array&lt;Array&gt;</code> - Fulfils with an array of arrays containing results for each batch of concurrently run tests.  
 <a name="module_test-runner-core--TestRunnerCore+event_in-progress"></a>
 
 #### "in-progress" (testCount)
@@ -108,3 +123,16 @@ Test suite passed
 Test suite ended
 
 **Kind**: event emitted by [<code>TestRunnerCore</code>](#exp_module_test-runner-core--TestRunnerCore)  
+<a name="Queue"></a>
+
+## Queue
+**Kind**: global class  
+<a name="new_Queue_new"></a>
+
+### new Queue(jobs, maxConcurrency)
+
+| Param | Type | Description |
+| --- | --- | --- |
+| jobs | <code>Array.&lt;function()&gt;</code> | An array of functions, each of which must return a Promise. |
+| maxConcurrency | <code>number</code> |  |
+

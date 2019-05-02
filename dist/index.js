@@ -323,6 +323,20 @@
     }
   }
 
+  class Stats {
+  	constructor () {
+  		this.start = 0;
+  		this.end = 0;
+  		this.pass = 0;
+  		this.fail = 0;
+  		this.skip = 0;
+  		this.ignore = 0;
+  		this.timeElapsed = function () {
+  		  return this.end - this.start
+  		};
+  	}
+  }
+
   /**
    * @module test-runner-core
    */
@@ -374,17 +388,7 @@
       /**
        * Runner stats
        */
-      this.stats = {
-        start: 0,
-        end: 0,
-        pass: 0,
-        fail: 0,
-        skip: 0,
-        ignore: 0,
-        timeElapsed: function () {
-          return this.end - this.start
-        }
-      };
+      this.stats = new Stats();
 
       this.on('start', (...args) => {
         if (this.view && this.view.start) this.view.start(...args);
@@ -405,6 +409,7 @@
         if (this.view && this.view.testIgnore) this.view.testIgnore(...args);
       });
 
+      /* translate tom to runner events */
       this.tom.on('pass', (...args) => {
         this.stats.pass++;
         this.emit('test-pass', ...args);
@@ -426,6 +431,7 @@
     /**
      * Start the runner
      * @returns {Promise}
+     * @fulfil {Array<Array>} - Fulfils with an array of arrays containing results for each batch of concurrently run tests.
      */
     async start () {
       this.stats.start = Date.now();
@@ -448,6 +454,7 @@
        */
       this.emit('start', testCount);
 
+      /* create array of job functions */
       const jobs = tests.map(test => {
         return () => {
           return test.run().catch(err => {
@@ -465,6 +472,7 @@
         }
       });
       return new Promise((resolve, reject) => {
+        /* isomorphic nextTick */
         setTimeout(async () => {
           const queue = new Queue(jobs, this.tom.options.concurrency);
           const results = await queue.process();

@@ -21,11 +21,13 @@
     "node": ">=8"
   },
   "scripts": {
-    "test": "npm run test:js && npm run test:mjs",
-    "test:js": "rollup -c build/tests.config.js && node dist/tests.js",
-    "test:mjs": "node --experimental-modules test/tests.mjs",
-    "dist": "rollup -w -c build/index.config.js",
-    "docs": "jsdoc2md -c build/jsdoc.conf index.mjs > docs/API.md"
+    "test": "npm run test:js && npm run test:esm",
+    "test:js": "rollup -c build/tests.config.js && node tmp/test/tests.js",
+    "test:esm": "node --experimental-modules test/tests.mjs",
+    "dist": "npm run dist:js && npm run dist:esm",
+    "dist:js": "rollup index.mjs -f umd -n TestRunnerCore -o dist/index.js",
+    "dist:esm": "rollup index.mjs -f esm -o dist/index.mjs",
+    "docs": "jsdoc2md -c build/jsdoc.conf index.mjs lib/queue-v10.mjs lib/stats.mjs > docs/API.md"
   },
   "dependencies": {
     "fsm-base": "^0.4.4"
@@ -33,8 +35,8 @@
   "devDependencies": {
     "jsdoc-to-markdown": "^4.0.1",
     "node-fetch": "^2.3.0",
-    "rollup": "^1.7.0",
-    "sleep-anywhere": "^1.1.0",
+    "rollup": "^1.10.1",
+    "sleep-anywhere": "^1.1.2",
     "test-object-model": "^0.3.8"
   },
   "standard": {
