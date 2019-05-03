@@ -418,7 +418,7 @@
         this.stats.fail++;
         this.emit('test-fail', ...args);
       });
-      this.tom.on('skip', (...args) => {
+      this.tom.on('skipped', (...args) => {
         this.stats.skip++;
         this.emit('test-skip', ...args);
       });
@@ -464,13 +464,10 @@
              */
             this.state = 'fail';
             // keep going when tests fail but crash for programmer error
-            // if (err.code !== 'ERR_ASSERTION') {
-            //   console.error('TEST ERROR')
-            //   console.error(err)
-            // }
           })
         }
       });
+
       return new Promise((resolve, reject) => {
         /* isomorphic nextTick */
         setTimeout(async () => {
