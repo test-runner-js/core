@@ -4,31 +4,37 @@ import a from 'assert'
 import { halt } from './lib/util.mjs'
 
 { /* custom view */
-  let counts = []
+  let actuals = []
   const tom = new Tom()
-  tom.test('one', () => counts.push('one'))
-  tom.test('two', () => counts.push('two'))
+  tom.test('one', () => {
+    actuals.push('one')
+    return 1
+  })
+  tom.test('two', async () => {
+    actuals.push('two')
+    return 2
+  })
 
   class View {
     start () {
-      counts.push('start')
+      actuals.push('start')
     }
     end () {
-      counts.push('end')
+      actuals.push('end')
     }
     testPass (test, result) {
-      counts.push('testPass')
+      actuals.push('testPass: ' + result)
     }
     testFail (test, err) {
-      counts.push('testFail')
+      actuals.push('testFail')
     }
     testSkip (test) {
-      counts.push('testSkip')
+      actuals.push('testSkip')
     }
   }
 
   const runner = new TestRunnerCore({ view: new View(), tom })
   runner.start()
-    .then(() => a.deepStrictEqual(counts, [ 'start', 'one', 'testPass', 'two', 'testPass', 'end' ]))
+    .then(() => a.deepStrictEqual(actuals, [ 'start', 'one', 'testPass: 1', 'two', 'testPass: 2', 'end' ]))
     .catch(halt)
 }

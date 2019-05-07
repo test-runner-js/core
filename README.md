@@ -15,12 +15,10 @@ Work in progress.
 * Extensible
 * Runs mjs
 * Lightweight
-* Assertion plans (counter)
 * Isomorphic, load anywhere
 * Test timeout and runFor
 * TAP output
 * Custom views
-
 
 * * *
 

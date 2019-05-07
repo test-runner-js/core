@@ -35,9 +35,9 @@
   "devDependencies": {
     "jsdoc-to-markdown": "^4.0.1",
     "node-fetch": "^2.5.0",
-    "rollup": "^1.11.0",
+    "rollup": "^1.11.3",
     "sleep-anywhere": "^1.1.2",
-    "test-object-model": "^0.4.3"
+    "test-object-model": "^0.4.4"
   },
   "standard": {
     "ignore": [
