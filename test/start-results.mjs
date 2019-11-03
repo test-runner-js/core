@@ -15,7 +15,7 @@ import { halt } from './lib/util.mjs'
   const runner = new TestRunner({ tom })
   runner.start()
     .then(results => {
-      a.deepStrictEqual(results, [ undefined, 1, 2 ])
+      a.deepStrictEqual(results, [undefined, 1, 2])
     })
     .catch(halt)
 }
@@ -32,13 +32,13 @@ import { halt } from './lib/util.mjs'
   const runner = new TestRunner({ tom })
   runner.start()
     .then(results => {
-      a.deepStrictEqual(results, [ undefined, undefined ])
+      a.deepStrictEqual(results, [undefined, undefined])
     })
     .catch(halt)
 }
 
 { /* runner.start(): pass, fail, skip events */
-  let counts = []
+  const counts = []
   const tom = new Tom()
   tom.test('one', () => true)
   tom.test('two', () => { throw new Error('fail') })
@@ -50,13 +50,13 @@ import { halt } from './lib/util.mjs'
   runner.tom.on('skip', () => counts.push('skip'))
   runner.start()
     .then(() => {
-      a.deepStrictEqual(counts, [ 'pass', 'fail', 'skip' ])
+      a.deepStrictEqual(counts, ['pass', 'fail', 'skip'])
     })
     .catch(halt)
 }
 
 { /* runner.start(): only */
-  let counts = []
+  const counts = []
   const tom = new Tom()
   tom.test('one', () => 1)
   tom.test('two', () => 2)
@@ -69,13 +69,13 @@ import { halt } from './lib/util.mjs'
   runner.start()
     .then(results => {
       // a.deepStrictEqual(results, [ undefined, undefined, 3 ])
-      a.deepStrictEqual(counts, [ 'skip', 'skip', 'pass' ])
+      a.deepStrictEqual(counts, ['skip', 'skip', 'pass'])
     })
     .catch(halt)
 }
 
 { /* runner.start(): deep only */
-  let counts = []
+  const counts = []
   const tom = new Tom()
   const one = tom.only('one', () => 1)
   const two = one.test('two', () => 2)
@@ -87,14 +87,14 @@ import { halt } from './lib/util.mjs'
   runner.tom.on('skip', () => counts.push('skip'))
   runner.start()
     .then(results => {
-      a.deepStrictEqual(results, [ 1, undefined, 3 ])
-      a.deepStrictEqual(counts, [ 'pass', 'skip', 'pass' ])
+      a.deepStrictEqual(results, [1, undefined, 3])
+      a.deepStrictEqual(counts, ['pass', 'skip', 'pass'])
     })
     .catch(halt)
 }
 
 { /* runner.start(): deep only with fail */
-  let counts = []
+  const counts = []
   const tom = new Tom()
   const one = tom.only('one', () => 1)
   const two = one.test('two', () => 2)
@@ -108,14 +108,14 @@ import { halt } from './lib/util.mjs'
   runner.tom.on('skip', () => counts.push('skip'))
   runner.start()
     .then(results => {
-      a.deepStrictEqual(results, [ 1, undefined, undefined ])
-      a.deepStrictEqual(counts, [ 'pass', 'skip', 'fail' ])
+      a.deepStrictEqual(results, [1, undefined, undefined])
+      a.deepStrictEqual(counts, ['pass', 'skip', 'fail'])
     })
     .catch(halt)
 }
 
 { /* runner.start(): deep only with skipped fail */
-  let counts = []
+  const counts = []
   const tom = new Tom()
   const one = tom.only('one', () => 1)
   const two = one.test('two', () => 2)
@@ -129,8 +129,8 @@ import { halt } from './lib/util.mjs'
   runner.tom.on('skip', () => counts.push('skip'))
   runner.start()
     .then(results => {
-      a.deepStrictEqual(results, [ 1, undefined, undefined ])
-      a.deepStrictEqual(counts, [ 'pass', 'skip', 'skip' ])
+      a.deepStrictEqual(results, [1, undefined, undefined])
+      a.deepStrictEqual(counts, ['pass', 'skip', 'skip'])
     })
     .catch(halt)
 }

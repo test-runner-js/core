@@ -16,7 +16,7 @@ import { halt } from './lib/util.mjs'
   const runner = new TestRunner({ tom })
   runner.start()
     .then(results => {
-      a.deepStrictEqual(actuals, [ 1, 2 ])
+      a.deepStrictEqual(actuals, [1, 2])
       a.strictEqual(tom.index, 1)
       a.strictEqual(tom.children[0].index, 1)
       a.strictEqual(tom.children[1].index, 2)
@@ -41,4 +41,3 @@ import { halt } from './lib/util.mjs'
 //     })
 //     .catch(halt)
 // }
-

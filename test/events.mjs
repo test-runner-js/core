@@ -4,7 +4,7 @@ import a from 'assert'
 import { halt } from './lib/util.mjs'
 
 { /* runner events: start, end */
-  let actuals = []
+  const actuals = []
   const tom = new Tom()
   tom.test('one', () => 1)
   tom.test('two', () => 2)
@@ -16,13 +16,13 @@ import { halt } from './lib/util.mjs'
   })
   runner.on('end', () => actuals.push('end'))
   setTimeout(() => {
-    a.deepStrictEqual(actuals, [ 'start', 'end' ])
+    a.deepStrictEqual(actuals, ['start', 'end'])
   }, 100)
   runner.start()
 }
 
 { /* runner events: start, test-pass, end */
-  let actuals = []
+  const actuals = []
   const tom = new Tom()
   tom.test('one', () => 1)
   tom.test('two', () => 2)
@@ -32,13 +32,13 @@ import { halt } from './lib/util.mjs'
   runner.on('end', () => actuals.push('end'))
   runner.on('test-pass', () => actuals.push('test-pass'))
   setTimeout(() => {
-    a.deepStrictEqual(actuals, [ 'start', 'test-pass', 'test-pass', 'end' ])
+    a.deepStrictEqual(actuals, ['start', 'test-pass', 'test-pass', 'end'])
   }, 100)
   runner.start()
 }
 
 { /* runner events: start, test-fail, end */
-  let actuals = []
+  const actuals = []
   const tom = new Tom()
   tom.test('one', () => {
     throw new Error('broken')
@@ -54,13 +54,13 @@ import { halt } from './lib/util.mjs'
   runner.on('test-fail', () => actuals.push('test-fail'))
   /* why is this in a timeout? */
   setTimeout(() => {
-    a.deepStrictEqual(actuals, [ 'start', 'test-fail', 'test-fail', 'end' ])
+    a.deepStrictEqual(actuals, ['start', 'test-fail', 'test-fail', 'end'])
   }, 100)
   runner.start()
 }
 
 { /* runner.start(): pass, fail, skip events */
-  let actuals = []
+  const actuals = []
   const tom = new Tom()
   tom.test('one', () => true)
   tom.test('two', () => { throw new Error('fail') })
@@ -72,13 +72,13 @@ import { halt } from './lib/util.mjs'
   runner.on('test-skip', () => actuals.push('test-skip'))
   runner.start()
     .then(() => {
-      a.deepStrictEqual(actuals, [ 'test-pass', 'test-fail', 'test-skip' ])
+      a.deepStrictEqual(actuals, ['test-pass', 'test-fail', 'test-skip'])
     })
     .catch(halt)
 }
 
 { /* runner.start(): only */
-  let actuals = []
+  const actuals = []
   const tom = new Tom()
   tom.test('one', () => 1)
   tom.test('two', () => 2)
@@ -90,13 +90,13 @@ import { halt } from './lib/util.mjs'
   runner.on('test-skip', () => actuals.push('test-skip'))
   runner.start()
     .then(() => {
-      a.deepStrictEqual(actuals, [ 'test-skip', 'test-skip', 'test-pass' ])
+      a.deepStrictEqual(actuals, ['test-skip', 'test-skip', 'test-pass'])
     })
     .catch(halt)
 }
 
 { /* runner.start(): deep only */
-  let actuals = []
+  const actuals = []
   const tom = new Tom()
   const one = tom.only('one', () => 1)
   const two = one.test('two', () => 2)
@@ -108,13 +108,13 @@ import { halt } from './lib/util.mjs'
   runner.on('test-skip', () => actuals.push('test-skip'))
   runner.start()
     .then(() => {
-      a.deepStrictEqual(actuals, [ 'test-pass', 'test-skip', 'test-pass' ])
+      a.deepStrictEqual(actuals, ['test-pass', 'test-skip', 'test-pass'])
     })
     .catch(halt)
 }
 
 { /* runner.start(): deep only with fail */
-  let actuals = []
+  const actuals = []
   const tom = new Tom()
   const one = tom.only('one', () => 1)
   const two = one.test('two', () => 2)
@@ -128,13 +128,13 @@ import { halt } from './lib/util.mjs'
   runner.on('test-skip', () => actuals.push('test-skip'))
   runner.start()
     .then(() => {
-      a.deepStrictEqual(actuals, [ 'test-pass', 'test-skip', 'test-fail' ])
+      a.deepStrictEqual(actuals, ['test-pass', 'test-skip', 'test-fail'])
     })
     .catch(halt)
 }
 
 { /* runner.start(): deep only with skipped fail */
-  let actuals = []
+  const actuals = []
   const tom = new Tom()
   const one = tom.only('one', () => 1)
   const two = one.test('two', () => 2)
@@ -148,7 +148,7 @@ import { halt } from './lib/util.mjs'
   runner.on('test-skip', () => actuals.push('test-skip'))
   runner.start()
     .then(() => {
-      a.deepStrictEqual(actuals, [ 'test-pass', 'test-skip', 'test-skip' ])
+      a.deepStrictEqual(actuals, ['test-pass', 'test-skip', 'test-skip'])
     })
     .catch(halt)
 }

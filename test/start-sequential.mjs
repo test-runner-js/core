@@ -4,9 +4,10 @@ import a from 'assert'
 import http from 'http'
 import fetch from 'node-fetch'
 import { halt } from './lib/util.mjs'
+import sleep from '../node_modules/sleep-anywhere/index.mjs'
 
 { /* timeout tests */
-  let counts = []
+  const counts = []
   const tom = new Tom('Sequential tests', null, { concurrency: 1 })
   tom.test('one', function () {
     a.deepStrictEqual(counts, [])
@@ -19,7 +20,7 @@ import { halt } from './lib/util.mjs'
   })
 
   tom.test('two', function () {
-    a.deepStrictEqual(counts, [ 1 ])
+    a.deepStrictEqual(counts, [1])
     return new Promise((resolve, reject) => {
       setTimeout(() => {
         counts.push(2)
@@ -29,7 +30,7 @@ import { halt } from './lib/util.mjs'
   })
 
   tom.test('three', function () {
-    a.deepStrictEqual(counts, [ 1, 2 ])
+    a.deepStrictEqual(counts, [1, 2])
     counts.push(3)
     return 3
   })
@@ -37,13 +38,13 @@ import { halt } from './lib/util.mjs'
   const runner = new TestRunner({ tom })
   runner.start()
     .then(() => {
-      a.deepStrictEqual(counts, [ 1, 2, 3 ])
+      a.deepStrictEqual(counts, [1, 2, 3])
     })
     .catch(halt)
 }
 
 { /* http server tests */
-  let counts = []
+  const counts = []
   const tom = new Tom('Sequential tests', null, { concurrency: 1 })
   tom.test('one', function () {
     const server = http.createServer((req, res) => {
@@ -86,7 +87,44 @@ import { halt } from './lib/util.mjs'
   const runner = new TestRunner({ tom })
   runner.start()
     .then(() => {
-      a.deepStrictEqual(counts, [ 200, 201 ])
+      a.deepStrictEqual(counts, [200, 201])
+    })
+    .catch(halt)
+}
+
+{ /* concurrency usage */
+  // TODO: ensure only one test runs at a time
+  const actuals = []
+  const tom = new Tom({ concurrency: 1 })
+  tom.test('one', async () => {
+    await sleep(30)
+    actuals.push(1)
+  })
+  tom.test('two', async () => {
+    await sleep(20)
+    actuals.push(1.1)
+  })
+  tom.test(async () => {
+    await sleep(50)
+    actuals.push(1.2)
+  })
+  tom.test(async () => {
+    await sleep(10)
+    actuals.push(2)
+  })
+  tom.test(async () => {
+    await sleep(40)
+    actuals.push(2.1)
+  })
+  tom.test(async () => {
+    await sleep(60)
+    actuals.push(2.2)
+  })
+
+  const runner = new TestRunner({ tom })
+  runner.start()
+    .then(() => {
+      a.deepStrictEqual(actuals, [1, 1.1, 1.2, 2, 2.1, 2.2])
     })
     .catch(halt)
 }

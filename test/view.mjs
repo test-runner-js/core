@@ -4,7 +4,7 @@ import a from 'assert'
 import { halt } from './lib/util.mjs'
 
 { /* custom view */
-  let actuals = []
+  const actuals = []
   const tom = new Tom()
   tom.test('one', () => {
     actuals.push('one')
@@ -19,15 +19,19 @@ import { halt } from './lib/util.mjs'
     start () {
       actuals.push('start')
     }
+
     end () {
       actuals.push('end')
     }
+
     testPass (test, result) {
       actuals.push('testPass: ' + result)
     }
+
     testFail (test, err) {
       actuals.push('testFail')
     }
+
     testSkip (test) {
       actuals.push('testSkip')
     }
@@ -35,6 +39,6 @@ import { halt } from './lib/util.mjs'
 
   const runner = new TestRunnerCore({ view: new View(), tom })
   runner.start()
-    .then(() => a.deepStrictEqual(actuals, [ 'start', 'one', 'testPass: 1', 'two', 'testPass: 2', 'end' ]))
+    .then(() => a.deepStrictEqual(actuals, ['start', 'one', 'testPass: 1', 'two', 'testPass: 2', 'end']))
     .catch(halt)
 }

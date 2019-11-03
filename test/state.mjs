@@ -4,7 +4,7 @@ import a from 'assert'
 import { halt } from './lib/util.mjs'
 
 { /* runner states: pass */
-  let counts = []
+  const counts = []
   const tom = new Tom()
   tom.test('one', () => 1)
   tom.test('two', () => 2)
@@ -18,7 +18,7 @@ import { halt } from './lib/util.mjs'
   runner.start()
     .then(() => {
       counts.push('prop:' + runner.state)
-      a.deepStrictEqual(counts, [ 'prop:pending', 'event:in-progress', 'prop:in-progress', 'test-pass', 'test-pass', 'event:pass', 'prop:pass' ])
+      a.deepStrictEqual(counts, ['prop:pending', 'event:in-progress', 'prop:in-progress', 'test-pass', 'test-pass', 'event:pass', 'prop:pass'])
       a.deepStrictEqual(runner.ended, true)
     })
     .catch(halt)
@@ -26,7 +26,7 @@ import { halt } from './lib/util.mjs'
 }
 
 { /* runner states: fail */
-  let counts = []
+  const counts = []
   const tom = new Tom()
   tom.test('one', () => {
     throw new Error('broken')
@@ -42,7 +42,7 @@ import { halt } from './lib/util.mjs'
   runner.start()
     .then(() => {
       counts.push('prop:' + runner.state)
-      a.deepStrictEqual(counts, [ 'prop:pending', 'event:in-progress', 'prop:in-progress', 'test-fail', 'test-pass', 'event:fail', 'prop:fail' ])
+      a.deepStrictEqual(counts, ['prop:pending', 'event:in-progress', 'prop:in-progress', 'test-fail', 'test-pass', 'event:fail', 'prop:fail'])
       a.deepStrictEqual(runner.ended, true)
     })
     .catch(halt)
@@ -50,7 +50,7 @@ import { halt } from './lib/util.mjs'
 }
 
 { /* runner states: fail, reject */
-  let counts = []
+  const counts = []
   const tom = new Tom()
   tom.test('one', () => {
     return Promise.reject(new Error('broken'))
@@ -66,7 +66,7 @@ import { halt } from './lib/util.mjs'
   runner.start()
     .then(() => {
       counts.push('prop:' + runner.state)
-      a.deepStrictEqual(counts, [ 'prop:pending', 'event:in-progress', 'prop:in-progress', 'test-pass', 'test-fail', 'event:fail', 'prop:fail' ])
+      a.deepStrictEqual(counts, ['prop:pending', 'event:in-progress', 'prop:in-progress', 'test-pass', 'test-fail', 'event:fail', 'prop:fail'])
       a.deepStrictEqual(runner.ended, true)
     })
     .catch(halt)
