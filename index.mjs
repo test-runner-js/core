@@ -1,6 +1,7 @@
 import StateMachine from './node_modules/fsm-base/dist/index.mjs'
 import Queue from './lib/queue.mjs'
 import Stats from './lib/stats.mjs'
+import TOM from './node_modules/test-object-model/dist/index.mjs'
 
 /**
  * @module test-runner-core
@@ -16,8 +17,11 @@ import Stats from './lib/stats.mjs'
  */
 class TestRunnerCore extends StateMachine {
   constructor (options) {
-    options = options || {}
-    if (!options.tom) throw new Error('tom required')
+    options = Object.assign({ tom: {} }, options)
+
+    /* validation */
+    TOM.validate(options.tom)
+
     super([
       { from: undefined, to: 'pending' },
       { from: 'pending', to: 'in-progress' },
