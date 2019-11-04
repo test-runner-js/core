@@ -18,7 +18,7 @@
 
 * [test-runner-core](#module_test-runner-core)
     * [TestRunnerCore](#exp_module_test-runner-core--TestRunnerCore) ⏏
-        * [new TestRunnerCore([options])](#new_module_test-runner-core--TestRunnerCore_new)
+        * [new TestRunnerCore(tom, [options])](#new_module_test-runner-core--TestRunnerCore_new)
         * [.state](#module_test-runner-core--TestRunnerCore+state) : <code>string</code>
         * [.tom](#module_test-runner-core--TestRunnerCore+tom) : <code>TestObjectModel</code>
         * [.ended](#module_test-runner-core--TestRunnerCore+ended) : <code>boolean</code>
@@ -38,13 +38,13 @@
 **Emits**: <code>event:start</code>, <code>event:end</code>  
 <a name="new_module_test-runner-core--TestRunnerCore_new"></a>
 
-#### new TestRunnerCore([options])
+#### new TestRunnerCore(tom, [options])
 
 | Param | Type |
 | --- | --- |
+| tom | <code>TestObjectModel</code> | 
 | [options] | <code>object</code> | 
 | [options.view] | <code>function</code> | 
-| [options.tom] | <code>object</code> | 
 
 <a name="module_test-runner-core--TestRunnerCore+state"></a>
 

@@ -16,7 +16,7 @@ tom.test('runner.start(): execution order', async function () {
     counts.push('two')
   })
 
-  const runner = new TestRunner({ tom })
+  const runner = new TestRunner(tom)
   const results = await runner.start()
   a.deepStrictEqual(counts, ['one', 'two'])
 })
@@ -33,7 +33,7 @@ tom.test('runner.start(): execution order 2', async function () {
     throw new Error('broken2')
   })
 
-  const runner = new TestRunner({ tom })
+  const runner = new TestRunner(tom)
   const results = await runner.start()
   a.deepStrictEqual(counts, ['one', 'two'])
 })
@@ -66,7 +66,7 @@ tom.test('run in parallel', async function () {
     actuals.push(2.2)
   })
 
-  const runner = new TestRunner({ tom })
+  const runner = new TestRunner(tom)
   const results = await runner.start()
   a.deepStrictEqual(actuals, [2, 1.1, 1, 2.1, 1.2, 2.2])
 })

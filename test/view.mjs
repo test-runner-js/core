@@ -39,7 +39,7 @@ tom.test('custom view', async function () {
     }
   }
 
-  const runner = new TestRunnerCore({ view: new View(), tom })
+  const runner = new TestRunnerCore(tom, { view: new View() })
   const results = await runner.start()
   a.deepEqual(actuals, ['start', 'one', 'testPass: 1', 'two', 'testPass: 2', 'end'])
 })

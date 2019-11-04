@@ -8,7 +8,7 @@ const tom = new Tom()
 tom.test('TOM must be defined', async function () {
   const tom = undefined
   a.throws(
-    () => { const runner = new TestRunner({ tom }) },
+    () => { const runner = new TestRunner(tom) },
     /valid tom required/i
   )
 })
@@ -16,7 +16,7 @@ tom.test('TOM must be defined', async function () {
 tom.test('TOM must be of type TestObjectModel', async function () {
   const tom = {}
   a.throws(
-    () => { const runner = new TestRunner({ tom }) },
+    () => { const runner = new TestRunner(tom) },
     /valid tom required/i
   )
 })

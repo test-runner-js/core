@@ -13,7 +13,7 @@ tom.test('runner states: pass', async function () {
   tom.on('pass', () => counts.push('test-pass'))
   tom.on('fail', () => counts.push('test-fail'))
 
-  const runner = new TestRunner({ tom })
+  const runner = new TestRunner(tom)
   counts.push('prop:' + runner.state)
   runner.on('state', state => counts.push('event:' + state))
   a.deepEqual(runner.ended, false)
@@ -37,7 +37,7 @@ tom.test('runner states: fail', async function () {
   tom.on('pass', () => counts.push('test-pass'))
   tom.on('fail', () => counts.push('test-fail'))
 
-  const runner = new TestRunner({ tom })
+  const runner = new TestRunner(tom)
   counts.push('prop:' + runner.state)
   runner.on('state', state => counts.push('event:' + state))
   a.deepEqual(runner.ended, false)
@@ -61,7 +61,7 @@ tom.test('runner states: fail, reject', async function () {
   tom.on('pass', () => counts.push('test-pass'))
   tom.on('fail', () => counts.push('test-fail'))
 
-  const runner = new TestRunner({ tom })
+  const runner = new TestRunner(tom)
   counts.push('prop:' + runner.state)
   runner.on('state', state => counts.push('event:' + state))
   a.deepEqual(runner.ended, false)

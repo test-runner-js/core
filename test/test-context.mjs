@@ -15,7 +15,7 @@ tom.test('this.index', async function () {
     actuals.push(this.index)
   })
 
-  const runner = new TestRunner({ tom })
+  const runner = new TestRunner(tom)
   const results = await runner.start()
   a.deepEqual(actuals, [1, 2])
   a.equal(tom.index, 1)
@@ -33,7 +33,7 @@ tom.test('this.index', async function () {
 //     actuals.push(ctx.index)
 //   })
 
-//   const runner = new TestRunner({ tom })
+//   const runner = new TestRunner(tom)
 //   runner.start()
 //     .then(results => {
 //       a.deepEqual(actuals, [ 1, 2 ])

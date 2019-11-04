@@ -11,7 +11,7 @@ tom.test('runner events: start, end', async function () {
   tom.test('one', () => 1)
   tom.test('two', () => 2)
 
-  const runner = new TestRunner({ tom })
+  const runner = new TestRunner(tom)
   runner.on('start', count => {
     actuals.push('start')
     a.equal(count, 2)
@@ -27,7 +27,7 @@ tom.test('runner events: start, test-pass, end', async function () {
   tom.test('one', () => 1)
   tom.test('two', () => 2)
 
-  const runner = new TestRunner({ tom })
+  const runner = new TestRunner(tom)
   runner.on('start', () => actuals.push('start'))
   runner.on('end', () => actuals.push('end'))
   runner.on('test-pass', () => actuals.push('test-pass'))
@@ -45,7 +45,7 @@ tom.test('runner events: start, test-fail, end', async function () {
     throw new Error('broken2')
   })
 
-  const runner = new TestRunner({ tom })
+  const runner = new TestRunner(tom)
   runner.on('start', () => actuals.push('start'))
   runner.on('end', () => actuals.push('end'))
   runner.on('test-pass', () => actuals.push('test-pass'))
@@ -61,7 +61,7 @@ tom.test('runner.start(): pass, fail, skip events', async function () {
   tom.test('two', () => { throw new Error('fail') })
   tom.skip('three', () => true)
 
-  const runner = new TestRunner({ tom })
+  const runner = new TestRunner(tom)
   runner.on('test-pass', () => actuals.push('test-pass'))
   runner.on('test-fail', () => actuals.push('test-fail'))
   runner.on('test-skip', () => actuals.push('test-skip'))
@@ -76,7 +76,7 @@ tom.test('runner.start(): only', async function () {
   tom.test('two', () => 2)
   tom.only('three', () => 3)
 
-  const runner = new TestRunner({ tom })
+  const runner = new TestRunner(tom)
   runner.on('test-pass', () => actuals.push('test-pass'))
   runner.on('test-fail', () => actuals.push('test-fail'))
   runner.on('test-skip', () => actuals.push('test-skip'))
@@ -91,7 +91,7 @@ tom.test('runner.start(): deep only', async function () {
   const two = one.test('two', () => 2)
   const three = two.only('three', () => 3)
 
-  const runner = new TestRunner({ tom })
+  const runner = new TestRunner(tom)
   runner.on('test-pass', () => actuals.push('test-pass'))
   runner.on('test-fail', () => actuals.push('test-fail'))
   runner.on('test-skip', () => actuals.push('test-skip'))
@@ -108,7 +108,7 @@ tom.test('runner.start(): deep only with fail', async function () {
     throw new Error('broken')
   })
 
-  const runner = new TestRunner({ tom })
+  const runner = new TestRunner(tom)
   runner.on('test-pass', () => actuals.push('test-pass'))
   runner.on('test-fail', () => actuals.push('test-fail'))
   runner.on('test-skip', () => actuals.push('test-skip'))
@@ -125,7 +125,7 @@ tom.test('runner.start(): deep only with skipped fail', async function () {
     throw new Error('broken')
   })
 
-  const runner = new TestRunner({ tom })
+  const runner = new TestRunner(tom)
   runner.on('test-pass', () => actuals.push('test-pass'))
   runner.on('test-fail', () => actuals.push('test-fail'))
   runner.on('test-skip', () => actuals.push('test-skip'))

@@ -9,18 +9,17 @@ import TOM from './node_modules/test-object-model/dist/index.mjs'
 
 /**
  * @alias module:test-runner-core
+ * @param {TestObjectModel} tom
  * @param {object} [options]
  * @param {function} [options.view]
- * @param {object} [options.tom]
  * @emits start
  * @emits end
  */
 class TestRunnerCore extends StateMachine {
-  constructor (options) {
-    options = Object.assign({ tom: {} }, options)
+  constructor (tom, options = {}) {
 
     /* validation */
-    TOM.validate(options.tom)
+    TOM.validate(tom)
 
     super('pending', [
       { from: 'pending', to: 'in-progress' },
@@ -39,7 +38,7 @@ class TestRunnerCore extends StateMachine {
      * Test Object Model
      * @type {TestObjectModel}
      */
-    this.tom = options.tom
+    this.tom = tom
 
     /**
      * Ended flag
@@ -105,7 +104,7 @@ class TestRunnerCore extends StateMachine {
     this.stats.start = Date.now()
     const tests = Array.from(this.tom)
 
-    /* encapsulate this in TOM? */
+    /* encapsulate this as a TOM method? */
     const testCount = tests.filter(t => t.testFn).length
 
     /**

@@ -37,7 +37,7 @@ tom.test('timeout tests', async function () {
     return 3
   })
 
-  const runner = new TestRunner({ tom })
+  const runner = new TestRunner(tom)
   const results = await runner.start()
   a.deepEqual(counts, [1, 2, 3])
 })
@@ -83,7 +83,7 @@ tom.test('http server tests', async function () {
     })
   })
 
-  const runner = new TestRunner({ tom })
+  const runner = new TestRunner(tom)
   const results = await runner.start()
   a.deepEqual(counts, [200, 201])
 })
@@ -116,7 +116,7 @@ tom.test('concurrency usage', async function () {
     actuals.push(2.2)
   })
 
-  const runner = new TestRunner({ tom })
+  const runner = new TestRunner(tom)
   const results = await runner.start()
   a.deepEqual(actuals, [1, 1.1, 1.2, 2, 2.1, 2.2])
 })
@@ -151,7 +151,7 @@ tom.skip('deep sequential usage', async function () {
     actuals.push(1.1)
   })
 
-  const runner = new TestRunner({ tom })
+  const runner = new TestRunner(tom)
   const results = await runner.start()
   a.deepEqual(actuals, [1.1, 1, 1.2, 2, 2.1, 2.2])
 })
