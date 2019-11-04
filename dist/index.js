@@ -120,7 +120,7 @@
     }
 
     /**
-     * Propagate.
+     * Propagate events from the supplied emitter to this emitter.
      * @param {string} eventName - the event name to propagate
      * @param {object} from - the emitter to propagate from
      */
@@ -147,10 +147,10 @@
   /**
    * Takes any input and guarantees an array back.
    *
-   * - converts array-like objects (e.g. `arguments`) to a real array
-   * - converts `undefined` to an empty array
-   * - converts any another other, singular value (including `null`) into an array containing that value
-   * - ignores input which is already an array
+   * - Converts array-like objects (e.g. `arguments`, `Set`) to a real array.
+   * - Converts `undefined` to an empty array.
+   * - Converts any another other, singular value (including `null`, objects and iterables other than `Set`) into an array containing that value.
+   * - Ignores input which is already an array.
    *
    * @module array-back
    * @example
@@ -168,6 +168,9 @@
    * > arrayify([ 1, 2 ])
    * [ 1, 2 ]
    *
+   * > arrayify(new Set([ 1, 2 ]))
+   * [ 1, 2 ]
+   *
    * > function f(){ return arrayify(arguments); }
    * > f(1,2,3)
    * [ 1, 2, 3 ]
@@ -182,22 +185,48 @@
   }
 
   /**
-   * @param {*} - the input value to convert to an array
+   * @param {*} - The input value to convert to an array
    * @returns {Array}
    * @alias module:array-back
    */
   function arrayify (input) {
     if (Array.isArray(input)) {
       return input
-    } else {
-      if (input === undefined) {
-        return []
-      } else if (isArrayLike(input)) {
-        return Array.prototype.slice.call(input)
-      } else {
-        return [ input ]
-      }
     }
+
+    if (input === undefined) {
+      return []
+    }
+
+    if (isArrayLike(input) || input instanceof Set) {
+      return Array.from(input)
+    }
+
+    return [ input ]
+  }
+
+  /**
+   * Isomorphic map-reduce function to flatten an array into the supplied array.
+   *
+   * @module reduce-flatten
+   * @example
+   * const flatten = require('reduce-flatten')
+   */
+
+  /**
+   * @alias module:reduce-flatten
+   * @example
+   * > numbers = [ 1, 2, [ 3, 4 ], 5 ]
+   * > numbers.reduce(flatten, [])
+   * [ 1, 2, 3, 4, 5 ]
+   */
+  function flatten (arr, curr) {
+    if (Array.isArray(curr)) {
+      arr.push(...curr);
+    } else {
+      arr.push(curr);
+    }
+    return arr
   }
 
   /**
@@ -205,22 +234,24 @@
    * @typicalname stateMachine
    */
 
+  const _initialState = new WeakMap();
   const _state = new WeakMap();
   const _validMoves = new WeakMap();
 
   /**
-   * @class
    * @alias module:fsm-base
    * @extends {Emitter}
    */
   class StateMachine extends Emitter {
-    constructor (validMoves) {
+    constructor (initialState, validMoves) {
       super();
       _validMoves.set(this, arrayify(validMoves).map(move => {
-        if (!Array.isArray(move.from)) move.from = [ move.from ];
-        if (!Array.isArray(move.to)) move.to = [ move.to ];
+        move.from = arrayify(move.from);
+        move.to = arrayify(move.to);
         return move
       }));
+      _state.set(this, initialState);
+      _initialState.set(this, initialState);
     }
 
     /**
@@ -274,7 +305,7 @@
         }
       });
       if (!moved) {
-        let froms = _validMoves.get(this)
+        const froms = _validMoves.get(this)
           .filter(move => move.to.indexOf(state) > -1)
           .map(move => move.from.map(from => `'${from}'`))
           .reduce(flatten);
@@ -284,10 +315,13 @@
         throw err
       }
     }
-  }
 
-  function flatten (prev, curr) {
-    return prev.concat(curr)
+    resetState () {
+      const prevState = this.state;
+      const initialState = _initialState.get(this);
+      _state.set(this, initialState);
+      this.emit('reset', prevState);
+    }
   }
 
   class Queue {
@@ -301,6 +335,7 @@
       this.maxConcurrency = maxConcurrency || 10;
     }
 
+    // TODO: composite structure, i.e. a Queue can have another Queue as one of its jobs.
     async process () {
       let output = [];
       while (this.jobs.length) {
@@ -316,7 +351,7 @@
           }
           const results = await Promise.all(toRun);
           this.activeCount -= results.length;
-          output = output.concat(results);
+          output.push(...results);
         }
       }
       return output
@@ -1157,8 +1192,7 @@
       /* validation */
       Tom.validate(options.tom);
 
-      super([
-        { from: undefined, to: 'pending' },
+      super('pending', [
         { from: 'pending', to: 'in-progress' },
         { from: 'in-progress', to: 'pass' },
         { from: 'in-progress', to: 'fail' }
@@ -1166,9 +1200,9 @@
 
       /**
        * State machine: pending -> in-progress -> pass or fail
-       * @type {string}
+       * @member {string} module:test-runner-core#state
        */
-      this.state = 'pending';
+
       this.options = options;
 
       /**
@@ -1275,7 +1309,7 @@
       return new Promise((resolve, reject) => {
         /* isomorphic nextTick */
         setTimeout(async () => {
-          const queue = new Queue(jobs, this.tom.options.concurrency);
+          const queue = new Queue(jobs, this.tom.options.maxConcurrency);
           const results = await queue.process();
           this.ended = true;
           if (this.state !== 'fail') {

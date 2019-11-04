@@ -8,7 +8,7 @@ import sleep from '../node_modules/sleep-anywhere/index.mjs'
 
 { /* timeout tests */
   const counts = []
-  const tom = new Tom('Sequential tests', null, { concurrency: 1 })
+  const tom = new Tom('Sequential tests', null, { maxConcurrency: 1 })
   tom.test('one', function () {
     a.deepStrictEqual(counts, [])
     return new Promise((resolve, reject) => {
@@ -45,7 +45,7 @@ import sleep from '../node_modules/sleep-anywhere/index.mjs'
 
 { /* http server tests */
   const counts = []
-  const tom = new Tom('Sequential tests', null, { concurrency: 1 })
+  const tom = new Tom('Sequential tests', null, { maxConcurrency: 1 })
   tom.test('one', function () {
     const server = http.createServer((req, res) => {
       setTimeout(() => {
@@ -93,9 +93,8 @@ import sleep from '../node_modules/sleep-anywhere/index.mjs'
 }
 
 { /* concurrency usage */
-  // TODO: ensure only one test runs at a time
   const actuals = []
-  const tom = new Tom({ concurrency: 1 })
+  const tom = new Tom({ maxConcurrency: 1 })
   tom.test('one', async () => {
     await sleep(30)
     actuals.push(1)
@@ -128,3 +127,41 @@ import sleep from '../node_modules/sleep-anywhere/index.mjs'
     })
     .catch(halt)
 }
+
+// { /* deep sequential usage */
+//   const actuals = []
+//   const tom = new Tom()
+//   const one = tom.test('one', async () => {
+//     await sleep(30)
+//     actuals.push(1)
+//   }, { maxConcurrency: 1 })
+
+//   one.test(async () => {
+//     await sleep(50)
+//     actuals.push(1.2)
+//   })
+//   one.test(async () => {
+//     await sleep(10)
+//     actuals.push(2)
+//   })
+//   one.test(async () => {
+//     await sleep(40)
+//     actuals.push(2.1)
+//   })
+//   one.test(async () => {
+//     await sleep(60)
+//     actuals.push(2.2)
+//   })
+
+//   tom.test('two', async () => {
+//     await sleep(20)
+//     actuals.push(1.1)
+//   })
+
+//   const runner = new TestRunner({ tom })
+//   runner.start()
+//     .then(() => {
+//       a.deepStrictEqual(actuals, [1.1, 1, 1.2, 2, 2.1, 2.2])
+//     })
+//     .catch(halt)
+// }

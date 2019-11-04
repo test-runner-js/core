@@ -3,16 +3,14 @@ import a from 'assert'
 import { halt } from './lib/util.mjs'
 import sleep from '../node_modules/sleep-anywhere/index.mjs'
 
+function createJob (ms, result) {
+  return async function () {
+    return sleep(ms, result)
+  }
+}
+
 async function start () {
   {
-    /* process(), maxConcurrency 1 */
-    // TODO: ensure only one test runs at a time
-    function createJob (ms, result) {
-      return function () {
-        sleep(ms)
-        return result
-      }
-    }
     const queue = new Queue([
       createJob(30, 1),
       createJob(20, 1.1),
@@ -24,4 +22,4 @@ async function start () {
   }
 }
 
-start().catch(halt)
+// start().catch(halt)

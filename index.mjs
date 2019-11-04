@@ -22,8 +22,7 @@ class TestRunnerCore extends StateMachine {
     /* validation */
     TOM.validate(options.tom)
 
-    super([
-      { from: undefined, to: 'pending' },
+    super('pending', [
       { from: 'pending', to: 'in-progress' },
       { from: 'in-progress', to: 'pass' },
       { from: 'in-progress', to: 'fail' }
@@ -31,9 +30,9 @@ class TestRunnerCore extends StateMachine {
 
     /**
      * State machine: pending -> in-progress -> pass or fail
-     * @type {string}
+     * @member {string} module:test-runner-core#state
      */
-    this.state = 'pending'
+
     this.options = options
 
     /**
@@ -140,7 +139,7 @@ class TestRunnerCore extends StateMachine {
     return new Promise((resolve, reject) => {
       /* isomorphic nextTick */
       setTimeout(async () => {
-        const queue = new Queue(jobs, this.tom.options.concurrency)
+        const queue = new Queue(jobs, this.tom.options.maxConcurrency)
         const results = await queue.process()
         this.ended = true
         if (this.state !== 'fail') {
