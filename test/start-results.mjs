@@ -1,26 +1,21 @@
 import TestRunner from '../index.mjs'
 import Tom from '../node_modules/test-object-model/dist/index.mjs'
-import a from 'assert'
-import { halt } from './lib/util.mjs'
+import assert from 'assert'
+const a = assert.strict
 
-{ /* runner.start(): results array */
+const tom = new Tom()
+
+tom.skip('runner.start(): results array', async function () {
   const tom = new Tom()
-  tom.test('one', () => {
-    return 1
-  })
-  tom.test('two', () => {
-    return 2
-  })
+  tom.test('one', () => 1)
+  tom.test('two', () => 2)
 
   const runner = new TestRunner({ tom })
-  runner.start()
-    .then(results => {
-      a.deepStrictEqual(results, [undefined, 1, 2])
-    })
-    .catch(halt)
-}
+  const results = await runner.start()
+  a.deepStrictEqual(results, [undefined, 1, 2])
+})
 
-{ /* runner.start(): fail results and events */
+tom.skip('runner.start(): fail results and events', async function () {
   const tom = new Tom()
   tom.test('one', () => {
     throw new Error('broken')
@@ -30,14 +25,11 @@ import { halt } from './lib/util.mjs'
   })
 
   const runner = new TestRunner({ tom })
-  runner.start()
-    .then(results => {
-      a.deepStrictEqual(results, [undefined, undefined])
-    })
-    .catch(halt)
-}
+  const results = await runner.start()
+  a.deepStrictEqual(results, [undefined, undefined])
+})
 
-{ /* runner.start(): pass, fail, skip events */
+tom.skip('runner.start(): pass, fail, skip events', async function () {
   const counts = []
   const tom = new Tom()
   tom.test('one', () => true)
@@ -48,14 +40,11 @@ import { halt } from './lib/util.mjs'
   runner.tom.on('pass', () => counts.push('pass'))
   runner.tom.on('fail', () => counts.push('fail'))
   runner.tom.on('skip', () => counts.push('skip'))
-  runner.start()
-    .then(() => {
-      a.deepStrictEqual(counts, ['pass', 'fail', 'skip'])
-    })
-    .catch(halt)
-}
+  const results = await runner.start()
+  a.deepStrictEqual(counts, ['pass', 'fail', 'skip'])
+})
 
-{ /* runner.start(): only */
+tom.skip('runner.start(): only', async function () {
   const counts = []
   const tom = new Tom()
   tom.test('one', () => 1)
@@ -66,15 +55,11 @@ import { halt } from './lib/util.mjs'
   runner.tom.on('pass', () => counts.push('pass'))
   runner.tom.on('fail', () => counts.push('fail'))
   runner.tom.on('skip', () => counts.push('skip'))
-  runner.start()
-    .then(results => {
-      // a.deepStrictEqual(results, [ undefined, undefined, 3 ])
-      a.deepStrictEqual(counts, ['skip', 'skip', 'pass'])
-    })
-    .catch(halt)
-}
+  const results = await runner.start()
+  a.deepStrictEqual(counts, ['skip', 'skip', 'pass'])
+})
 
-{ /* runner.start(): deep only */
+tom.skip('runner.start(): deep only', async function () {
   const counts = []
   const tom = new Tom()
   const one = tom.only('one', () => 1)
@@ -85,15 +70,12 @@ import { halt } from './lib/util.mjs'
   runner.tom.on('pass', () => counts.push('pass'))
   runner.tom.on('fail', () => counts.push('fail'))
   runner.tom.on('skip', () => counts.push('skip'))
-  runner.start()
-    .then(results => {
-      a.deepStrictEqual(results, [1, undefined, 3])
-      a.deepStrictEqual(counts, ['pass', 'skip', 'pass'])
-    })
-    .catch(halt)
-}
+  const results = await runner.start()
+  a.deepStrictEqual(results, [1, undefined, 3])
+  a.deepStrictEqual(counts, ['pass', 'skip', 'pass'])
+})
 
-{ /* runner.start(): deep only with fail */
+tom.skip('runner.start(): deep only with fail', async function () {
   const counts = []
   const tom = new Tom()
   const one = tom.only('one', () => 1)
@@ -106,15 +88,12 @@ import { halt } from './lib/util.mjs'
   runner.tom.on('pass', () => counts.push('pass'))
   runner.tom.on('fail', () => counts.push('fail'))
   runner.tom.on('skip', () => counts.push('skip'))
-  runner.start()
-    .then(results => {
-      a.deepStrictEqual(results, [1, undefined, undefined])
-      a.deepStrictEqual(counts, ['pass', 'skip', 'fail'])
-    })
-    .catch(halt)
-}
+  const results = await runner.start()
+  a.deepStrictEqual(results, [1, undefined, undefined])
+  a.deepStrictEqual(counts, ['pass', 'skip', 'fail'])
+})
 
-{ /* runner.start(): deep only with skipped fail */
+tom.skip('runner.start(): deep only with skipped fail', async function () {
   const counts = []
   const tom = new Tom()
   const one = tom.only('one', () => 1)
@@ -127,10 +106,9 @@ import { halt } from './lib/util.mjs'
   runner.tom.on('pass', () => counts.push('pass'))
   runner.tom.on('fail', () => counts.push('fail'))
   runner.tom.on('skip', () => counts.push('skip'))
-  runner.start()
-    .then(results => {
-      a.deepStrictEqual(results, [1, undefined, undefined])
-      a.deepStrictEqual(counts, ['pass', 'skip', 'skip'])
-    })
-    .catch(halt)
-}
+  const results = await runner.start()
+  a.deepStrictEqual(results, [1, undefined, undefined])
+  a.deepStrictEqual(counts, ['pass', 'skip', 'skip'])
+})
+
+export default tom

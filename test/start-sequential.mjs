@@ -1,16 +1,18 @@
 import TestRunner from '../index.mjs'
 import Tom from '../node_modules/test-object-model/dist/index.mjs'
-import a from 'assert'
+import assert from 'assert'
+const a = assert.strict
 import http from 'http'
 import fetch from 'node-fetch'
-import { halt } from './lib/util.mjs'
 import sleep from '../node_modules/sleep-anywhere/index.mjs'
 
-{ /* timeout tests */
+const tom = new Tom()
+
+tom.test('timeout tests', async function () {
   const counts = []
   const tom = new Tom('Sequential tests', null, { maxConcurrency: 1 })
   tom.test('one', function () {
-    a.deepStrictEqual(counts, [])
+    a.deepEqual(counts, [])
     return new Promise((resolve, reject) => {
       setTimeout(() => {
         counts.push(1)
@@ -20,7 +22,7 @@ import sleep from '../node_modules/sleep-anywhere/index.mjs'
   })
 
   tom.test('two', function () {
-    a.deepStrictEqual(counts, [1])
+    a.deepEqual(counts, [1])
     return new Promise((resolve, reject) => {
       setTimeout(() => {
         counts.push(2)
@@ -30,20 +32,17 @@ import sleep from '../node_modules/sleep-anywhere/index.mjs'
   })
 
   tom.test('three', function () {
-    a.deepStrictEqual(counts, [1, 2])
+    a.deepEqual(counts, [1, 2])
     counts.push(3)
     return 3
   })
 
   const runner = new TestRunner({ tom })
-  runner.start()
-    .then(() => {
-      a.deepStrictEqual(counts, [1, 2, 3])
-    })
-    .catch(halt)
-}
+  const results = await runner.start()
+  a.deepEqual(counts, [1, 2, 3])
+})
 
-{ /* http server tests */
+tom.test('http server tests', async function () {
   const counts = []
   const tom = new Tom('Sequential tests', null, { maxConcurrency: 1 })
   tom.test('one', function () {
@@ -85,14 +84,11 @@ import sleep from '../node_modules/sleep-anywhere/index.mjs'
   })
 
   const runner = new TestRunner({ tom })
-  runner.start()
-    .then(() => {
-      a.deepStrictEqual(counts, [200, 201])
-    })
-    .catch(halt)
-}
+  const results = await runner.start()
+  a.deepEqual(counts, [200, 201])
+})
 
-{ /* concurrency usage */
+tom.test('concurrency usage', async function () {
   const actuals = []
   const tom = new Tom({ maxConcurrency: 1 })
   tom.test('one', async () => {
@@ -121,47 +117,43 @@ import sleep from '../node_modules/sleep-anywhere/index.mjs'
   })
 
   const runner = new TestRunner({ tom })
-  runner.start()
-    .then(() => {
-      a.deepStrictEqual(actuals, [1, 1.1, 1.2, 2, 2.1, 2.2])
-    })
-    .catch(halt)
-}
+  const results = await runner.start()
+  a.deepEqual(actuals, [1, 1.1, 1.2, 2, 2.1, 2.2])
+})
 
-// { /* deep sequential usage */
-//   const actuals = []
-//   const tom = new Tom()
-//   const one = tom.test('one', async () => {
-//     await sleep(30)
-//     actuals.push(1)
-//   }, { maxConcurrency: 1 })
+tom.skip('deep sequential usage', async function () {
+  const actuals = []
+  const tom = new Tom()
+  const one = tom.test('one', async () => {
+    await sleep(30)
+    actuals.push(1)
+  }, { maxConcurrency: 1 })
 
-//   one.test(async () => {
-//     await sleep(50)
-//     actuals.push(1.2)
-//   })
-//   one.test(async () => {
-//     await sleep(10)
-//     actuals.push(2)
-//   })
-//   one.test(async () => {
-//     await sleep(40)
-//     actuals.push(2.1)
-//   })
-//   one.test(async () => {
-//     await sleep(60)
-//     actuals.push(2.2)
-//   })
+  one.test(async () => {
+    await sleep(50)
+    actuals.push(1.2)
+  })
+  one.test(async () => {
+    await sleep(10)
+    actuals.push(2)
+  })
+  one.test(async () => {
+    await sleep(40)
+    actuals.push(2.1)
+  })
+  one.test(async () => {
+    await sleep(60)
+    actuals.push(2.2)
+  })
 
-//   tom.test('two', async () => {
-//     await sleep(20)
-//     actuals.push(1.1)
-//   })
+  tom.test('two', async () => {
+    await sleep(20)
+    actuals.push(1.1)
+  })
 
-//   const runner = new TestRunner({ tom })
-//   runner.start()
-//     .then(() => {
-//       a.deepStrictEqual(actuals, [1.1, 1, 1.2, 2, 2.1, 2.2])
-//     })
-//     .catch(halt)
-// }
+  const runner = new TestRunner({ tom })
+  const results = await runner.start()
+  a.deepEqual(actuals, [1.1, 1, 1.2, 2, 2.1, 2.2])
+})
+
+export default tom

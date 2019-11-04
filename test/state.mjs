@@ -1,9 +1,11 @@
 import TestRunner from '../index.mjs'
 import Tom from '../node_modules/test-object-model/dist/index.mjs'
-import a from 'assert'
-import { halt } from './lib/util.mjs'
+import assert from 'assert'
+const a = assert.strict
 
-{ /* runner states: pass */
+const tom = new Tom()
+
+tom.test('runner states: pass', async function () {
   const counts = []
   const tom = new Tom()
   tom.test('one', () => 1)
@@ -14,18 +16,18 @@ import { halt } from './lib/util.mjs'
   const runner = new TestRunner({ tom })
   counts.push('prop:' + runner.state)
   runner.on('state', state => counts.push('event:' + state))
-  a.deepStrictEqual(runner.ended, false)
-  runner.start()
+  a.deepEqual(runner.ended, false)
+  const promise = runner.start()
     .then(() => {
       counts.push('prop:' + runner.state)
-      a.deepStrictEqual(counts, ['prop:pending', 'event:in-progress', 'prop:in-progress', 'test-pass', 'test-pass', 'event:pass', 'prop:pass'])
-      a.deepStrictEqual(runner.ended, true)
+      a.deepEqual(counts, ['prop:pending', 'event:in-progress', 'prop:in-progress', 'test-pass', 'test-pass', 'event:pass', 'prop:pass'])
+      a.deepEqual(runner.ended, true)
     })
-    .catch(halt)
   counts.push('prop:' + runner.state)
-}
+  return promise
+})
 
-{ /* runner states: fail */
+tom.test('runner states: fail', async function () {
   const counts = []
   const tom = new Tom()
   tom.test('one', () => {
@@ -38,18 +40,18 @@ import { halt } from './lib/util.mjs'
   const runner = new TestRunner({ tom })
   counts.push('prop:' + runner.state)
   runner.on('state', state => counts.push('event:' + state))
-  a.deepStrictEqual(runner.ended, false)
-  runner.start()
+  a.deepEqual(runner.ended, false)
+  const promise = runner.start()
     .then(() => {
       counts.push('prop:' + runner.state)
-      a.deepStrictEqual(counts, ['prop:pending', 'event:in-progress', 'prop:in-progress', 'test-fail', 'test-pass', 'event:fail', 'prop:fail'])
-      a.deepStrictEqual(runner.ended, true)
+      a.deepEqual(counts, ['prop:pending', 'event:in-progress', 'prop:in-progress', 'test-fail', 'test-pass', 'event:fail', 'prop:fail'])
+      a.deepEqual(runner.ended, true)
     })
-    .catch(halt)
   counts.push('prop:' + runner.state)
-}
+  return promise
+})
 
-{ /* runner states: fail, reject */
+tom.test('runner states: fail, reject', async function () {
   const counts = []
   const tom = new Tom()
   tom.test('one', () => {
@@ -62,13 +64,15 @@ import { halt } from './lib/util.mjs'
   const runner = new TestRunner({ tom })
   counts.push('prop:' + runner.state)
   runner.on('state', state => counts.push('event:' + state))
-  a.deepStrictEqual(runner.ended, false)
-  runner.start()
+  a.deepEqual(runner.ended, false)
+  const promise = runner.start()
     .then(() => {
       counts.push('prop:' + runner.state)
-      a.deepStrictEqual(counts, ['prop:pending', 'event:in-progress', 'prop:in-progress', 'test-pass', 'test-fail', 'event:fail', 'prop:fail'])
-      a.deepStrictEqual(runner.ended, true)
+      a.deepEqual(counts, ['prop:pending', 'event:in-progress', 'prop:in-progress', 'test-pass', 'test-fail', 'event:fail', 'prop:fail'])
+      a.deepEqual(runner.ended, true)
     })
-    .catch(halt)
   counts.push('prop:' + runner.state)
-}
+  return promise
+})
+
+export default tom

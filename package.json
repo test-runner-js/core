@@ -21,9 +21,9 @@
     "node": ">=8"
   },
   "scripts": {
-    "test": "npm run dist && npm run test:js && npm run test:esm",
-    "test:js": "rollup -c build/tests.config.js && node tmp/test/tests.js",
-    "test:esm": "node --experimental-modules test/tests.mjs",
+    "test": "npm run dist && npm run test:esm",
+    "test:js": "",
+    "test:esm": "esm-runner test/*.mjs",
     "dist": "npm run dist:js && npm run dist:esm",
     "dist:js": "rollup index.mjs -f umd -n TestRunnerCore -o dist/index.js",
     "dist:esm": "rollup index.mjs -f esm -o dist/index.mjs",
@@ -31,7 +31,7 @@
   },
   "dependencies": {
     "fsm-base": "^0.5.0",
-    "test-object-model": "^0.4.5"
+    "test-object-model": "^0.4.6"
   },
   "devDependencies": {
     "esm-runner": "^0.1.5",

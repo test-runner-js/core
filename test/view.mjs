@@ -1,9 +1,11 @@
 import TestRunnerCore from '../index.mjs'
 import Tom from '../node_modules/test-object-model/dist/index.mjs'
-import a from 'assert'
-import { halt } from './lib/util.mjs'
+import assert from 'assert'
+const a = assert.strict
 
-{ /* custom view */
+const tom = new Tom()
+
+tom.test('custom view', async function () {
   const actuals = []
   const tom = new Tom()
   tom.test('one', () => {
@@ -38,7 +40,8 @@ import { halt } from './lib/util.mjs'
   }
 
   const runner = new TestRunnerCore({ view: new View(), tom })
-  runner.start()
-    .then(() => a.deepStrictEqual(actuals, ['start', 'one', 'testPass: 1', 'two', 'testPass: 2', 'end']))
-    .catch(halt)
-}
+  const results = await runner.start()
+  a.deepEqual(actuals, ['start', 'one', 'testPass: 1', 'two', 'testPass: 2', 'end'])
+})
+
+export default tom

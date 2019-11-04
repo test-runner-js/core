@@ -1,10 +1,12 @@
-import TestRunner from '../index.mjs'
 import Tom from '../node_modules/test-object-model/dist/index.mjs'
-import a from 'assert'
-import { halt } from './lib/util.mjs'
+import TestRunner from '../index.mjs'
+import assert from 'assert'
+const a = assert.strict
 import sleep from '../node_modules/sleep-anywhere/index.mjs'
 
-{ /* runner.start(): execution order */
+const tom = new Tom()
+
+tom.test('runner.start(): execution order', async function () {
   const counts = []
   const tom = new Tom()
   tom.test('one', () => {
@@ -15,14 +17,11 @@ import sleep from '../node_modules/sleep-anywhere/index.mjs'
   })
 
   const runner = new TestRunner({ tom })
-  runner.start()
-    .then(() => {
-      a.deepStrictEqual(counts, ['one', 'two'])
-    })
-    .catch(halt)
-}
+  const results = await runner.start()
+  a.deepStrictEqual(counts, ['one', 'two'])
+})
 
-{ /* runner.start(): execution order 2 */
+tom.test('runner.start(): execution order 2', async function () {
   const counts = []
   const tom = new Tom()
   tom.test('one', () => {
@@ -35,14 +34,11 @@ import sleep from '../node_modules/sleep-anywhere/index.mjs'
   })
 
   const runner = new TestRunner({ tom })
-  runner.start()
-    .then(() => {
-      a.deepStrictEqual(counts, ['one', 'two'])
-    })
-    .catch(halt)
-}
+  const results = await runner.start()
+  a.deepStrictEqual(counts, ['one', 'two'])
+})
 
-{ /* run in parallel */
+tom.test('run in parallel', async function () {
   const actuals = []
   const tom = new Tom()
   tom.test('one', async () => {
@@ -71,9 +67,8 @@ import sleep from '../node_modules/sleep-anywhere/index.mjs'
   })
 
   const runner = new TestRunner({ tom })
-  runner.start()
-    .then(() => {
-      a.deepStrictEqual(actuals, [2, 1.1, 1, 2.1, 1.2, 2.2])
-    })
-    .catch(halt)
-}
+  const results = await runner.start()
+  a.deepStrictEqual(actuals, [2, 1.1, 1, 2.1, 1.2, 2.2])
+})
+
+export default tom
