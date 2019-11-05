@@ -95,6 +95,34 @@ class TestRunnerCore extends StateMachine {
     })
   }
 
+  async runTomAndChildren (tom) {
+    /* create array of job functions */
+    const tests = [...tom.children]
+    const jobs = tests.map(test => {
+      return () => {
+        const promise = test.run()
+          .catch(err => {
+            /**
+             * Test suite failed
+             * @event module:test-runner-core#fail
+             */
+            this.state = 'fail'
+            // don't handle err - keep going when tests fail (but crash for programmer error if poss)
+          })
+        return Promise.all([promise, this.runTomAndChildren(test)])
+      }
+    })
+
+    return new Promise((resolve, reject) => {
+      /* isomorphic nextTick */
+      setTimeout(async () => {
+        const queue = new Queue(jobs, tom.maxConcurrency)
+        await queue.process()
+        resolve()
+      }, 0)
+    })
+  }
+
   /**
    * Start the runner
    * @returns {Promise}
@@ -102,10 +130,9 @@ class TestRunnerCore extends StateMachine {
    */
   async start () {
     this.stats.start = Date.now()
-    const tests = Array.from(this.tom)
 
     /* encapsulate this as a TOM method? */
-    const testCount = tests.filter(t => t.testFn).length
+    const testCount = Array.from(this.tom).filter(t => t.testFn).length
 
     /**
      * in-progress
@@ -120,43 +147,31 @@ class TestRunnerCore extends StateMachine {
      * @param testCount {number} - the numbers of tests
      */
     this.emit('start', testCount)
+    await this.runTomAndChildren(this.tom)
+    this.ended = true
+    if (this.state !== 'fail') {
+      /**
+       * Test suite passed
+       * @event module:test-runner-core#pass
+       */
+      this.state = 'pass'
+    }
+    /**
+     * Test suite ended
+     * @event module:test-runner-core#end
+     */
+    this.stats.end = Date.now()
+    this.emit('end', this.stats)
+  }
+}
 
-    /* create array of job functions */
-    const jobs = tests.map(test => {
-      return () => {
-        return test.run().catch(err => {
-          /**
-           * Test suite failed
-           * @event module:test-runner-core#fail
-           */
-          this.state = 'fail'
-          // keep going when tests fail but crash for programmer error
-        })
-      }
-    })
+class RunTestCommand {
+  constructor (test) {
+    this.test = test
+  }
 
-    return new Promise((resolve, reject) => {
-      /* isomorphic nextTick */
-      setTimeout(async () => {
-        const queue = new Queue(jobs, this.tom.options.maxConcurrency)
-        const results = await queue.process()
-        this.ended = true
-        if (this.state !== 'fail') {
-          /**
-           * Test suite passed
-           * @event module:test-runner-core#pass
-           */
-          this.state = 'pass'
-        }
-        /**
-         * Test suite ended
-         * @event module:test-runner-core#end
-         */
-        this.stats.end = Date.now()
-        this.emit('end', this.stats)
-        return resolve(results)
-      }, 0)
-    })
+  execute () {
+    return this.test.run()
   }
 }
 

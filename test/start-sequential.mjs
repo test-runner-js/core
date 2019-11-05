@@ -121,39 +121,58 @@ tom.test('concurrency usage', async function () {
   a.deepEqual(actuals, [1, 1.1, 1.2, 2, 2.1, 2.2])
 })
 
-tom.skip('deep sequential usage', async function () {
+tom.test('multiple child maxConcurrency values', async function () {
+  class TestTom extends Tom {
+    toString () {
+      return `${this.name}, ${this.children.length}, maxConcurrency: ${this.maxConcurrency}`
+    }
+  }
   const actuals = []
-  const tom = new Tom()
-  const one = tom.test('one', async () => {
-    await sleep(30)
-    actuals.push(1)
-  }, { maxConcurrency: 1 })
+  const tom = new TestTom({ maxConcurrency: 2 })
 
-  one.test(async () => {
-    await sleep(50)
-    actuals.push(1.2)
+  /* sequential child tests */
+  const one = tom.test({ maxConcurrency: 1 })
+
+  one.test('one.1', async function () {
+    await sleep(500)
+    actuals.push(this.name)
   })
-  one.test(async () => {
-    await sleep(10)
-    actuals.push(2)
+  one.test('one.2', async function () {
+    await sleep(100)
+    actuals.push(this.name)
   })
-  one.test(async () => {
+  one.test('one.3', async function () {
     await sleep(40)
-    actuals.push(2.1)
+    actuals.push(this.name)
   })
-  one.test(async () => {
-    await sleep(60)
-    actuals.push(2.2)
+  one.test('one.4', async function () {
+    await sleep(10)
+    actuals.push(this.name)
   })
 
-  tom.test('two', async () => {
-    await sleep(20)
-    actuals.push(1.1)
+  /* parallel child tests */
+  const two = tom.test()
+
+  two.test('two.1', async function () {
+    await sleep(50)
+    actuals.push(this.name)
+  })
+  two.test('two.2', async function () {
+    await sleep(10)
+    actuals.push(this.name)
+  })
+  two.test('two.3', async function () {
+    await sleep(40)
+    actuals.push(this.name)
+  })
+  two.test('two.4', async function () {
+    await sleep(60)
+    actuals.push(this.name)
   })
 
   const runner = new TestRunner(tom)
   const results = await runner.start()
-  a.deepEqual(actuals, [1.1, 1, 1.2, 2, 2.1, 2.2])
+  a.deepEqual(actuals, ['two.2', 'two.3', 'two.1', 'two.4', 'one.1', 'one.2', 'one.3', 'one.4'])
 })
 
 export default tom
