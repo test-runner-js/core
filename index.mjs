@@ -64,6 +64,9 @@ class TestRunnerCore extends StateMachine {
     this.on('end', (...args) => {
       if (this.view && this.view.end) this.view.end(...args)
     })
+    this.on('test-start', (...args) => {
+      if (this.view && this.view.testStart) this.view.testStart(...args)
+    })
     this.on('test-pass', (...args) => {
       if (this.view && this.view.testPass) this.view.testPass(...args)
     })
@@ -78,6 +81,9 @@ class TestRunnerCore extends StateMachine {
     })
 
     /* translate tom to runner events */
+    this.tom.on('start', (...args) => {
+      this.emit('test-start', ...args)
+    })
     this.tom.on('pass', (...args) => {
       this.stats.pass++
       this.emit('test-pass', ...args)

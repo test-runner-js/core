@@ -25,9 +25,9 @@
         * [.view](#module_test-runner-core--TestRunnerCore+view) : <code>View</code>
         * [.stats](#module_test-runner-core--TestRunnerCore+stats)
         * [.start()](#module_test-runner-core--TestRunnerCore+start) ⇒ <code>Promise</code>
+        * ["fail"](#module_test-runner-core--TestRunnerCore+event_fail)
         * ["in-progress" (testCount)](#module_test-runner-core--TestRunnerCore+event_in-progress)
         * ["start" (testCount)](#module_test-runner-core--TestRunnerCore+event_start)
-        * ["fail"](#module_test-runner-core--TestRunnerCore+event_fail)
         * ["pass"](#module_test-runner-core--TestRunnerCore+event_pass)
         * ["end"](#module_test-runner-core--TestRunnerCore+event_end)
 
@@ -45,6 +45,7 @@
 | tom | <code>TestObjectModel</code> | 
 | [options] | <code>object</code> | 
 | [options.view] | <code>function</code> | 
+| [options.debug] | <code>boolean</code> | 
 
 <a name="module_test-runner-core--TestRunnerCore+state"></a>
 
@@ -83,6 +84,12 @@ Start the runner
 
 **Kind**: instance method of [<code>TestRunnerCore</code>](#exp_module_test-runner-core--TestRunnerCore)  
 **Fulfil**: <code>Array&lt;Array&gt;</code> - Fulfils with an array of arrays containing results for each batch of concurrently run tests.  
+<a name="module_test-runner-core--TestRunnerCore+event_fail"></a>
+
+#### "fail"
+Test suite failed
+
+**Kind**: event emitted by [<code>TestRunnerCore</code>](#exp_module_test-runner-core--TestRunnerCore)  
 <a name="module_test-runner-core--TestRunnerCore+event_in-progress"></a>
 
 #### "in-progress" (testCount)
@@ -105,12 +112,6 @@ Start
 | --- | --- | --- |
 | testCount | <code>number</code> | the numbers of tests |
 
-<a name="module_test-runner-core--TestRunnerCore+event_fail"></a>
-
-#### "fail"
-Test suite failed
-
-**Kind**: event emitted by [<code>TestRunnerCore</code>](#exp_module_test-runner-core--TestRunnerCore)  
 <a name="module_test-runner-core--TestRunnerCore+event_pass"></a>
 
 #### "pass"

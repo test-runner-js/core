@@ -22,12 +22,10 @@
   },
   "scripts": {
     "test": "npm run dist && npm run test:esm",
-    "test:js": "",
     "test:esm": "esm-runner test/*.mjs",
-    "dist": "npm run dist:js && npm run dist:esm",
-    "dist:js": "rollup index.mjs -f umd -n TestRunnerCore -o dist/index.js",
-    "dist:esm": "rollup index.mjs -f esm -o dist/index.mjs",
-    "docs": "jsdoc2md -c build/jsdoc.conf index.mjs lib/queue-v10.mjs lib/stats.mjs > docs/API.md"
+    "dist": "rollup -c",
+    "watch": "rollup -c -w",
+    "docs": "jsdoc2md -c jsdoc.conf index.mjs lib/queue-v10.mjs lib/stats.mjs > docs/API.md"
   },
   "dependencies": {
     "fsm-base": "^0.5.0",
