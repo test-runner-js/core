@@ -401,14 +401,16 @@ function createMixin (Src) {
 }
 
 /**
+ * An isomorphic, load-anywhere JavaScript class for building [composite structures](https://en.wikipedia.org/wiki/Composite_pattern). Suitable for use as a super class or mixin.
  * @module composite-class
+ * @example
+ * const Composite = require('composite-class')
  */
 
 const _children = new WeakMap();
 const _parent = new WeakMap();
 
 /**
- * A base class for building standard composite structures. Can also be mixed in.
  * @alias module:composite-class
  */
 class Composite {
@@ -429,7 +431,6 @@ class Composite {
     _children.set(this, val);
   }
 
-
   /**
    * Parent
    * @type {Composite}
@@ -437,6 +438,7 @@ class Composite {
   get parent () {
     return _parent.get(this)
   }
+
   set parent (val) {
     _parent.set(this, val);
   }
@@ -511,7 +513,7 @@ class Composite {
    */
   tree () {
     return Array.from(this).reduce((prev, curr) => {
-      return prev += `${'  '.repeat(curr.level())}- ${curr}\n`
+      return (prev += `${'  '.repeat(curr.level())}- ${curr}\n`)
     }, '')
   }
 
@@ -531,7 +533,7 @@ class Composite {
    */
   * [Symbol.iterator] () {
     yield this;
-    for (let child of this.children) {
+    for (const child of this.children) {
       yield * child;
     }
   }
@@ -682,7 +684,7 @@ class Emitter$1 {
   }
 
   /**
-   * Propagate.
+   * Propagate events from the supplied emitter to this emitter.
    * @param {string} eventName - the event name to propagate
    * @param {object} from - the emitter to propagate from
    */
@@ -709,10 +711,10 @@ function createListenersArray$1 (target) {
 /**
  * Takes any input and guarantees an array back.
  *
- * - converts array-like objects (e.g. `arguments`) to a real array
- * - converts `undefined` to an empty array
- * - converts any another other, singular value (including `null`) into an array containing that value
- * - ignores input which is already an array
+ * - Converts array-like objects (e.g. `arguments`, `Set`) to a real array.
+ * - Converts `undefined` to an empty array.
+ * - Converts any another other, singular value (including `null`, objects and iterables other than `Set`) into an array containing that value.
+ * - Ignores input which is already an array.
  *
  * @module array-back
  * @example
@@ -730,6 +732,9 @@ function createListenersArray$1 (target) {
  * > arrayify([ 1, 2 ])
  * [ 1, 2 ]
  *
+ * > arrayify(new Set([ 1, 2 ]))
+ * [ 1, 2 ]
+ *
  * > function f(){ return arrayify(arguments); }
  * > f(1,2,3)
  * [ 1, 2, 3 ]
@@ -744,22 +749,48 @@ function isArrayLike$1 (input) {
 }
 
 /**
- * @param {*} - the input value to convert to an array
+ * @param {*} - The input value to convert to an array
  * @returns {Array}
  * @alias module:array-back
  */
 function arrayify$1 (input) {
   if (Array.isArray(input)) {
     return input
-  } else {
-    if (input === undefined) {
-      return []
-    } else if (isArrayLike$1(input)) {
-      return Array.prototype.slice.call(input)
-    } else {
-      return [ input ]
-    }
   }
+
+  if (input === undefined) {
+    return []
+  }
+
+  if (isArrayLike$1(input) || input instanceof Set) {
+    return Array.from(input)
+  }
+
+  return [ input ]
+}
+
+/**
+ * Isomorphic map-reduce function to flatten an array into the supplied array.
+ *
+ * @module reduce-flatten
+ * @example
+ * const flatten = require('reduce-flatten')
+ */
+
+/**
+ * @alias module:reduce-flatten
+ * @example
+ * > numbers = [ 1, 2, [ 3, 4 ], 5 ]
+ * > numbers.reduce(flatten, [])
+ * [ 1, 2, 3, 4, 5 ]
+ */
+function flatten$1 (arr, curr) {
+  if (Array.isArray(curr)) {
+    arr.push(...curr);
+  } else {
+    arr.push(curr);
+  }
+  return arr
 }
 
 /**
@@ -767,22 +798,24 @@ function arrayify$1 (input) {
  * @typicalname stateMachine
  */
 
+const _initialState$1 = new WeakMap();
 const _state$1 = new WeakMap();
 const _validMoves$1 = new WeakMap();
 
 /**
- * @class
  * @alias module:fsm-base
  * @extends {Emitter}
  */
 class StateMachine$1 extends Emitter$1 {
-  constructor (validMoves) {
+  constructor (initialState, validMoves) {
     super();
     _validMoves$1.set(this, arrayify$1(validMoves).map(move => {
-      if (!Array.isArray(move.from)) move.from = [ move.from ];
-      if (!Array.isArray(move.to)) move.to = [ move.to ];
+      move.from = arrayify$1(move.from);
+      move.to = arrayify$1(move.to);
       return move
     }));
+    _state$1.set(this, initialState);
+    _initialState$1.set(this, initialState);
   }
 
   /**
@@ -836,7 +869,7 @@ class StateMachine$1 extends Emitter$1 {
       }
     });
     if (!moved) {
-      let froms = _validMoves$1.get(this)
+      const froms = _validMoves$1.get(this)
         .filter(move => move.to.indexOf(state) > -1)
         .map(move => move.from.map(from => `'${from}'`))
         .reduce(flatten$1);
@@ -846,10 +879,13 @@ class StateMachine$1 extends Emitter$1 {
       throw err
     }
   }
-}
 
-function flatten$1 (prev, curr) {
-  return prev.concat(curr)
+  resetState () {
+    const prevState = this.state;
+    const initialState = _initialState$1.get(this);
+    _state$1.set(this, initialState);
+    this.emit('reset', prevState);
+  }
 }
 
 /**
@@ -935,19 +971,12 @@ class Tom extends createMixin(Composite)(StateMachine$1) {
     }
     options = Object.assign({ timeout: 10000 }, options);
     name = name || 'tom';
-    super ([
-      { from: undefined, to: 'pending' },
+    super('pending', [
       { from: 'pending', to: 'in-progress' },
       { from: 'pending', to: 'skipped' },
       { from: 'pending', to: 'ignored' },
       { from: 'in-progress', to: 'pass' },
-      { from: 'in-progress', to: 'fail' },
-      /* reset */
-      { from: 'in-progress', to: 'pending' },
-      { from: 'pass', to: 'pending' },
-      { from: 'fail', to: 'pending' },
-      { from: 'skipped', to: 'pending' },
-      { from: 'ignored', to: 'pending' },
+      { from: 'in-progress', to: 'fail' }
     ]);
     /**
      * Test name
@@ -969,9 +998,8 @@ class Tom extends createMixin(Composite)(StateMachine$1) {
 
     /**
      * Test state: pending, start, skip, pass or fail.
-     * @type {string}
+     * @member {string} module:test-object-model#state
      */
-    this.state = 'pending';
 
     /**
      * A time limit for the test in ms.
@@ -1005,7 +1033,7 @@ class Tom extends createMixin(Composite)(StateMachine$1) {
   }
 
   toString () {
-    return `${this.name}`
+    return this.name
   }
 
   /**
@@ -1089,16 +1117,15 @@ class Tom extends createMixin(Composite)(StateMachine$1) {
             index: this.index
           }));
           if (isPromise(testResult)) {
-            return Promise.race([ testResult, raceTimeout(this.timeout) ])
-              .then(result => {
-                this.result = result;
-                this.setState('pass', this, result);
-                return result
-              })
-              .catch(err => {
-                this.setState('fail', this, err);
-                throw err
-              })
+            try {
+              const result = await Promise.race([testResult, raceTimeout(this.timeout)]);
+              this.result = result;
+              this.setState('pass', this, result);
+              return result
+            } catch (err) {
+              this.setState('fail', this, err);
+              return Promise.reject(err)
+            }
           } else {
             this.result = testResult;
             this.setState('pass', this, testResult);
@@ -1106,7 +1133,7 @@ class Tom extends createMixin(Composite)(StateMachine$1) {
           }
         } catch (err) {
           this.setState('fail', this, err);
-          throw(err)
+          throw (err)
         }
       }
     } else {
@@ -1124,27 +1151,26 @@ class Tom extends createMixin(Composite)(StateMachine$1) {
       }
     } else {
       this.index = 1;
-      this.state = 'pending';
+      this.resetState();
       this.markedSkip = this.options.skip || false;
       this.markedOnly = this.options.only || false;
     }
   }
 
   /**
-   * Combine several TOM instances into a common root
+   * If more than one TOM instances are supplied, combine them into a common root.
    * @param {Array.<Tom>} tests
    * @param {string} [name]
    * @return {Tom}
    */
-  static combine (tests, name) {
+  static combine (tests, name, options) {
     let test;
     if (tests.length > 1) {
-      test = new this(name);
+      test = new this(name, options);
       for (const subTom of tests) {
         this.validate(subTom);
         test.add(subTom);
       }
-
     } else {
       test = tests[0];
       this.validate(test);
@@ -1176,6 +1202,7 @@ function isPlainObject (input) {
  * @param {TestObjectModel} tom
  * @param {object} [options]
  * @param {function} [options.view]
+ * @param {boolean} [options.debug]
  * @emits start
  * @emits end
  */
@@ -1271,7 +1298,12 @@ class TestRunnerCore extends StateMachine {
              * @event module:test-runner-core#fail
              */
             this.state = 'fail';
-            // don't handle err - keep going when tests fail (but crash for programmer error if poss)
+            if (this.options.debug) {
+              console.error('-----------------------\nDEBUG');
+              console.error('-----------------------');
+              console.error(err);
+              console.error('-----------------------');
+            }
           });
         return Promise.all([promise, this.runTomAndChildren(test)])
       }

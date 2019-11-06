@@ -12,6 +12,7 @@ import TOM from './node_modules/test-object-model/dist/index.mjs'
  * @param {TestObjectModel} tom
  * @param {object} [options]
  * @param {function} [options.view]
+ * @param {boolean} [options.debug]
  * @emits start
  * @emits end
  */
@@ -107,7 +108,12 @@ class TestRunnerCore extends StateMachine {
              * @event module:test-runner-core#fail
              */
             this.state = 'fail'
-            // don't handle err - keep going when tests fail (but crash for programmer error if poss)
+            if (this.options.debug) {
+              console.error('-----------------------\nDEBUG')
+              console.error('-----------------------')
+              console.error(err)
+              console.error('-----------------------')
+            }
           })
         return Promise.all([promise, this.runTomAndChildren(test)])
       }
