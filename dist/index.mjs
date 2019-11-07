@@ -354,6 +354,7 @@ class Queue {
 
 class Stats {
   constructor () {
+    this.total = 0;
     this.start = 0;
     this.end = 0;
     this.pass = 0;
@@ -1201,7 +1202,7 @@ function isPlainObject (input) {
  * @alias module:test-runner-core
  * @param {TestObjectModel} tom
  * @param {object} [options]
- * @param {function} [options.view]
+ * @param {function} [options.view] - View instance.
  * @param {boolean} [options.debug]
  * @emits start
  * @emits end
@@ -1242,6 +1243,9 @@ class TestRunnerCore extends StateMachine {
      * @type {View}
      */
     this.view = options.view;
+    if (this.view) {
+      this.view.runner = this;
+    }
 
     /**
      * Runner stats
@@ -1335,6 +1339,7 @@ class TestRunnerCore extends StateMachine {
 
     /* encapsulate this as a TOM method? */
     const testCount = Array.from(this.tom).filter(t => t.testFn).length;
+    this.stats.total = testCount;
 
     /**
      * in-progress

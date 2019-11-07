@@ -11,7 +11,7 @@ import TOM from './node_modules/test-object-model/dist/index.mjs'
  * @alias module:test-runner-core
  * @param {TestObjectModel} tom
  * @param {object} [options]
- * @param {function} [options.view]
+ * @param {function} [options.view] - View instance.
  * @param {boolean} [options.debug]
  * @emits start
  * @emits end
@@ -52,6 +52,9 @@ class TestRunnerCore extends StateMachine {
      * @type {View}
      */
     this.view = options.view
+    if (this.view) {
+      this.view.runner = this
+    }
 
     /**
      * Runner stats
@@ -145,6 +148,7 @@ class TestRunnerCore extends StateMachine {
 
     /* encapsulate this as a TOM method? */
     const testCount = Array.from(this.tom).filter(t => t.testFn).length
+    this.stats.total = testCount
 
     /**
      * in-progress
@@ -174,16 +178,6 @@ class TestRunnerCore extends StateMachine {
      */
     this.stats.end = Date.now()
     this.emit('end', this.stats)
-  }
-}
-
-class RunTestCommand {
-  constructor (test) {
-    this.test = test
-  }
-
-  execute () {
-    return this.test.run()
   }
 }
 
