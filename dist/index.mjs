@@ -1110,7 +1110,7 @@ class Tom extends createMixin(Composite)(StateMachine$1) {
         this.setState('skipped', this);
       } else {
         this.setState('in-progress', this);
-        this.emit('start');
+        this.emit('start', this);
 
         try {
           const testResult = this.testFn.call(new TestContext({
