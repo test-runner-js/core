@@ -1,17 +1,3 @@
-## Modules
-
-<dl>
-<dt><a href="#module_test-runner-core">test-runner-core</a></dt>
-<dd></dd>
-</dl>
-
-## Classes
-
-<dl>
-<dt><a href="#Queue">Queue</a></dt>
-<dd></dd>
-</dl>
-
 <a name="module_test-runner-core"></a>
 
 ## test-runner-core
@@ -40,12 +26,12 @@
 
 #### new TestRunnerCore(tom, [options])
 
-| Param | Type |
-| --- | --- |
-| tom | <code>TestObjectModel</code> | 
-| [options] | <code>object</code> | 
-| [options.view] | <code>function</code> | 
-| [options.debug] | <code>boolean</code> | 
+| Param | Type | Description |
+| --- | --- | --- |
+| tom | <code>TestObjectModel</code> |  |
+| [options] | <code>object</code> |  |
+| [options.view] | <code>function</code> | View instance. |
+| [options.debug] | <code>boolean</code> |  |
 
 <a name="module_test-runner-core--TestRunnerCore+state"></a>
 
@@ -124,16 +110,3 @@ Test suite passed
 Test suite ended
 
 **Kind**: event emitted by [<code>TestRunnerCore</code>](#exp_module_test-runner-core--TestRunnerCore)  
-<a name="Queue"></a>
-
-## Queue
-**Kind**: global class  
-<a name="new_Queue_new"></a>
-
-### new Queue(jobs, maxConcurrency)
-
-| Param | Type | Description |
-| --- | --- | --- |
-| jobs | <code>Array.&lt;function()&gt;</code> | An array of functions, each of which must return a Promise. |
-| maxConcurrency | <code>number</code> |  |
-

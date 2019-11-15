@@ -4,9 +4,9 @@
 [![Dependency Status](https://badgen.net/david/dep/test-runner-js/core)](https://david-dm.org/test-runner-js/core)
 [![js-standard-style](https://img.shields.io/badge/code%20style-standard-brightgreen.svg)](https://github.com/feross/standard)
 
-# test-runner-core
+***This documentation is a work in progress.***
 
-Work in progress.
+# test-runner-core
 
 * Simple
 * Use any assertion library
