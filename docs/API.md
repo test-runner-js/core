@@ -10,7 +10,12 @@
         * [.ended](#module_test-runner-core--TestRunnerCore+ended) : <code>boolean</code>
         * [.view](#module_test-runner-core--TestRunnerCore+view) : <code>View</code>
         * [.stats](#module_test-runner-core--TestRunnerCore+stats)
-        * [.start()](#module_test-runner-core--TestRunnerCore+start) ⇒ <code>Promise</code>
+        * [.start()](#module_test-runner-core--TestRunnerCore+start)
+        * ["test-start" (test)](#module_test-runner-core--TestRunnerCore+event_test-start)
+        * ["test-pass" (test, result)](#module_test-runner-core--TestRunnerCore+event_test-pass)
+        * ["test-fail" (test, err)](#module_test-runner-core--TestRunnerCore+event_test-fail)
+        * ["test-skip" (test)](#module_test-runner-core--TestRunnerCore+event_test-skip)
+        * ["test-ignore" (test)](#module_test-runner-core--TestRunnerCore+event_test-ignore)
         * ["fail"](#module_test-runner-core--TestRunnerCore+event_fail)
         * ["in-progress" (testCount)](#module_test-runner-core--TestRunnerCore+event_in-progress)
         * ["start" (testCount)](#module_test-runner-core--TestRunnerCore+event_start)
@@ -65,11 +70,67 @@ Runner stats
 **Kind**: instance property of [<code>TestRunnerCore</code>](#exp_module_test-runner-core--TestRunnerCore)  
 <a name="module_test-runner-core--TestRunnerCore+start"></a>
 
-#### testRunnerCore.start() ⇒ <code>Promise</code>
-Start the runner
+#### testRunnerCore.start()
+Start the runner.
 
 **Kind**: instance method of [<code>TestRunnerCore</code>](#exp_module_test-runner-core--TestRunnerCore)  
-**Fulfil**: <code>Array&lt;Array&gt;</code> - Fulfils with an array of arrays containing results for each batch of concurrently run tests.  
+<a name="module_test-runner-core--TestRunnerCore+event_test-start"></a>
+
+#### "test-start" (test)
+Test start.
+
+**Kind**: event emitted by [<code>TestRunnerCore</code>](#exp_module_test-runner-core--TestRunnerCore)  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| test | <code>TestObjectModel</code> | The test node. |
+
+<a name="module_test-runner-core--TestRunnerCore+event_test-pass"></a>
+
+#### "test-pass" (test, result)
+Test pass.
+
+**Kind**: event emitted by [<code>TestRunnerCore</code>](#exp_module_test-runner-core--TestRunnerCore)  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| test | <code>TestObjectModel</code> | The test node. |
+| result | <code>\*</code> | The value returned by the test. |
+
+<a name="module_test-runner-core--TestRunnerCore+event_test-fail"></a>
+
+#### "test-fail" (test, err)
+Test fail.
+
+**Kind**: event emitted by [<code>TestRunnerCore</code>](#exp_module_test-runner-core--TestRunnerCore)  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| test | <code>TestObjectModel</code> | The test node. |
+| err | <code>Error</code> | The exception thrown by the test. |
+
+<a name="module_test-runner-core--TestRunnerCore+event_test-skip"></a>
+
+#### "test-skip" (test)
+Test skip.
+
+**Kind**: event emitted by [<code>TestRunnerCore</code>](#exp_module_test-runner-core--TestRunnerCore)  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| test | <code>TestObjectModel</code> | The test node. |
+
+<a name="module_test-runner-core--TestRunnerCore+event_test-ignore"></a>
+
+#### "test-ignore" (test)
+Test ignore.
+
+**Kind**: event emitted by [<code>TestRunnerCore</code>](#exp_module_test-runner-core--TestRunnerCore)  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| test | <code>TestObjectModel</code> | The test node. |
+
 <a name="module_test-runner-core--TestRunnerCore+event_fail"></a>
 
 #### "fail"

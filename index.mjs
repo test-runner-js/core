@@ -85,22 +85,49 @@ class TestRunnerCore extends StateMachine {
 
     /* translate tom to runner events */
     this.tom.on('start', (...args) => {
+      /**
+       * Test start.
+       * @event module:test-runner-core#test-start
+       * @param test {TestObjectModel} - The test node.
+       */
       this.emit('test-start', ...args)
     })
     this.tom.on('pass', (...args) => {
       this.stats.pass++
+      /**
+       * Test pass.
+       * @event module:test-runner-core#test-pass
+       * @param test {TestObjectModel} - The test node.
+       * @param result {*} - The value returned by the test.
+       */
       this.emit('test-pass', ...args)
     })
     this.tom.on('fail', (...args) => {
       this.stats.fail++
+      /**
+       * Test fail.
+       * @event module:test-runner-core#test-fail
+       * @param test {TestObjectModel} - The test node.
+       * @param err {Error} - The exception thrown by the test.
+       */
       this.emit('test-fail', ...args)
     })
     this.tom.on('skipped', (...args) => {
       this.stats.skip++
+      /**
+       * Test skip.
+       * @event module:test-runner-core#test-skip
+       * @param test {TestObjectModel} - The test node.
+       */
       this.emit('test-skip', ...args)
     })
     this.tom.on('ignored', (...args) => {
       this.stats.ignore++
+      /**
+       * Test ignore.
+       * @event module:test-runner-core#test-ignore
+       * @param test {TestObjectModel} - The test node.
+       */
       this.emit('test-ignore', ...args)
     })
   }

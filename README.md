@@ -65,6 +65,10 @@ Runner state change: in-progress -> fail
 Test run complete. State: fail, passed: 1, failed: 1
 ```
 
+## See also
+
+* [API docs](https://github.com/test-runner-js/core/blob/master/docs/API.md)
+
 * * *
 
 &copy; 2016-19 Lloyd Brookes \<75pound@gmail.com\>. Documented by [jsdoc-to-markdown](https://github.com/jsdoc2md/jsdoc-to-markdown).
