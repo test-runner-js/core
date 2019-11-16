@@ -1,18 +1,3 @@
-## Modules
-
-<dl>
-<dt><a href="#module_test-runner-core">test-runner-core</a></dt>
-<dd></dd>
-</dl>
-
-## Classes
-
-<dl>
-<dt><a href="#Stats">Stats</a></dt>
-<dd><p>Stats object.</p>
-</dd>
-</dl>
-
 <a name="module_test-runner-core"></a>
 
 ## test-runner-core
@@ -24,7 +9,7 @@
         * [.tom](#module_test-runner-core--TestRunnerCore+tom) : <code>TestObjectModel</code>
         * [.ended](#module_test-runner-core--TestRunnerCore+ended) : <code>boolean</code>
         * [.view](#module_test-runner-core--TestRunnerCore+view) : <code>View</code>
-        * [.stats](#module_test-runner-core--TestRunnerCore+stats) : [<code>Stats</code>](#Stats)
+        * [.stats](#module_test-runner-core--TestRunnerCore+stats) : <code>object</code>
         * [.start()](#module_test-runner-core--TestRunnerCore+start)
         * ["test-start" (test)](#module_test-runner-core--TestRunnerCore+event_test-start)
         * ["test-pass" (test, result)](#module_test-runner-core--TestRunnerCore+event_test-pass)
@@ -78,10 +63,20 @@ View
 **Kind**: instance property of [<code>TestRunnerCore</code>](#exp_module_test-runner-core--TestRunnerCore)  
 <a name="module_test-runner-core--TestRunnerCore+stats"></a>
 
-#### testRunnerCore.stats : [<code>Stats</code>](#Stats)
+#### testRunnerCore.stats : <code>object</code>
 Runner stats
 
-**Kind**: instance property of [<code>TestRunnerCore</code>](#exp_module_test-runner-core--TestRunnerCore)  
+**Kind**: instance namespace of [<code>TestRunnerCore</code>](#exp_module_test-runner-core--TestRunnerCore)  
+**Properties**
+
+| Name | Type |
+| --- | --- |
+| fail | <code>number</code> | 
+| pass | <code>number</code> | 
+| skip | <code>number</code> | 
+| start | <code>number</code> | 
+| end | <code>number</code> | 
+
 <a name="module_test-runner-core--TestRunnerCore+start"></a>
 
 #### testRunnerCore.start()
@@ -185,33 +180,3 @@ Test suite passed
 Test suite ended
 
 **Kind**: event emitted by [<code>TestRunnerCore</code>](#exp_module_test-runner-core--TestRunnerCore)  
-<a name="Stats"></a>
-
-## Stats
-Stats object.
-
-**Kind**: global class  
-
-* [Stats](#Stats)
-    * [.total](#Stats+total)
-    * [.start](#Stats+start)
-    * [.end](#Stats+end)
-
-<a name="Stats+total"></a>
-
-### stats.total
-Total tests run.
-
-**Kind**: instance property of [<code>Stats</code>](#Stats)  
-<a name="Stats+start"></a>
-
-### stats.start
-Runner start time.
-
-**Kind**: instance property of [<code>Stats</code>](#Stats)  
-<a name="Stats+end"></a>
-
-### stats.end
-Runner end time.
-
-**Kind**: instance property of [<code>Stats</code>](#Stats)  

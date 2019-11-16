@@ -56,7 +56,12 @@ class TestRunnerCore extends StateMachine {
 
     /**
      * Runner stats
-     * @type {Stats}
+     * @namespace
+     * @property {number} fail
+     * @property {number} pass
+     * @property {number} skip
+     * @property {number} start
+     * @property {number} end
      */
     this.stats = new Stats()
 
@@ -65,21 +70,6 @@ class TestRunnerCore extends StateMachine {
     })
     this.on('end', (...args) => {
       if (this.view && this.view.end) this.view.end(...args)
-    })
-    this.on('test-start', (...args) => {
-      if (this.view && this.view.testStart) this.view.testStart(...args)
-    })
-    this.on('test-pass', (...args) => {
-      if (this.view && this.view.testPass) this.view.testPass(...args)
-    })
-    this.on('test-fail', (...args) => {
-      if (this.view && this.view.testFail) this.view.testFail(...args)
-    })
-    this.on('test-skip', (...args) => {
-      if (this.view && this.view.testSkip) this.view.testSkip(...args)
-    })
-    this.on('test-ignore', (...args) => {
-      if (this.view && this.view.testIgnore) this.view.testIgnore(...args)
     })
 
     /* translate tom to runner events */
@@ -90,6 +80,7 @@ class TestRunnerCore extends StateMachine {
        * @param test {TestObjectModel} - The test node.
        */
       this.emit('test-start', ...args)
+      if (this.view && this.view.testStart) this.view.testStart(...args)
     })
     this.tom.on('pass', (...args) => {
       this.stats.pass++
@@ -100,6 +91,7 @@ class TestRunnerCore extends StateMachine {
        * @param result {*} - The value returned by the test.
        */
       this.emit('test-pass', ...args)
+      if (this.view && this.view.testPass) this.view.testPass(...args)
     })
     this.tom.on('fail', (...args) => {
       this.stats.fail++
@@ -110,6 +102,7 @@ class TestRunnerCore extends StateMachine {
        * @param err {Error} - The exception thrown by the test.
        */
       this.emit('test-fail', ...args)
+      if (this.view && this.view.testFail) this.view.testFail(...args)
     })
     this.tom.on('skipped', (...args) => {
       this.stats.skip++
@@ -119,6 +112,7 @@ class TestRunnerCore extends StateMachine {
        * @param test {TestObjectModel} - The test node.
        */
       this.emit('test-skip', ...args)
+      if (this.view && this.view.testSkip) this.view.testSkip(...args)
     })
     this.tom.on('ignored', (...args) => {
       this.stats.ignore++
@@ -128,6 +122,7 @@ class TestRunnerCore extends StateMachine {
        * @param test {TestObjectModel} - The test node.
        */
       this.emit('test-ignore', ...args)
+      if (this.view && this.view.testIgnore) this.view.testIgnore(...args)
     })
   }
 

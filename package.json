@@ -26,7 +26,7 @@
     "test:esm": "esm-runner test/*.mjs",
     "dist": "rollup -c",
     "watch": "rollup -c -w",
-    "docs": "jsdoc2md -c jsdoc.conf index.mjs lib/stats.mjs > docs/API.md"
+    "docs": "jsdoc2md -c jsdoc.conf index.mjs > docs/API.md && jsdoc2md -c jsdoc.conf lib/view.mjs > docs/view.md"
   },
   "dependencies": {
     "fsm-base": "^0.5.1",
