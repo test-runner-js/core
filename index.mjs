@@ -10,11 +10,9 @@ import TOM from 'test-object-model'
 /**
  * @alias module:test-runner-core
  * @param {TestObjectModel} tom
- * @param {object} [options]
+ * @param {object} [options] - Config object.
  * @param {function} [options.view] - View instance.
- * @param {boolean} [options.debug]
- * @emits start
- * @emits end
+ * @param {boolean} [options.debug] - Log all errors.
  */
 class TestRunnerCore extends StateMachine {
   constructor (tom, options = {}) {
@@ -133,7 +131,7 @@ class TestRunnerCore extends StateMachine {
     })
   }
 
-  async runTomAndChildren (tom) {
+  async runTomNode (tom) {
     /* create array of job functions */
     const tests = [...tom.children]
     const jobs = tests.map(test => {
@@ -152,7 +150,7 @@ class TestRunnerCore extends StateMachine {
               console.error('-----------------------')
             }
           })
-        return Promise.all([promise, this.runTomAndChildren(test)])
+        return Promise.all([promise, this.runTomNode(test)])
       }
     })
 
@@ -189,7 +187,7 @@ class TestRunnerCore extends StateMachine {
      * @param testCount {number} - the numbers of tests
      */
     this.emit('start', testCount)
-    await this.runTomAndChildren(this.tom)
+    await this.runTomNode(this.tom)
     this.ended = true
     if (this.state !== 'fail') {
       /**

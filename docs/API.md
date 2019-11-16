@@ -41,7 +41,6 @@
 
 ### TestRunnerCore ⏏
 **Kind**: Exported class  
-**Emits**: <code>event:start</code>, <code>event:end</code>  
 <a name="new_module_test-runner-core--TestRunnerCore_new"></a>
 
 #### new TestRunnerCore(tom, [options])
@@ -49,9 +48,9 @@
 | Param | Type | Description |
 | --- | --- | --- |
 | tom | <code>TestObjectModel</code> |  |
-| [options] | <code>object</code> |  |
+| [options] | <code>object</code> | Config object. |
 | [options.view] | <code>function</code> | View instance. |
-| [options.debug] | <code>boolean</code> |  |
+| [options.debug] | <code>boolean</code> | Log all errors. |
 
 <a name="module_test-runner-core--TestRunnerCore+state"></a>
 

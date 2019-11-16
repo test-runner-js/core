@@ -8,17 +8,7 @@
 
 # test-runner-core
 
-* Simple
-* Use any assertion library
-* Multi-core parallelism
-* Configurable concurrency
-* Extensible
-* Runs mjs
-* Lightweight
-* Isomorphic, load anywhere
-* Test timeout and runFor
-* TAP output
-* Custom views
+Isomophic test runner. Takes a test object model as input, runs it streaming progress info to the attached view or listener. Used by test-runner, esm-runner and web-runner.
 
 ## Synopsis
 

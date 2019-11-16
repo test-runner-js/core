@@ -381,18 +381,31 @@
     }
   }
 
+  /**
+   * Stats object.
+   */
   class Stats {
     constructor () {
+      /**
+       * Total tests run.
+       */
       this.total = 0;
+      /**
+       * Runner start time.
+       */
       this.start = 0;
+      /**
+       * Runner end time.
+       */
       this.end = 0;
       this.pass = 0;
       this.fail = 0;
       this.skip = 0;
       this.ignore = 0;
-      this.timeElapsed = function () {
-        return this.end - this.start
-      };
+    }
+
+    timeElapsed () {
+      return this.end - this.start
     }
   }
 
@@ -1239,11 +1252,9 @@
   /**
    * @alias module:test-runner-core
    * @param {TestObjectModel} tom
-   * @param {object} [options]
+   * @param {object} [options] - Config object.
    * @param {function} [options.view] - View instance.
-   * @param {boolean} [options.debug]
-   * @emits start
-   * @emits end
+   * @param {boolean} [options.debug] - Log all errors.
    */
   class TestRunnerCore extends StateMachine {
     constructor (tom, options = {}) {
@@ -1287,6 +1298,7 @@
 
       /**
        * Runner stats
+       * @type {Stats}
        */
       this.stats = new Stats();
 
@@ -1314,27 +1326,54 @@
 
       /* translate tom to runner events */
       this.tom.on('start', (...args) => {
+        /**
+         * Test start.
+         * @event module:test-runner-core#test-start
+         * @param test {TestObjectModel} - The test node.
+         */
         this.emit('test-start', ...args);
       });
       this.tom.on('pass', (...args) => {
         this.stats.pass++;
+        /**
+         * Test pass.
+         * @event module:test-runner-core#test-pass
+         * @param test {TestObjectModel} - The test node.
+         * @param result {*} - The value returned by the test.
+         */
         this.emit('test-pass', ...args);
       });
       this.tom.on('fail', (...args) => {
         this.stats.fail++;
+        /**
+         * Test fail.
+         * @event module:test-runner-core#test-fail
+         * @param test {TestObjectModel} - The test node.
+         * @param err {Error} - The exception thrown by the test.
+         */
         this.emit('test-fail', ...args);
       });
       this.tom.on('skipped', (...args) => {
         this.stats.skip++;
+        /**
+         * Test skip.
+         * @event module:test-runner-core#test-skip
+         * @param test {TestObjectModel} - The test node.
+         */
         this.emit('test-skip', ...args);
       });
       this.tom.on('ignored', (...args) => {
         this.stats.ignore++;
+        /**
+         * Test ignore.
+         * @event module:test-runner-core#test-ignore
+         * @param test {TestObjectModel} - The test node.
+         */
         this.emit('test-ignore', ...args);
       });
     }
 
-    async runTomAndChildren (tom) {
+    async runTomNode (tom) {
       /* create array of job functions */
       const tests = [...tom.children];
       const jobs = tests.map(test => {
@@ -1353,7 +1392,7 @@
                 console.error('-----------------------');
               }
             });
-          return Promise.all([promise, this.runTomAndChildren(test)])
+          return Promise.all([promise, this.runTomNode(test)])
         }
       });
 
@@ -1390,7 +1429,7 @@
        * @param testCount {number} - the numbers of tests
        */
       this.emit('start', testCount);
-      await this.runTomAndChildren(this.tom);
+      await this.runTomNode(this.tom);
       this.ended = true;
       if (this.state !== 'fail') {
         /**
