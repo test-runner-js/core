@@ -58,6 +58,7 @@ class TestRunnerCore extends StateMachine {
 
     /**
      * Runner stats
+     * @type {Stats}
      */
     this.stats = new Stats()
 
