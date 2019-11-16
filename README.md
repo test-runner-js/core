@@ -20,6 +20,51 @@
 * TAP output
 * Custom views
 
+## Synopsis
+
+```js
+import TestRunnerCore from '../index.mjs'
+import Tom from 'test-object-model'
+
+/* Define a test model */
+const tom = new Tom()
+
+tom.test('A successful test', function () {
+  return 'This passed'
+})
+
+tom.test('A failing test', function () {
+  throw new Error('This failed')
+})
+
+/* run the tests */
+const runner = new TestRunnerCore(tom)
+
+runner.on('state', (state, prevState) => {
+  console.log(`Runner state change: ${prevState} -> ${state}`)
+})
+runner.on('test-pass', test => {
+  console.log(`Test passed: ${test.name}`)
+})
+runner.on('test-fail', test => {
+  console.log(`Test failed: ${test.name}`)
+})
+runner.start().then(() => {
+  console.log(`Test run complete. State: ${runner.state}, passed: ${runner.stats.pass}, failed: ${runner.stats.fail}`)
+})
+```
+
+Output.
+
+```
+$ node --experimental-modules synopsis.mjs
+Runner state change: pending -> in-progress
+Test passed: A successful test
+Test failed: A failing test
+Runner state change: in-progress -> fail
+Test run complete. State: fail, passed: 1, failed: 1
+```
+
 * * *
 
 &copy; 2016-19 Lloyd Brookes \<75pound@gmail.com\>. Documented by [jsdoc-to-markdown](https://github.com/jsdoc2md/jsdoc-to-markdown).

@@ -1,5 +1,5 @@
 import TestRunner from '../index.mjs'
-import Tom from '../node_modules/test-object-model/dist/index.mjs'
+import Tom from 'test-object-model'
 import assert from 'assert'
 const a = assert.strict
 

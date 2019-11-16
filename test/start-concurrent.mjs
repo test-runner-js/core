@@ -1,4 +1,4 @@
-import Tom from '../node_modules/test-object-model/dist/index.mjs'
+import Tom from 'test-object-model'
 import TestRunner from '../index.mjs'
 import assert from 'assert'
 const a = assert.strict
@@ -18,7 +18,7 @@ tom.test('runner.start(): execution order', async function () {
 
   const runner = new TestRunner(tom)
   const results = await runner.start()
-  a.deepStrictEqual(counts, ['one', 'two'])
+  a.deepEqual(counts, ['one', 'two'])
 })
 
 tom.test('runner.start(): execution order 2', async function () {
@@ -35,7 +35,7 @@ tom.test('runner.start(): execution order 2', async function () {
 
   const runner = new TestRunner(tom)
   const results = await runner.start()
-  a.deepStrictEqual(counts, ['one', 'two'])
+  a.deepEqual(counts, ['one', 'two'])
 })
 
 tom.test('run in parallel', async function () {
@@ -68,7 +68,7 @@ tom.test('run in parallel', async function () {
 
   const runner = new TestRunner(tom)
   const results = await runner.start()
-  a.deepStrictEqual(actuals, [2, 1.1, 1, 2.1, 1.2, 2.2])
+  a.deepEqual(actuals, [2, 1.1, 1, 2.1, 1.2, 2.2])
 })
 
 export default tom

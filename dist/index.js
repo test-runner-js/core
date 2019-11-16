@@ -202,7 +202,7 @@
       return Array.from(input)
     }
 
-    return [ input ]
+    return [input]
   }
 
   /**
@@ -796,7 +796,7 @@
       return Array.from(input)
     }
 
-    return [ input ]
+    return [input]
   }
 
   /**
@@ -975,10 +975,10 @@
 
   /**
    * @param {string} [name] - The test name.
-   * @param {function} [testFn] - A function which will either complete successfully, reject or throw.
-   * @param {object} [options]
+   * @param {function} [testFn] - A function which will either succeed, reject or throw.
+   * @param {object} [options] - Test config.
    * @param {number} [options.timeout] - A time limit for the test in ms.
-   * @param {number} [options.maxConcurrency] - The max concurrency that asynchronous child jobs can run.
+   * @param {number} [options.maxConcurrency] - The max concurrency that child tests will be able to run. For example, specifying `2` will allow child tests to run two at a time. Defaults to `10`.
    * @param {boolean} [options.skip] - Skip this test.
    * @param {boolean} [options.only] - Only run this test.
    * @alias module:test-object-model
@@ -1015,7 +1015,7 @@
       this.name = name;
 
       /**
-       * A function which will either complete successfully, reject or throw.
+       * A function which will either succeed, reject or throw.
        * @type {function}
        */
       this.testFn = testFn;
@@ -1027,7 +1027,7 @@
       this.index = 1;
 
       /**
-       * Test state: pending, start, skip, pass or fail.
+       * Test state. Can be one of `pending`, `start`, `skip`, `pass` or `fail`.
        * @member {string} module:test-object-model#state
        */
 
@@ -1050,7 +1050,7 @@
       this.result = undefined;
 
       /**
-       * The max concurrency that asynchronous child jobs can run.
+       * The max concurrency that child tests will be able to run. For example, specifying `2` will allow child tests to run two at a time.
        * @type {number}
        * @default 10
        */
@@ -1062,6 +1062,10 @@
       this.options = options;
     }
 
+    /**
+     * Returns the test name.
+     * @returns {string}
+     */
     toString () {
       return this.name
     }
@@ -1209,6 +1213,11 @@
       return test
     }
 
+    /**
+     * Returns true if the input is a valid test.
+     * @param {module:test-object-model} tom - Input to test.
+     * @returns {boolean}
+     */
     static validate (tom = {}) {
       const valid = ['name', 'testFn', 'index', 'ended'].every(prop => Object.keys(tom).includes(prop));
       if (!valid) {
@@ -1359,9 +1368,7 @@
     }
 
     /**
-     * Start the runner
-     * @returns {Promise}
-     * @fulfil {Array<Array>} - Fulfils with an array of arrays containing results for each batch of concurrently run tests.
+     * Start the runner.
      */
     async start () {
       this.stats.start = Date.now();

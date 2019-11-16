@@ -1,4 +1,4 @@
-import Tom from '../node_modules/test-object-model/dist/index.mjs'
+import Tom from 'test-object-model'
 import TestRunner from '../index.mjs'
 import assert from 'assert'
 const a = assert.strict
@@ -17,7 +17,7 @@ tom.test('runner events: start, end', async function () {
     a.equal(count, 2)
   })
   runner.on('end', () => actuals.push('end'))
-  const results = await runner.start()
+  await runner.start()
   a.deepEqual(actuals, ['start', 'end'])
 })
 
@@ -31,7 +31,7 @@ tom.test('runner events: start, test-pass, end', async function () {
   runner.on('start', () => actuals.push('start'))
   runner.on('end', () => actuals.push('end'))
   runner.on('test-pass', () => actuals.push('test-pass'))
-  const results = await runner.start()
+  await runner.start()
   a.deepEqual(actuals, ['start', 'test-pass', 'test-pass', 'end'])
 })
 
@@ -50,7 +50,7 @@ tom.test('runner events: start, test-fail, end', async function () {
   runner.on('end', () => actuals.push('end'))
   runner.on('test-pass', () => actuals.push('test-pass'))
   runner.on('test-fail', () => actuals.push('test-fail'))
-  const results = await runner.start()
+  await runner.start()
   a.deepEqual(actuals, ['start', 'test-fail', 'test-fail', 'end'])
 })
 
@@ -65,7 +65,7 @@ tom.test('runner.start(): pass, fail, skip events', async function () {
   runner.on('test-pass', () => actuals.push('test-pass'))
   runner.on('test-fail', () => actuals.push('test-fail'))
   runner.on('test-skip', () => actuals.push('test-skip'))
-  const results = await runner.start()
+  await runner.start()
   a.deepEqual(actuals, ['test-pass', 'test-fail', 'test-skip'])
 })
 
@@ -80,7 +80,7 @@ tom.test('runner.start(): only', async function () {
   runner.on('test-pass', () => actuals.push('test-pass'))
   runner.on('test-fail', () => actuals.push('test-fail'))
   runner.on('test-skip', () => actuals.push('test-skip'))
-  const results = await runner.start()
+  await runner.start()
   a.deepEqual(actuals, ['test-skip', 'test-skip', 'test-pass'])
 })
 
@@ -95,7 +95,7 @@ tom.test('runner.start(): deep only', async function () {
   runner.on('test-pass', () => actuals.push('test-pass'))
   runner.on('test-fail', () => actuals.push('test-fail'))
   runner.on('test-skip', () => actuals.push('test-skip'))
-  const results = await runner.start()
+  await runner.start()
   a.deepEqual(actuals, ['test-pass', 'test-skip', 'test-pass'])
 })
 
@@ -112,7 +112,7 @@ tom.test('runner.start(): deep only with fail', async function () {
   runner.on('test-pass', () => actuals.push('test-pass'))
   runner.on('test-fail', () => actuals.push('test-fail'))
   runner.on('test-skip', () => actuals.push('test-skip'))
-  const results = await runner.start()
+  await runner.start()
   a.deepEqual(actuals, ['test-pass', 'test-skip', 'test-fail'])
 })
 
@@ -129,7 +129,7 @@ tom.test('runner.start(): deep only with skipped fail', async function () {
   runner.on('test-pass', () => actuals.push('test-pass'))
   runner.on('test-fail', () => actuals.push('test-fail'))
   runner.on('test-skip', () => actuals.push('test-skip'))
-  const results = await runner.start()
+  await runner.start()
   a.deepEqual(actuals, ['test-pass', 'test-skip', 'test-skip'])
 })
 

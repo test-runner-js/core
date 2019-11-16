@@ -1,5 +1,5 @@
 import TestRunner from '../index.mjs'
-import Tom from '../node_modules/test-object-model/dist/index.mjs'
+import Tom from 'test-object-model'
 import assert from 'assert'
 const a = assert.strict
 import http from 'http'
@@ -38,7 +38,7 @@ tom.test('timeout tests', async function () {
   })
 
   const runner = new TestRunner(tom)
-  const results = await runner.start()
+  await runner.start()
   a.deepEqual(counts, [1, 2, 3])
 })
 
@@ -84,7 +84,7 @@ tom.test('http server tests', async function () {
   })
 
   const runner = new TestRunner(tom)
-  const results = await runner.start()
+  await runner.start()
   a.deepEqual(counts, [200, 201])
 })
 
@@ -117,7 +117,7 @@ tom.test('concurrency usage', async function () {
   })
 
   const runner = new TestRunner(tom)
-  const results = await runner.start()
+  await runner.start()
   a.deepEqual(actuals, [1, 1.1, 1.2, 2, 2.1, 2.2])
 })
 
@@ -171,7 +171,7 @@ tom.test('multiple child maxConcurrency values', async function () {
   })
 
   const runner = new TestRunner(tom)
-  const results = await runner.start()
+  await runner.start()
   a.deepEqual(actuals, ['two.2', 'two.3', 'two.1', 'two.4', 'one.1', 'one.2', 'one.3', 'one.4'])
 })
 

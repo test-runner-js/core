@@ -1,7 +1,7 @@
-import StateMachine from './node_modules/fsm-base/dist/index.mjs'
+import StateMachine from 'fsm-base'
 import Queue from './lib/queue.mjs'
 import Stats from './lib/stats.mjs'
-import TOM from './node_modules/test-object-model/dist/index.mjs'
+import TOM from 'test-object-model'
 
 /**
  * @module test-runner-core
@@ -139,9 +139,7 @@ class TestRunnerCore extends StateMachine {
   }
 
   /**
-   * Start the runner
-   * @returns {Promise}
-   * @fulfil {Array<Array>} - Fulfils with an array of arrays containing results for each batch of concurrently run tests.
+   * Start the runner.
    */
   async start () {
     this.stats.start = Date.now()
