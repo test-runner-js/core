@@ -29,14 +29,14 @@
     "docs": "jsdoc2md -c jsdoc.conf index.mjs > docs/API.md && jsdoc2md -c jsdoc.conf lib/view.mjs > docs/view.md"
   },
   "dependencies": {
-    "fsm-base": "^0.5.1",
-    "test-object-model": "^0.5.0"
+    "fsm-base": "^0.5.2",
+    "test-object-model": "^0.5.1"
   },
   "devDependencies": {
     "esm-runner": "^0.2.1",
     "jsdoc-to-markdown": "^5.0.2",
     "node-fetch": "^2.6.0",
-    "rollup": "^1.27.0",
+    "rollup": "^1.27.1",
     "rollup-plugin-node-resolve": "^5.2.0",
     "sleep-anywhere": "^1.1.3"
   },

@@ -606,326 +606,6 @@ function isComposite (item) {
 }
 
 /**
- * @module obso
- */
-
-/**
- * @alias module:obso
- */
-class Emitter$1 {
-  /**
-   * Emit an event.
-   * @param {string} eventName - the event name to emit.
-   * @param ...args {*} - args to pass to the event handler
-   */
-  emit (eventName, ...args) {
-    if (this._listeners && this._listeners.length > 0) {
-      const toRemove = [];
-
-      /* invoke each relevant listener */
-      for (const listener of this._listeners) {
-        const handlerArgs = args.slice();
-        if (listener.eventName === '__ALL__') {
-          handlerArgs.unshift(eventName);
-        }
-
-        if (listener.eventName === '__ALL__' || listener.eventName === eventName) {
-          listener.handler.call(this, ...handlerArgs);
-
-          /* remove once handler */
-          if (listener.once) toRemove.push(listener);
-        }
-      }
-
-      toRemove.forEach(listener => {
-        this._listeners.splice(this._listeners.indexOf(listener), 1);
-      });
-    }
-
-    /* bubble event up */
-    if (this.parent) this.parent._emitTarget(eventName, this, ...args);
-  }
-
-  _emitTarget (eventName, target, ...args) {
-    if (this._listeners && this._listeners.length > 0) {
-      const toRemove = [];
-
-      /* invoke each relevant listener */
-      for (const listener of this._listeners) {
-        const handlerArgs = args.slice();
-        if (listener.eventName === '__ALL__') {
-          handlerArgs.unshift(eventName);
-        }
-
-        if (listener.eventName === '__ALL__' || listener.eventName === eventName) {
-          listener.handler.call(target, ...handlerArgs);
-
-          /* remove once handler */
-          if (listener.once) toRemove.push(listener);
-        }
-      }
-
-      toRemove.forEach(listener => {
-        this._listeners.splice(this._listeners.indexOf(listener), 1);
-      });
-    }
-
-    /* bubble event up */
-    if (this.parent) this.parent._emitTarget(eventName, target || this, ...args);
-  }
-
-   /**
-    * Register an event listener.
-    * @param {string} [eventName] - The event name to watch. Omitting the name will catch all events.
-    * @param {function} handler - The function to be called when `eventName` is emitted. Invocated with `this` set to `emitter`.
-    * @param {object} [options]
-    * @param {boolean} [options.once] - If `true`, the handler will be invoked once then removed.
-    */
-  on (eventName, handler, options) {
-    createListenersArray$1(this);
-    options = options || {};
-    if (arguments.length === 1 && typeof eventName === 'function') {
-      handler = eventName;
-      eventName = '__ALL__';
-    }
-    if (!handler) {
-      throw new Error('handler function required')
-    } else if (handler && typeof handler !== 'function') {
-      throw new Error('handler arg must be a function')
-    } else {
-      this._listeners.push({ eventName, handler: handler, once: options.once });
-    }
-  }
-
-  /**
-   * Remove an event listener.
-   * @param eventName {string} - the event name
-   * @param handler {function} - the event handler
-   */
-  removeEventListener (eventName, handler) {
-    if (!this._listeners || this._listeners.length === 0) return
-    const index = this._listeners.findIndex(function (listener) {
-      return listener.eventName === eventName && listener.handler === handler
-    });
-    if (index > -1) this._listeners.splice(index, 1);
-  }
-
-  /**
-   * Once.
-   * @param {string} eventName - the event name to watch
-   * @param {function} handler - the event handler
-   */
-  once (eventName, handler) {
-    /* TODO: the once option is browser-only */
-    this.on(eventName, handler, { once: true });
-  }
-
-  /**
-   * Propagate events from the supplied emitter to this emitter.
-   * @param {string} eventName - the event name to propagate
-   * @param {object} from - the emitter to propagate from
-   */
-  propagate (eventName, from) {
-    from.on(eventName, (...args) => this.emit(eventName, ...args));
-  }
-}
-
-/**
- * Alias for `on`.
- */
-Emitter$1.prototype.addEventListener = Emitter$1.prototype.on;
-
-function createListenersArray$1 (target) {
-  if (target._listeners) return
-  Object.defineProperty(target, '_listeners', {
-    enumerable: false,
-    configurable: false,
-    writable: false,
-    value: []
-  });
-}
-
-/**
- * Takes any input and guarantees an array back.
- *
- * - Converts array-like objects (e.g. `arguments`, `Set`) to a real array.
- * - Converts `undefined` to an empty array.
- * - Converts any another other, singular value (including `null`, objects and iterables other than `Set`) into an array containing that value.
- * - Ignores input which is already an array.
- *
- * @module array-back
- * @example
- * > const arrayify = require('array-back')
- *
- * > arrayify(undefined)
- * []
- *
- * > arrayify(null)
- * [ null ]
- *
- * > arrayify(0)
- * [ 0 ]
- *
- * > arrayify([ 1, 2 ])
- * [ 1, 2 ]
- *
- * > arrayify(new Set([ 1, 2 ]))
- * [ 1, 2 ]
- *
- * > function f(){ return arrayify(arguments); }
- * > f(1,2,3)
- * [ 1, 2, 3 ]
- */
-
-function isObject$1 (input) {
-  return typeof input === 'object' && input !== null
-}
-
-function isArrayLike$1 (input) {
-  return isObject$1(input) && typeof input.length === 'number'
-}
-
-/**
- * @param {*} - The input value to convert to an array
- * @returns {Array}
- * @alias module:array-back
- */
-function arrayify$1 (input) {
-  if (Array.isArray(input)) {
-    return input
-  }
-
-  if (input === undefined) {
-    return []
-  }
-
-  if (isArrayLike$1(input) || input instanceof Set) {
-    return Array.from(input)
-  }
-
-  return [input]
-}
-
-/**
- * Isomorphic map-reduce function to flatten an array into the supplied array.
- *
- * @module reduce-flatten
- * @example
- * const flatten = require('reduce-flatten')
- */
-
-/**
- * @alias module:reduce-flatten
- * @example
- * > numbers = [ 1, 2, [ 3, 4 ], 5 ]
- * > numbers.reduce(flatten, [])
- * [ 1, 2, 3, 4, 5 ]
- */
-function flatten$1 (arr, curr) {
-  if (Array.isArray(curr)) {
-    arr.push(...curr);
-  } else {
-    arr.push(curr);
-  }
-  return arr
-}
-
-/**
- * @module fsm-base
- * @typicalname stateMachine
- */
-
-const _initialState$1 = new WeakMap();
-const _state$1 = new WeakMap();
-const _validMoves$1 = new WeakMap();
-
-/**
- * @alias module:fsm-base
- * @extends {Emitter}
- */
-class StateMachine$1 extends Emitter$1 {
-  constructor (initialState, validMoves) {
-    super();
-    _validMoves$1.set(this, arrayify$1(validMoves).map(move => {
-      move.from = arrayify$1(move.from);
-      move.to = arrayify$1(move.to);
-      return move
-    }));
-    _state$1.set(this, initialState);
-    _initialState$1.set(this, initialState);
-  }
-
-  /**
-   * The current state
-   * @type {string} state
-   * @throws `INVALID_MOVE` if an invalid move made
-   */
-  get state () {
-    return _state$1.get(this)
-  }
-
-  set state (state) {
-    this.setState(state);
-  }
-
-  /**
-   * Set the current state. The second arg onward will be sent as event args.
-   * @param {string} state
-   */
-  setState (state, ...args) {
-    /* nothing to do */
-    if (this.state === state) return
-
-    const validTo = _validMoves$1.get(this).some(move => move.to.indexOf(state) > -1);
-    if (!validTo) {
-      const msg = `Invalid state: ${state}`;
-      const err = new Error(msg);
-      err.name = 'INVALID_MOVE';
-      throw err
-    }
-
-    let moved = false;
-    const prevState = this.state;
-    _validMoves$1.get(this).forEach(move => {
-      if (move.from.indexOf(this.state) > -1 && move.to.indexOf(state) > -1) {
-        _state$1.set(this, state);
-        moved = true;
-        /**
-         * fired on every state change
-         * @event module:fsm-base#state
-         * @param state {string} - the new state
-         * @param prev {string} - the previous state
-         */
-        this.emit('state', state, prevState);
-
-        /**
-         * fired on every state change
-         * @event module:fsm-base#&lt;state value&gt;
-         */
-        this.emit(state, ...args);
-      }
-    });
-    if (!moved) {
-      const froms = _validMoves$1.get(this)
-        .filter(move => move.to.indexOf(state) > -1)
-        .map(move => move.from.map(from => `'${from}'`))
-        .reduce(flatten$1);
-      const msg = `Can only move to '${state}' from ${froms.join(' or ') || '<unspecified>'} (not '${prevState}')`;
-      const err = new Error(msg);
-      err.name = 'INVALID_MOVE';
-      throw err
-    }
-  }
-
-  resetState () {
-    const prevState = this.state;
-    const initialState = _initialState$1.get(this);
-    _state$1.set(this, initialState);
-    this.emit('reset', prevState);
-  }
-}
-
-/**
  * The test context, available as `this` within each test function.
  */
 class TestContext {
@@ -949,6 +629,36 @@ class TestContext {
  * const t = require('typical')
  * const allDefined = array.every(t.isDefined)
  */
+
+/**
+ * A plain object is a simple object literal, it is not an instance of a class. Returns true if the input `typeof` is `object` and directly decends from `Object`.
+ *
+ * @param {*} - the input to test
+ * @returns {boolean}
+ * @static
+ * @example
+ * > t.isPlainObject({ something: 'one' })
+ * true
+ * > t.isPlainObject(new Date())
+ * false
+ * > t.isPlainObject([ 0, 1 ])
+ * false
+ * > t.isPlainObject(/test/)
+ * false
+ * > t.isPlainObject(1)
+ * false
+ * > t.isPlainObject('one')
+ * false
+ * > t.isPlainObject(null)
+ * false
+ * > t.isPlainObject((function * () {})())
+ * false
+ * > t.isPlainObject(function * () {})
+ * false
+ */
+function isPlainObject (input) {
+  return input !== null && typeof input === 'object' && input.constructor === Object
+}
 
 /**
  * Returns true if the input value is defined.
@@ -990,7 +700,7 @@ function isPromise (input) {
  * @param {boolean} [options.only] - Only run this test.
  * @alias module:test-object-model
  */
-class Tom extends createMixin(Composite)(StateMachine$1) {
+class Tom extends createMixin(Composite)(StateMachine) {
   constructor (name, testFn, options) {
     if (typeof name === 'string') {
       if (isPlainObject(testFn)) {
@@ -1150,6 +860,11 @@ class Tom extends createMixin(Composite)(StateMachine$1) {
         this.setState('skipped', this);
       } else {
         this.setState('in-progress', this);
+        /**
+         * Test start.
+         * @event module:test-object-model#start
+         * @param test {TestObjectModel} - The test node.
+         */
         this.emit('start', this);
 
         try {
@@ -1161,9 +876,21 @@ class Tom extends createMixin(Composite)(StateMachine$1) {
             try {
               const result = await Promise.race([testResult, raceTimeout(this.timeout)]);
               this.result = result;
+              /**
+               * Test pass.
+               * @event module:test-object-model#pass
+               * @param test {TestObjectModel} - The test node.
+               * @param result {*} - The value returned by the test.
+               */
               this.setState('pass', this, result);
               return result
             } catch (err) {
+              /**
+               * Test fail.
+               * @event module:test-object-model#fail
+               * @param test {TestObjectModel} - The test node.
+               * @param err {Error} - The exception thrown.
+               */
               this.setState('fail', this, err);
               return Promise.reject(err)
             }
@@ -1178,6 +905,11 @@ class Tom extends createMixin(Composite)(StateMachine$1) {
         }
       }
     } else {
+      /**
+       * Test ignored.
+       * @event module:test-object-model#ignored
+       * @param test {TestObjectModel} - The test node.
+       */
       this.setState('ignored', this);
     }
   }
@@ -1233,10 +965,6 @@ class Tom extends createMixin(Composite)(StateMachine$1) {
       throw err
     }
   }
-}
-
-function isPlainObject (input) {
-  return input !== null && typeof input === 'object' && input.constructor === Object
 }
 
 /**

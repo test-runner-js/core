@@ -12,11 +12,13 @@ Isomophic test runner. Takes a test object model as input, runs it streaming pro
 
 ## Synopsis
 
+This trivial example creates a test object model containing one passing and one failing test. The model is passed to a TestRunnerCore instance, along with the default view, which then runs the tests printing the result to the console.
+
 ```js
 import TestRunnerCore from '../index.mjs'
 import Tom from 'test-object-model'
 
-/* Define a test model */
+/* Define a simple test model */
 const tom = new Tom()
 
 tom.test('A successful test', function () {
@@ -27,7 +29,36 @@ tom.test('A failing test', function () {
   throw new Error('This failed')
 })
 
-/* run the tests */
+/* send test-runner output to the default view  */
+const view = new DefaultView()
+
+/* run the tests defined in the test model */
+const runner = new TestRunnerCore(tom, { view })
+runner.start()
+```
+
+Output.
+
+```
+$ nodem tmp/synopsis.mjs
+
+Start: 2 tests loaded
+
+ ✓ tom A successful test [This passed]
+ ⨯ tom A failing test
+
+   Error: This failed
+       at TestContext.<anonymous> (file:///Users/lloyd/Documents/test-runner-js/test-runner-core/tmp/synopsis.mjs:13:9)
+       ...
+       at processTimers (internal/timers.js:475:7)
+
+
+Completed in 11ms. Pass: 1, fail: 1, skip: 0.
+```
+
+Instead of passing a `view` instance to `TestRunnerCore`, this example shows how to observe `runner` events and print your own output.
+
+```js
 const runner = new TestRunnerCore(tom)
 
 runner.on('state', (state, prevState) => {
