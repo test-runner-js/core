@@ -3,7 +3,7 @@
   "author": "Lloyd Brookes <75pound@gmail.com>",
   "version": "0.8.0",
   "description": "Minimal, extensible test runner.",
-  "repository": "https://github.com/test-runner-js/core",
+  "repository": "https://github.com/test-runner-js/test-runner-core",
   "main": "dist/index.js",
   "module": "index.mjs",
   "license": "MIT",
@@ -30,13 +30,13 @@
   },
   "dependencies": {
     "fsm-base": "^0.5.2",
-    "test-object-model": "^0.5.1"
+    "test-object-model": "^0.5.2"
   },
   "devDependencies": {
     "esm-runner": "^0.2.1",
-    "jsdoc-to-markdown": "^5.0.2",
+    "jsdoc-to-markdown": "^5.0.3",
     "node-fetch": "^2.6.0",
-    "rollup": "^1.27.1",
+    "rollup": "^1.27.4",
     "rollup-plugin-node-resolve": "^5.2.0",
     "sleep-anywhere": "^1.1.3"
   },

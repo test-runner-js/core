@@ -891,6 +891,7 @@
                 this.setState('pass', this, result);
                 return result
               } catch (err) {
+                this.result = err;
                 /**
                  * Test fail.
                  * @event module:test-object-model#fail
@@ -906,6 +907,7 @@
               return testResult
             }
           } catch (err) {
+            this.result = err;
             this.setState('fail', this, err);
             throw (err)
           }
