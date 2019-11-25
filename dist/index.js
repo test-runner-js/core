@@ -1131,6 +1131,18 @@
       })
     }
 
+    async run (tom) {
+      return tom.run().catch(err => {
+        this.state = 'fail';
+        if (this.options.debug) {
+          console.error('-----------------------\nDEBUG');
+          console.error('-----------------------');
+          console.error(err);
+          console.error('-----------------------');
+        }
+      })
+    }
+
     /**
      * Start the runner.
      */
@@ -1154,6 +1166,7 @@
        * @param testCount {number} - the numbers of tests
        */
       this.emit('start', testCount);
+      await this.run(this.tom);
       await this.runTomNode(this.tom);
       this.ended = true;
       if (this.state !== 'fail') {

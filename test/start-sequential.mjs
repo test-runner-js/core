@@ -10,7 +10,7 @@ const tom = new Tom()
 
 tom.test('timeout tests', async function () {
   const counts = []
-  const tom = new Tom('Sequential tests', null, { maxConcurrency: 1 })
+  const tom = new Tom('Sequential tests', { maxConcurrency: 1 })
   tom.test('one', function () {
     a.deepEqual(counts, [])
     return new Promise((resolve, reject) => {
@@ -44,7 +44,7 @@ tom.test('timeout tests', async function () {
 
 tom.test('http server tests', async function () {
   const counts = []
-  const tom = new Tom('Sequential tests', null, { maxConcurrency: 1 })
+  const tom = new Tom('Sequential tests', { maxConcurrency: 1 })
   tom.test('one', function () {
     const server = http.createServer((req, res) => {
       setTimeout(() => {

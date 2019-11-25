@@ -71,4 +71,16 @@ tom.test('run in parallel', async function () {
   a.deepEqual(actuals, [2, 1.1, 1, 2.1, 1.2, 2.2])
 })
 
+tom.test('runner.start(): single test, no children', async function () {
+  const counts = []
+  const tom = new Tom('one', () => {
+    counts.push('one')
+  })
+
+  const runner = new TestRunner(tom)
+  await runner.start()
+  a.deepEqual(counts, ['one'])
+  a.equal(tom.state, 'pass')
+})
+
 export default tom

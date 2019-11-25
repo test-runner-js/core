@@ -75,4 +75,16 @@ tom.test('runner states: fail, reject', async function () {
   return promise
 })
 
+tom.test('tom states: all pass or ignored', async function () {
+  const counts = []
+  const tom = new Tom()
+  tom.test('one', () => 1)
+  tom.test('two', () => 2)
+
+  const runner = new TestRunner(tom)
+  await runner.start()
+  const result = [tom.state, tom.children[0].state, tom.children[1].state]
+  a.deepEqual(result, ['ignored', 'pass', 'pass'])
+})
+
 export default tom

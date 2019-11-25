@@ -1,7 +1,7 @@
 [![view on npm](https://img.shields.io/npm/v/test-runner-core.svg)](https://www.npmjs.org/package/test-runner-core)
 [![npm module downloads](https://img.shields.io/npm/dt/test-runner-core.svg)](https://www.npmjs.org/package/test-runner-core)
-[![Build Status](https://travis-ci.org/test-runner-js/core.svg?branch=master)](https://travis-ci.org/test-runner-js/core)
-[![Dependency Status](https://badgen.net/david/dep/test-runner-js/core)](https://david-dm.org/test-runner-js/core)
+[![Build Status](https://travis-ci.org/test-runner-js/test-runner-core.svg?branch=master)](https://travis-ci.org/test-runner-js/test-runner-core)
+[![Dependency Status](https://badgen.net/david/dep/test-runner-js/test-runner-core)](https://david-dm.org/test-runner-js/test-runner-core)
 [![js-standard-style](https://img.shields.io/badge/code%20style-standard-brightgreen.svg)](https://github.com/feross/standard)
 
 ***This documentation is a work in progress.***
@@ -88,7 +88,7 @@ Test run complete. State: fail, passed: 1, failed: 1
 
 ## See also
 
-* [API docs](https://github.com/test-runner-js/core/blob/master/docs/API.md)
+* [API docs](https://github.com/test-runner-js/test-runner-core/blob/master/docs/API.md)
 
 * * *
 
