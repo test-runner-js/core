@@ -618,6 +618,10 @@ class TestContext {
      * The test index within the current set.
      */
     this.index = context.index;
+    /**
+     * Test run data.
+     */
+    this.data = undefined;
   }
 }
 
@@ -761,7 +765,7 @@ class Tom extends createMixin(Composite)(StateMachine) {
     this.ended = false;
 
     /**
-     * The value returned by the test function, if it ended successfully.
+     * If the test passed, the value returned by the test function. If it failed, the exception thrown or rejection reason.
      * @type {*}
      */
     this.result = undefined;
@@ -777,6 +781,34 @@ class Tom extends createMixin(Composite)(StateMachine) {
     this.markedOnly = options.only || false;
 
     this.options = options;
+
+    /**
+     * Test execution stats
+     * @namespace
+     */
+    this.stats = {
+      /**
+       * Start time.
+       * @type {number}
+       */
+      start: 0,
+      /**
+       * End time.
+       * @type {number}
+       */
+      end: 0,
+      /**
+       * Test execution duration.
+       * @type {number}
+       */
+      duration: 0
+    };
+
+    /**
+     * The text execution context.
+     * @type {TextContext}
+     */
+    this.context = undefined;
   }
 
   /**
@@ -785,6 +817,13 @@ class Tom extends createMixin(Composite)(StateMachine) {
    */
   toString () {
     return this.name
+  }
+
+  /**
+   * Add a test group.
+   */
+  group (name, options) {
+    return this.test(name, options)
   }
 
   /**
@@ -855,6 +894,7 @@ class Tom extends createMixin(Composite)(StateMachine) {
    * @fulfil {*}
    */
   async run () {
+    const performance = await this._getPerformance();
     if (this.testFn) {
       if (this.markedSkip) {
         this.setState('skipped', this);
@@ -867,15 +907,21 @@ class Tom extends createMixin(Composite)(StateMachine) {
          */
         this.emit('start', this);
 
+        this.stats.start = performance.now();
+
         try {
-          const testResult = this.testFn.call(new TestContext({
+          this.context = new TestContext({
             name: this.name,
             index: this.index
-          }));
+          });
+          const testResult = this.testFn.call(this.context);
           if (isPromise(testResult)) {
             try {
               const result = await Promise.race([testResult, raceTimeout(this.timeout)]);
               this.result = result;
+              this.stats.end = performance.now();
+              this.stats.duration = this.stats.end - this.stats.start;
+
               /**
                * Test pass.
                * @event module:test-object-model#pass
@@ -886,6 +932,9 @@ class Tom extends createMixin(Composite)(StateMachine) {
               return result
             } catch (err) {
               this.result = err;
+              this.stats.end = performance.now();
+              this.stats.duration = this.stats.end - this.stats.start;
+
               /**
                * Test fail.
                * @event module:test-object-model#fail
@@ -896,12 +945,16 @@ class Tom extends createMixin(Composite)(StateMachine) {
               return Promise.reject(err)
             }
           } else {
+            this.stats.end = performance.now();
+            this.stats.duration = this.stats.end - this.stats.start;
             this.result = testResult;
             this.setState('pass', this, testResult);
             return testResult
           }
         } catch (err) {
           this.result = err;
+          this.stats.end = performance.now();
+          this.stats.duration = this.stats.end - this.stats.start;
           this.setState('fail', this, err);
           throw (err)
         }
@@ -929,6 +982,15 @@ class Tom extends createMixin(Composite)(StateMachine) {
       this.resetState();
       this.markedSkip = this.options.skip || false;
       this.markedOnly = this.options.only || false;
+    }
+  }
+
+  async _getPerformance () {
+    if (typeof window === 'undefined') {
+      const { performance } = await import('perf_hooks');
+      return performance
+    } else {
+      return performance
     }
   }
 
@@ -1141,6 +1203,9 @@ class TestRunnerCore extends StateMachine {
    * Start the runner.
    */
   async start () {
+    if (this.view && this.view.init) {
+      await this.view.init();
+    }
     this.stats.start = Date.now();
 
     /* encapsulate this as a TOM method? */

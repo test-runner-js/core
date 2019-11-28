@@ -8,7 +8,10 @@ module.exports = [
       format: 'umd',
       name: 'TestRunnerCore'
     },
-    plugins: [resolve()]
+    external: ['perf_hooks'],
+    plugins: [resolve({
+      preferBuiltins: true
+    })]
   },
   {
     input: 'index.mjs',
@@ -16,6 +19,9 @@ module.exports = [
       file: 'dist/index.mjs',
       format: 'esm'
     },
-    plugins: [resolve()]
+    external: ['perf_hooks'],
+    plugins: [resolve({
+      preferBuiltins: true
+    })]
   }
 ]

@@ -175,6 +175,9 @@ class TestRunnerCore extends StateMachine {
    * Start the runner.
    */
   async start () {
+    if (this.view && this.view.init) {
+      await this.view.init()
+    }
     this.stats.start = Date.now()
 
     /* encapsulate this as a TOM method? */
