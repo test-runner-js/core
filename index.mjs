@@ -16,7 +16,6 @@ import TOM from 'test-object-model'
  */
 class TestRunnerCore extends StateMachine {
   constructor (tom, options = {}) {
-
     /* validation */
     TOM.validate(tom)
 
@@ -129,31 +128,43 @@ class TestRunnerCore extends StateMachine {
   async runTomNode (tom) {
     /* create array of job functions */
     const tests = [...tom.children]
-    const jobs = tests.map(test => {
-      return () => {
-        const promise = test.run()
-          .catch(err => {
-            /**
-             * Test suite failed
-             * @event module:test-runner-core#fail
-             */
-            this.state = 'fail'
-            if (this.options.debug) {
-              console.error('-----------------------\nDEBUG')
-              console.error('-----------------------')
-              console.error(err)
-              console.error('-----------------------')
-            }
-          })
-        return Promise.all([promise, this.runTomNode(test)])
-      }
-    })
+    const jobs = []
+    const beforeJobs = tests
+      .filter(t => t.markedBefore)
+      .map(test => {
+        return () => {
+          const promise = this.run(test)
+          return Promise.all([promise, this.runTomNode(test)])
+        }
+      })
+    const mainJobs = tests
+      .filter(t => !(t.markedBefore || t.markedAfter))
+      .map(test => {
+        return () => {
+          const promise = this.run(test)
+          return Promise.all([promise, this.runTomNode(test)])
+        }
+      })
+    const afterJobs = tests
+      .filter(t => t.markedAfter)
+      .map(test => {
+        return () => {
+          const promise = this.run(test)
+          return Promise.all([promise, this.runTomNode(test)])
+        }
+      })
+
+    jobs.push(...beforeJobs, ...mainJobs, ...afterJobs)
 
     return new Promise((resolve, reject) => {
       /* isomorphic nextTick */
       setTimeout(async () => {
-        const queue = new Queue(jobs, tom.maxConcurrency)
-        await queue.process()
+        const beforeQueue = new Queue(beforeJobs, tom.maxConcurrency)
+        await beforeQueue.process()
+        const mainQueue = new Queue(mainJobs, tom.maxConcurrency)
+        await mainQueue.process()
+        const afterQueue = new Queue(afterJobs, tom.maxConcurrency)
+        await afterQueue.process()
         resolve()
       }, 0)
     })

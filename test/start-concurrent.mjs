@@ -1,8 +1,8 @@
 import Tom from 'test-object-model'
 import TestRunner from '../index.mjs'
 import assert from 'assert'
-const a = assert.strict
 import sleep from '../node_modules/sleep-anywhere/index.mjs'
+const a = assert.strict
 
 const tom = new Tom()
 

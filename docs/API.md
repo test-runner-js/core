@@ -16,7 +16,6 @@
         * ["test-fail" (test, err)](#module_test-runner-core--TestRunnerCore+event_test-fail)
         * ["test-skip" (test)](#module_test-runner-core--TestRunnerCore+event_test-skip)
         * ["test-ignore" (test)](#module_test-runner-core--TestRunnerCore+event_test-ignore)
-        * ["fail"](#module_test-runner-core--TestRunnerCore+event_fail)
         * ["in-progress" (testCount)](#module_test-runner-core--TestRunnerCore+event_in-progress)
         * ["start" (testCount)](#module_test-runner-core--TestRunnerCore+event_start)
         * ["pass"](#module_test-runner-core--TestRunnerCore+event_pass)
@@ -140,12 +139,6 @@ Test ignore.
 | --- | --- | --- |
 | test | <code>TestObjectModel</code> | The test node. |
 
-<a name="module_test-runner-core--TestRunnerCore+event_fail"></a>
-
-#### "fail"
-Test suite failed
-
-**Kind**: event emitted by [<code>TestRunnerCore</code>](#exp_module_test-runner-core--TestRunnerCore)  
 <a name="module_test-runner-core--TestRunnerCore+event_in-progress"></a>
 
 #### "in-progress" (testCount)

@@ -354,7 +354,7 @@ class Queue {
   }
 
   async process () {
-    let output = [];
+    const output = [];
     while (this.jobs.length) {
       const slotsAvailable = this.maxConcurrency - this.activeCount;
       if (slotsAvailable > 0) {
@@ -779,6 +779,8 @@ class Tom extends createMixin(Composite)(StateMachine) {
 
     this.markedSkip = options.skip || false;
     this.markedOnly = options.only || false;
+    this.markedBefore = options.before || false;
+    this.markedAfter = options.after || false;
 
     this.options = options;
 
@@ -828,6 +830,9 @@ class Tom extends createMixin(Composite)(StateMachine) {
 
   /**
    * Add a test.
+   * @param {string} - Test name.
+   * @param {function} - Test function.
+   * @param {objects} - Config.
    * @return {module:test-object-model}
    */
   test (name, testFn, options) {
@@ -848,22 +853,36 @@ class Tom extends createMixin(Composite)(StateMachine) {
    * Add a skipped test
    * @return {module:test-object-model}
    */
-  skip (name, testFn, options) {
-    options = options || {};
+  skip (name, testFn, options = {}) {
     options.skip = true;
-    const test = this.test(name, testFn, options);
-    return test
+    return this.test(name, testFn, options)
   }
 
   /**
    * Add an only test
    * @return {module:test-object-model}
    */
-  only (name, testFn, options) {
-    options = options || {};
+  only (name, testFn, options = {}) {
     options.only = true;
-    const test = this.test(name, testFn, options);
-    return test
+    return this.test(name, testFn, options)
+  }
+
+  /**
+   * Add a test which must run and complete before the others.
+   * @return {module:test-object-model}
+   */
+  before (name, testFn, options = {}) {
+    options.before = true;
+    return this.test(name, testFn, options)
+  }
+
+  /**
+   * Add a test which must run and complete after the others.
+   * @return {module:test-object-model}
+   */
+  after (name, testFn, options = {}) {
+    options.after = true;
+    return this.test(name, testFn, options)
   }
 
   _onlyExists () {
@@ -1044,7 +1063,6 @@ class Tom extends createMixin(Composite)(StateMachine) {
  */
 class TestRunnerCore extends StateMachine {
   constructor (tom, options = {}) {
-
     /* validation */
     Tom.validate(tom);
 
@@ -1157,31 +1175,40 @@ class TestRunnerCore extends StateMachine {
   async runTomNode (tom) {
     /* create array of job functions */
     const tests = [...tom.children];
-    const jobs = tests.map(test => {
-      return () => {
-        const promise = test.run()
-          .catch(err => {
-            /**
-             * Test suite failed
-             * @event module:test-runner-core#fail
-             */
-            this.state = 'fail';
-            if (this.options.debug) {
-              console.error('-----------------------\nDEBUG');
-              console.error('-----------------------');
-              console.error(err);
-              console.error('-----------------------');
-            }
-          });
-        return Promise.all([promise, this.runTomNode(test)])
-      }
-    });
+    const beforeJobs = tests
+      .filter(t => t.markedBefore)
+      .map(test => {
+        return () => {
+          const promise = this.run(test);
+          return Promise.all([promise, this.runTomNode(test)])
+        }
+      });
+    const mainJobs = tests
+      .filter(t => !(t.markedBefore || t.markedAfter))
+      .map(test => {
+        return () => {
+          const promise = this.run(test);
+          return Promise.all([promise, this.runTomNode(test)])
+        }
+      });
+    const afterJobs = tests
+      .filter(t => t.markedAfter)
+      .map(test => {
+        return () => {
+          const promise = this.run(test);
+          return Promise.all([promise, this.runTomNode(test)])
+        }
+      });
 
     return new Promise((resolve, reject) => {
       /* isomorphic nextTick */
       setTimeout(async () => {
-        const queue = new Queue(jobs, tom.maxConcurrency);
-        await queue.process();
+        const beforeQueue = new Queue(beforeJobs, tom.maxConcurrency);
+        await beforeQueue.process();
+        const mainQueue = new Queue(mainJobs, tom.maxConcurrency);
+        await mainQueue.process();
+        const afterQueue = new Queue(afterJobs, tom.maxConcurrency);
+        await afterQueue.process();
         resolve();
       }, 0);
     })

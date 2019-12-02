@@ -1,10 +1,10 @@
 import TestRunner from '../index.mjs'
 import Tom from 'test-object-model'
 import assert from 'assert'
-const a = assert.strict
 import http from 'http'
 import fetch from 'node-fetch'
 import sleep from '../node_modules/sleep-anywhere/index.mjs'
+const a = assert.strict
 
 const tom = new Tom()
 

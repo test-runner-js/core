@@ -1,8 +1,8 @@
 import Tom from 'test-object-model'
 import Queue from '../lib/queue.mjs'
 import assert from 'assert'
+import sleep from 'sleep-anywhere'
 const a = assert.strict
-import sleep from '../node_modules/sleep-anywhere/index.mjs'
 
 const tom = new Tom()
 
