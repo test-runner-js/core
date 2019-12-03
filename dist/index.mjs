@@ -726,6 +726,7 @@ class Tom extends createMixin(Composite)(StateMachine) {
       { from: 'pending', to: 'in-progress' },
       { from: 'pending', to: 'skipped' },
       { from: 'pending', to: 'ignored' },
+      { from: 'pending', to: 'todo' },
       { from: 'in-progress', to: 'pass' },
       { from: 'in-progress', to: 'fail' }
     ]);
@@ -781,6 +782,7 @@ class Tom extends createMixin(Composite)(StateMachine) {
     this.markedOnly = options.only || false;
     this.markedBefore = options.before || false;
     this.markedAfter = options.after || false;
+    this.markedTodo = options.todo || false;
 
     this.options = options;
 
@@ -803,7 +805,11 @@ class Tom extends createMixin(Composite)(StateMachine) {
        * Test execution duration.
        * @type {number}
        */
-      duration: 0
+      duration: 0,
+      finish: function (end) {
+        this.end = end;
+        this.duration = this.end - this.start;
+      }
     };
 
     /**
@@ -877,6 +883,15 @@ class Tom extends createMixin(Composite)(StateMachine) {
   }
 
   /**
+   * Add a test but don't run it and mark as incomplete.
+   * @return {module:test-object-model}
+   */
+  todo (name, testFn, options = {}) {
+    options.todo = true;
+    return this.test(name, testFn, options)
+  }
+
+  /**
    * Add a test which must run and complete after the others.
    * @return {module:test-object-model}
    */
@@ -917,6 +932,8 @@ class Tom extends createMixin(Composite)(StateMachine) {
     if (this.testFn) {
       if (this.markedSkip) {
         this.setState('skipped', this);
+      } else if (this.markedTodo) {
+        this.setState('todo', this);
       } else {
         this.setState('in-progress', this);
         /**
@@ -938,8 +955,7 @@ class Tom extends createMixin(Composite)(StateMachine) {
             try {
               const result = await Promise.race([testResult, raceTimeout(this.timeout)]);
               this.result = result;
-              this.stats.end = performance.now();
-              this.stats.duration = this.stats.end - this.stats.start;
+              this.stats.finish(performance.now());
 
               /**
                * Test pass.
@@ -951,8 +967,7 @@ class Tom extends createMixin(Composite)(StateMachine) {
               return result
             } catch (err) {
               this.result = err;
-              this.stats.end = performance.now();
-              this.stats.duration = this.stats.end - this.stats.start;
+              this.stats.finish(performance.now());
 
               /**
                * Test fail.
@@ -964,27 +979,29 @@ class Tom extends createMixin(Composite)(StateMachine) {
               return Promise.reject(err)
             }
           } else {
-            this.stats.end = performance.now();
-            this.stats.duration = this.stats.end - this.stats.start;
+            this.stats.finish(performance.now());
             this.result = testResult;
             this.setState('pass', this, testResult);
             return testResult
           }
         } catch (err) {
           this.result = err;
-          this.stats.end = performance.now();
-          this.stats.duration = this.stats.end - this.stats.start;
+          this.stats.finish(performance.now());
           this.setState('fail', this, err);
           throw (err)
         }
       }
     } else {
-      /**
-       * Test ignored.
-       * @event module:test-object-model#ignored
-       * @param test {TestObjectModel} - The test node.
-       */
-      this.setState('ignored', this);
+      if (this.markedTodo) {
+        this.setState('todo', this);
+      } else {
+        /**
+         * Test ignored.
+         * @event module:test-object-model#ignored
+         * @param test {TestObjectModel} - The test node.
+         */
+        this.setState('ignored', this);
+      }
     }
   }
 
@@ -1169,6 +1186,16 @@ class TestRunnerCore extends StateMachine {
        */
       this.emit('test-ignore', ...args);
       if (this.view && this.view.testIgnore) this.view.testIgnore(...args);
+    });
+    this.tom.on('todo', (...args) => {
+      this.stats.todo++;
+      /**
+       * Test todo.
+       * @event module:test-runner-core#test-todo
+       * @param test {TestObjectModel} - The test node.
+       */
+      this.emit('test-todo', ...args);
+      if (this.view && this.view.testTodo) this.view.testTodo(...args);
     });
   }
 

@@ -123,6 +123,16 @@ class TestRunnerCore extends StateMachine {
       this.emit('test-ignore', ...args)
       if (this.view && this.view.testIgnore) this.view.testIgnore(...args)
     })
+    this.tom.on('todo', (...args) => {
+      this.stats.todo++
+      /**
+       * Test todo.
+       * @event module:test-runner-core#test-todo
+       * @param test {TestObjectModel} - The test node.
+       */
+      this.emit('test-todo', ...args)
+      if (this.view && this.view.testTodo) this.view.testTodo(...args)
+    })
   }
 
   async runTomNode (tom) {

@@ -16,6 +16,7 @@
         * ["test-fail" (test, err)](#module_test-runner-core--TestRunnerCore+event_test-fail)
         * ["test-skip" (test)](#module_test-runner-core--TestRunnerCore+event_test-skip)
         * ["test-ignore" (test)](#module_test-runner-core--TestRunnerCore+event_test-ignore)
+        * ["test-todo" (test)](#module_test-runner-core--TestRunnerCore+event_test-todo)
         * ["in-progress" (testCount)](#module_test-runner-core--TestRunnerCore+event_in-progress)
         * ["start" (testCount)](#module_test-runner-core--TestRunnerCore+event_start)
         * ["pass"](#module_test-runner-core--TestRunnerCore+event_pass)
@@ -132,6 +133,17 @@ Test skip.
 
 #### "test-ignore" (test)
 Test ignore.
+
+**Kind**: event emitted by [<code>TestRunnerCore</code>](#exp_module_test-runner-core--TestRunnerCore)  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| test | <code>TestObjectModel</code> | The test node. |
+
+<a name="module_test-runner-core--TestRunnerCore+event_test-todo"></a>
+
+#### "test-todo" (test)
+Test todo.
 
 **Kind**: event emitted by [<code>TestRunnerCore</code>](#exp_module_test-runner-core--TestRunnerCore)  
 

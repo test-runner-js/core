@@ -46,7 +46,7 @@ tom.test('run in parallel', async function () {
     actuals.push(1)
   })
   tom.test('two', async () => {
-    await sleep(20)
+    await sleep(15)
     actuals.push(1.1)
   })
   tom.test(async () => {
