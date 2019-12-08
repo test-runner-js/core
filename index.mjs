@@ -73,6 +73,7 @@ class TestRunnerCore extends StateMachine {
 
     /* translate tom to runner events */
     this.tom.on('in-progress', (...args) => {
+      this.stats.inProgress++
       /**
        * Test start.
        * @event module:test-runner-core#test-start
@@ -83,6 +84,7 @@ class TestRunnerCore extends StateMachine {
     })
     this.tom.on('pass', (...args) => {
       this.stats.pass++
+      this.stats.inProgress--
       /**
        * Test pass.
        * @event module:test-runner-core#test-pass
@@ -94,6 +96,7 @@ class TestRunnerCore extends StateMachine {
     })
     this.tom.on('fail', (...args) => {
       this.stats.fail++
+      this.stats.inProgress--
       /**
        * Test fail.
        * @event module:test-runner-core#test-fail

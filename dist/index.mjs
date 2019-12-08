@@ -387,19 +387,21 @@ class Stats {
     /**
      * Runner start time.
      */
-    this.start = 0;
+    this.startTime = 0;
     /**
      * Runner end time.
      */
-    this.end = 0;
+    this.endTime = 0;
     this.pass = 0;
     this.fail = 0;
     this.skip = 0;
+    this.todo = 0;
     this.ignore = 0;
+    this.inProgress = 0;
   }
 
   timeElapsed () {
-    return this.end - this.start
+    return this.endTime - this.startTime
   }
 }
 
@@ -1145,6 +1147,7 @@ class TestRunnerCore extends StateMachine {
 
     /* translate tom to runner events */
     this.tom.on('in-progress', (...args) => {
+      this.stats.inProgress++;
       /**
        * Test start.
        * @event module:test-runner-core#test-start
@@ -1155,6 +1158,7 @@ class TestRunnerCore extends StateMachine {
     });
     this.tom.on('pass', (...args) => {
       this.stats.pass++;
+      this.stats.inProgress--;
       /**
        * Test pass.
        * @event module:test-runner-core#test-pass
@@ -1166,6 +1170,7 @@ class TestRunnerCore extends StateMachine {
     });
     this.tom.on('fail', (...args) => {
       this.stats.fail++;
+      this.stats.inProgress--;
       /**
        * Test fail.
        * @event module:test-runner-core#test-fail
