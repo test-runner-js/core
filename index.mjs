@@ -72,7 +72,7 @@ class TestRunnerCore extends StateMachine {
     })
 
     /* translate tom to runner events */
-    this.tom.on('start', (...args) => {
+    this.tom.on('in-progress', (...args) => {
       /**
        * Test start.
        * @event module:test-runner-core#test-start
@@ -140,7 +140,7 @@ class TestRunnerCore extends StateMachine {
     const tests = [...tom.children]
     const jobs = []
     const beforeJobs = tests
-      .filter(t => t.markedBefore)
+      .filter(t => t.options.before)
       .map(test => {
         return () => {
           const promise = this.run(test)
@@ -148,7 +148,7 @@ class TestRunnerCore extends StateMachine {
         }
       })
     const mainJobs = tests
-      .filter(t => !(t.markedBefore || t.markedAfter))
+      .filter(t => !(t.options.before || t.options.after))
       .map(test => {
         return () => {
           const promise = this.run(test)
@@ -156,7 +156,7 @@ class TestRunnerCore extends StateMachine {
         }
       })
     const afterJobs = tests
-      .filter(t => t.markedAfter)
+      .filter(t => t.options.after)
       .map(test => {
         return () => {
           const promise = this.run(test)
@@ -169,11 +169,11 @@ class TestRunnerCore extends StateMachine {
     return new Promise((resolve, reject) => {
       /* isomorphic nextTick */
       setTimeout(async () => {
-        const beforeQueue = new Queue(beforeJobs, tom.maxConcurrency)
+        const beforeQueue = new Queue(beforeJobs, tom.options.maxConcurrency)
         await beforeQueue.process()
-        const mainQueue = new Queue(mainJobs, tom.maxConcurrency)
+        const mainQueue = new Queue(mainJobs, tom.options.maxConcurrency)
         await mainQueue.process()
-        const afterQueue = new Queue(afterJobs, tom.maxConcurrency)
+        const afterQueue = new Queue(afterJobs, tom.options.maxConcurrency)
         await afterQueue.process()
         resolve()
       }, 0)

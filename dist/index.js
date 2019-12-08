@@ -708,6 +708,9 @@
    * @param {number} [options.maxConcurrency] - The max concurrency that child tests will be able to run. For example, specifying `2` will allow child tests to run two at a time. Defaults to `10`.
    * @param {boolean} [options.skip] - Skip this test.
    * @param {boolean} [options.only] - Only run this test.
+   * @param {boolean} [options.before] - Run this test before its siblings.
+   * @param {boolean} [options.after] - Run this test after its siblings.
+   * @param {boolean} [options.todo] - Mark this test as incomplete.
    * @alias module:test-object-model
    */
   class Tom extends createMixin(Composite)(StateMachine) {
@@ -726,8 +729,11 @@
         testFn = undefined;
         name = '';
       }
-      options = Object.assign({ timeout: 10000 }, options);
-      name = name || 'tom';
+
+      /**
+       * Test state. Can be one of `pending`, `in-progress`, `skipped`, `ignored`, `todo`, `pass` or `fail`.
+       * @member {string} module:test-object-model#state
+       */
       super('pending', [
         { from: 'pending', to: 'in-progress' },
         { from: 'pending', to: 'skipped' },
@@ -736,11 +742,12 @@
         { from: 'in-progress', to: 'pass' },
         { from: 'in-progress', to: 'fail' }
       ]);
+
       /**
        * Test name
        * @type {string}
        */
-      this.name = name;
+      this.name = name || 'tom';
 
       /**
        * A function which will either succeed, reject or throw.
@@ -755,17 +762,6 @@
       this.index = 1;
 
       /**
-       * Test state. Can be one of `pending`, `start`, `skip`, `pass` or `fail`.
-       * @member {string} module:test-object-model#state
-       */
-
-      /**
-       * A time limit for the test in ms.
-       * @type {number}
-       */
-      this.timeout = options.timeout;
-
-      /**
        * True if the test has ended.
        * @type {boolean}
        */
@@ -777,19 +773,20 @@
        */
       this.result = undefined;
 
+      options = Object.assign({
+        timeout: 10000,
+        maxConcurrency: 10
+      }, options);
+
       /**
-       * The max concurrency that child tests will be able to run. For example, specifying `2` will allow child tests to run two at a time.
-       * @type {number}
-       * @default 10
+       * True if one or more different tests are marked as `only`.
+       * @type {boolean}
        */
-      this.maxConcurrency = options.maxConcurrency || 10;
+      this.disabledByOnly = false;
 
-      this.markedSkip = options.skip || false;
-      this.markedOnly = options.only || false;
-      this.markedBefore = options.before || false;
-      this.markedAfter = options.after || false;
-      this.markedTodo = options.todo || false;
-
+      /**
+       * The options set when creating the test.
+       */
       this.options = options;
 
       /**
@@ -835,6 +832,9 @@
 
     /**
      * Add a test group.
+     * @param {string} - Test name.
+     * @param {objects} - Config.
+     * @return {module:test-object-model}
      */
     group (name, options) {
       return this.test(name, options)
@@ -847,8 +847,8 @@
      * @param {objects} - Config.
      * @return {module:test-object-model}
      */
-    test (name, testFn, options) {
-      /* validation */
+    test (name, testFn, options = {}) {
+      /* validate name */
       for (const child of this) {
         if (child.name === name) {
           throw new Error('Duplicate name: ' + name)
@@ -857,7 +857,7 @@
       const test = new this.constructor(name, testFn, options);
       this.add(test);
       test.index = this.children.length;
-      this._skipLogic();
+      test._disableNonOnlyTests();
       return test
     }
 
@@ -907,13 +907,13 @@
     }
 
     _onlyExists () {
-      return Array.from(this.root()).some(t => t.markedOnly)
+      return Array.from(this.root()).some(t => t.options.only)
     }
 
-    _skipLogic () {
+    _disableNonOnlyTests () {
       if (this._onlyExists()) {
         for (const test of this.root()) {
-          test.markedSkip = !test.markedOnly;
+          test.disabledByOnly = !test.options.only;
         }
       }
     }
@@ -936,18 +936,27 @@
     async run () {
       const performance = await this._getPerformance();
       if (this.testFn) {
-        if (this.markedSkip) {
-          this.setState('skipped', this);
-        } else if (this.markedTodo) {
-          this.setState('todo', this);
-        } else {
-          this.setState('in-progress', this);
+        if (this.disabledByOnly || this.options.skip) {
           /**
-           * Test start.
-           * @event module:test-object-model#start
+           * Test skipped.
+           * @event module:test-object-model#skipped
            * @param test {TestObjectModel} - The test node.
            */
-          this.emit('start', this);
+          this.setState('skipped', this);
+        } else if (this.options.todo) {
+          /**
+           * Test todo.
+           * @event module:test-object-model#todo
+           * @param test {TestObjectModel} - The test node.
+           */
+          this.setState('todo', this);
+        } else {
+          /**
+           * Test in-progress.
+           * @event module:test-object-model#in-progress
+           * @param test {TestObjectModel} - The test node.
+           */
+          this.setState('in-progress', this);
 
           this.stats.start = performance.now();
 
@@ -959,7 +968,7 @@
             const testResult = this.testFn.call(this.context);
             if (isPromise(testResult)) {
               try {
-                const result = await Promise.race([testResult, raceTimeout(this.timeout)]);
+                const result = await Promise.race([testResult, raceTimeout(this.options.timeout)]);
                 this.result = result;
                 this.stats.finish(performance.now());
 
@@ -998,7 +1007,7 @@
           }
         }
       } else {
-        if (this.markedTodo) {
+        if (this.options.todo) {
           this.setState('todo', this);
         } else {
           /**
@@ -1022,8 +1031,7 @@
       } else {
         this.index = 1;
         this.resetState();
-        this.markedSkip = this.options.skip || false;
-        this.markedOnly = this.options.only || false;
+        this.disabledByOnly = false;
       }
     }
 
@@ -1032,7 +1040,7 @@
         const { performance } = await import('perf_hooks');
         return performance
       } else {
-        return performance
+        return window.performance
       }
     }
 
@@ -1054,7 +1062,7 @@
         test = tests[0];
         this.validate(test);
       }
-      test._skipLogic();
+      test._disableNonOnlyTests();
       return test
     }
 
@@ -1142,7 +1150,7 @@
       });
 
       /* translate tom to runner events */
-      this.tom.on('start', (...args) => {
+      this.tom.on('in-progress', (...args) => {
         /**
          * Test start.
          * @event module:test-runner-core#test-start
@@ -1209,7 +1217,7 @@
       /* create array of job functions */
       const tests = [...tom.children];
       const beforeJobs = tests
-        .filter(t => t.markedBefore)
+        .filter(t => t.options.before)
         .map(test => {
           return () => {
             const promise = this.run(test);
@@ -1217,7 +1225,7 @@
           }
         });
       const mainJobs = tests
-        .filter(t => !(t.markedBefore || t.markedAfter))
+        .filter(t => !(t.options.before || t.options.after))
         .map(test => {
           return () => {
             const promise = this.run(test);
@@ -1225,7 +1233,7 @@
           }
         });
       const afterJobs = tests
-        .filter(t => t.markedAfter)
+        .filter(t => t.options.after)
         .map(test => {
           return () => {
             const promise = this.run(test);
@@ -1236,11 +1244,11 @@
       return new Promise((resolve, reject) => {
         /* isomorphic nextTick */
         setTimeout(async () => {
-          const beforeQueue = new Queue(beforeJobs, tom.maxConcurrency);
+          const beforeQueue = new Queue(beforeJobs, tom.options.maxConcurrency);
           await beforeQueue.process();
-          const mainQueue = new Queue(mainJobs, tom.maxConcurrency);
+          const mainQueue = new Queue(mainJobs, tom.options.maxConcurrency);
           await mainQueue.process();
-          const afterQueue = new Queue(afterJobs, tom.maxConcurrency);
+          const afterQueue = new Queue(afterJobs, tom.options.maxConcurrency);
           await afterQueue.process();
           resolve();
         }, 0);

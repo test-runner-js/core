@@ -30,14 +30,14 @@
   },
   "dependencies": {
     "fsm-base": "^0.5.2",
-    "test-object-model": "^0.5.10"
+    "test-object-model": "^0.6.0"
   },
   "devDependencies": {
     "esm-runner": "^0.3.3",
     "isomorphic-assert": "^0.1.1",
     "jsdoc-to-markdown": "^5.0.3",
     "node-fetch": "^2.6.0",
-    "rollup": "^1.27.8",
+    "rollup": "^1.27.9",
     "rollup-plugin-node-resolve": "^5.2.0",
     "sleep-anywhere": "^1.1.3"
   },
