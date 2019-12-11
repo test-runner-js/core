@@ -7,16 +7,24 @@ Custom view API.
 
 * [CustomView](#CustomView)
     * _instance_
+        * [.init()](#CustomView+init) ⇒ <code>Promise</code>
         * [.start(count)](#CustomView+start)
         * [.testStart(test)](#CustomView+testStart)
         * [.testPass(test, result)](#CustomView+testPass)
         * [.testFail(test, err)](#CustomView+testFail)
         * [.testSkip(test)](#CustomView+testSkip)
         * [.testIgnore(test)](#CustomView+testIgnore)
+        * [.testTodo(test)](#CustomView+testTodo)
         * [.end()](#CustomView+end)
     * _static_
         * [.optionDefinitions()](#CustomView.optionDefinitions) ⇒ <code>Array.&lt;OptionDefinition&gt;</code>
 
+<a name="CustomView+init"></a>
+
+### customView.init() ⇒ <code>Promise</code>
+An asynchronous method invoked by the runner just before the test run begins.
+
+**Kind**: instance method of [<code>CustomView</code>](#CustomView)  
 <a name="CustomView+start"></a>
 
 ### customView.start(count)
@@ -78,6 +86,17 @@ Test skipped.
 
 ### customView.testIgnore(test)
 Test ignored.
+
+**Kind**: instance method of [<code>CustomView</code>](#CustomView)  
+
+| Param | Type |
+| --- | --- |
+| test | <code>Tom</code> | 
+
+<a name="CustomView+testTodo"></a>
+
+### customView.testTodo(test)
+Test todo.
 
 **Kind**: instance method of [<code>CustomView</code>](#CustomView)  
 

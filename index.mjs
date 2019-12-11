@@ -1,7 +1,7 @@
-import StateMachine from 'fsm-base'
+import StateMachine from 'fsm-base/index.mjs'
 import Queue from './lib/queue.mjs'
 import Stats from './lib/stats.mjs'
-import TOM from 'test-object-model'
+import TOM from 'test-object-model/index.mjs'
 
 /**
  * @module test-runner-core

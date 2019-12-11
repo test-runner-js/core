@@ -693,6 +693,26 @@ function isPromise (input) {
 }
 
 /**
+ * Returns true if the input value is a string. The equivalent of `typeof input === 'string'` for use in funcitonal contexts.
+ * @param {*} - the input to test
+ * @returns {boolean}
+ * @static
+ */
+function isString (input) {
+  return typeof input === 'string'
+}
+
+/**
+ * Returns true if the input value is a function. The equivalent of `typeof input === 'function'` for use in funcitonal contexts.
+ * @param {*} - the input to test
+ * @returns {boolean}
+ * @static
+ */
+function isFunction (input) {
+  return typeof input === 'function'
+}
+
+/**
  * @module test-object-model
  */
 
@@ -707,23 +727,31 @@ function isPromise (input) {
  * @param {boolean} [options.before] - Run this test before its siblings.
  * @param {boolean} [options.after] - Run this test after its siblings.
  * @param {boolean} [options.todo] - Mark this test as incomplete.
+ * @param {boolean} [options.group] - Mark this test as a group.
  * @alias module:test-object-model
  */
 class Tom extends createMixin(Composite)(StateMachine) {
   constructor (name, testFn, options) {
-    if (typeof name === 'string') {
+    if (name) {
+      if (isString(name)) {
+        if (isPlainObject(testFn)) {
+          options = testFn;
+          testFn = undefined;
+        }
+      } else if (isFunction(name)) {
+        options = testFn;
+        testFn = name;
+        name = '';
+      } else if (isPlainObject(name)) {
+        options = name;
+        testFn = undefined;
+        name = '';
+      }
+    } else {
       if (isPlainObject(testFn)) {
         options = testFn;
         testFn = undefined;
       }
-    } else if (typeof name === 'function') {
-      options = testFn;
-      testFn = name;
-      name = '';
-    } else if (typeof name === 'object') {
-      options = name;
-      testFn = undefined;
-      name = '';
     }
 
     /**
@@ -769,10 +797,9 @@ class Tom extends createMixin(Composite)(StateMachine) {
      */
     this.result = undefined;
 
-    options = Object.assign({
-      timeout: 10000,
-      maxConcurrency: 10
-    }, options);
+    options = Object.assign({}, options);
+    options.maxConcurrency = options.maxConcurrency || 10;
+    options.timeout = options.timeout || 10000;
 
     /**
      * True if one or more different tests are marked as `only`.
@@ -819,6 +846,34 @@ class Tom extends createMixin(Composite)(StateMachine) {
   }
 
   /**
+   * Returns `test`, `group` or `todo`.
+   * @returns {string}
+   */
+  get type () {
+    if (this.options.group) {
+      return 'group'
+    } else if (this.options.todo) {
+      return 'todo'
+    } else {
+      if (this.testFn && !this.children.length) {
+        return 'test'
+      } else if (!this.testFn && this.children.length) {
+        return 'group'
+      } else {
+        return 'todo'
+      }
+    }
+  }
+
+  /**
+   * Returns `true` if this test was marked to be skipped by usage of `skip` or `only`.
+   * @returns {booolean}
+   */
+  get toSkip () {
+    return this.disabledByOnly || this.options.skip
+  }
+
+  /**
    * Returns the test name.
    * @returns {string}
    */
@@ -832,7 +887,8 @@ class Tom extends createMixin(Composite)(StateMachine) {
    * @param {objects} - Config.
    * @return {module:test-object-model}
    */
-  group (name, options) {
+  group (name, options = {}) {
+    options.group = true;
     return this.test(name, options)
   }
 
@@ -932,7 +988,7 @@ class Tom extends createMixin(Composite)(StateMachine) {
   async run () {
     const performance = await this._getPerformance();
     if (this.testFn) {
-      if (this.disabledByOnly || this.options.skip) {
+      if (this.toSkip) {
         /**
          * Test skipped.
          * @event module:test-object-model#skipped
