@@ -10,8 +10,8 @@ Custom view API.
         * [.init()](#CustomView+init) ⇒ <code>Promise</code>
         * [.start(count)](#CustomView+start)
         * [.testStart(test)](#CustomView+testStart)
-        * [.testPass(test, result)](#CustomView+testPass)
-        * [.testFail(test, err)](#CustomView+testFail)
+        * [.testPass(test)](#CustomView+testPass)
+        * [.testFail(test)](#CustomView+testFail)
         * [.testSkip(test)](#CustomView+testSkip)
         * [.testIgnore(test)](#CustomView+testIgnore)
         * [.testTodo(test)](#CustomView+testTodo)
@@ -49,7 +49,7 @@ Test start
 
 <a name="CustomView+testPass"></a>
 
-### customView.testPass(test, result)
+### customView.testPass(test)
 Test passed.
 
 **Kind**: instance method of [<code>CustomView</code>](#CustomView)  
@@ -57,19 +57,17 @@ Test passed.
 | Param | Type |
 | --- | --- |
 | test | <code>Tom</code> | 
-| result | <code>\*</code> | 
 
 <a name="CustomView+testFail"></a>
 
-### customView.testFail(test, err)
-Test passed.
+### customView.testFail(test)
+Test failed.
 
 **Kind**: instance method of [<code>CustomView</code>](#CustomView)  
 
 | Param | Type |
 | --- | --- |
 | test | <code>Tom</code> | 
-| err | <code>\*</code> | 
 
 <a name="CustomView+testSkip"></a>
 
