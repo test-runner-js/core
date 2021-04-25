@@ -4,9 +4,9 @@
   "version": "0.8.6",
   "description": "Minimal, extensible test runner.",
   "repository": "https://github.com/test-runner-js/test-runner-core",
-  "main": "index.mjs",
-  "exports": "index.mjs",
-  "module": "index.mjs",
+  "main": "./index.mjs",
+  "exports": "./index.mjs",
+  "module": "./index.mjs",
   "license": "MIT",
   "keywords": [
     "test",
@@ -30,7 +30,7 @@
   },
   "dependencies": {
     "fsm-base": "^0.6.0",
-    "test-object-model": "^0.6.1"
+    "test-object-model": "^0.7.1"
   },
   "devDependencies": {
     "isomorphic-assert": "^0.2.0",
@@ -49,6 +49,7 @@
   },
   "files": [
     "lib",
+    "dist",
     "index.mjs"
   ]
 }

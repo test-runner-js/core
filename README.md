@@ -1,18 +1,19 @@
-[![view on npm](https://img.shields.io/npm/v/test-runner-core.svg)](https://www.npmjs.org/package/test-runner-core)
-[![npm module downloads](https://img.shields.io/npm/dt/test-runner-core.svg)](https://www.npmjs.org/package/test-runner-core)
+[![view on npm](https://badgen.net/npm/v/test-runner-core)](https://www.npmjs.org/package/test-runner-core)
+[![npm module downloads](https://badgen.net/npm/dt/test-runner-core)](https://www.npmjs.org/package/test-runner-core)
+[![Gihub repo dependents](https://badgen.net/github/dependents-repo/test-runner-js/test-runner-core)](https://github.com/test-runner-js/test-runner-core/network/dependents?dependent_type=REPOSITORY)
+[![Gihub package dependents](https://badgen.net/github/dependents-pkg/test-runner-js/test-runner-core)](https://github.com/test-runner-js/test-runner-core/network/dependents?dependent_type=PACKAGE)
 [![Build Status](https://travis-ci.org/test-runner-js/test-runner-core.svg?branch=master)](https://travis-ci.org/test-runner-js/test-runner-core)
-[![Dependency Status](https://badgen.net/david/dep/test-runner-js/test-runner-core)](https://david-dm.org/test-runner-js/test-runner-core)
 [![js-standard-style](https://img.shields.io/badge/code%20style-standard-brightgreen.svg)](https://github.com/feross/standard)
 
 ***This documentation is a work in progress.***
 
 # test-runner-core
 
-Isomophic test runner. Takes a test object model as input, runs it streaming progress info to the attached view or listener. Used by test-runner, esm-runner and web-runner.
+Isomophic test runner. Takes a test-object-model instance as input, streaming progress info to the attached view or listener. Used by test-runner and web-runner.
 
 ## Synopsis
 
-This trivial example creates a test object model containing one passing and one failing test. The model is passed to a TestRunnerCore instance, along with the default view, which then runs the tests printing the result to the console.
+This trivial example creates a test object model containing one passing and one failing test. The model is passed to a `TestRunnerCore` instance, along with the default view, which then runs the tests printing the result to the console.
 
 ```js
 import TestRunnerCore from '../index.mjs'
@@ -92,4 +93,4 @@ Test run complete. State: fail, passed: 1, failed: 1
 
 * * *
 
-&copy; 2016-20 Lloyd Brookes \<75pound@gmail.com\>. Documented by [jsdoc-to-markdown](https://github.com/jsdoc2md/jsdoc-to-markdown).
+&copy; 2016-21 Lloyd Brookes \<75pound@gmail.com\>. Documented by [jsdoc-to-markdown](https://github.com/jsdoc2md/jsdoc-to-markdown).
