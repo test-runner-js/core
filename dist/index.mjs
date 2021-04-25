@@ -1,22 +1,28 @@
 /**
  * @module obso
  */
+const _listeners = new WeakMap();
 
 /**
  * @alias module:obso
  */
-class Emitter {
+class Emitter$1 {
+  constructor () {
+    _listeners.set(this, []);
+  }
+
   /**
    * Emit an event.
    * @param {string} eventName - the event name to emit.
    * @param ...args {*} - args to pass to the event handler
    */
   emit (eventName, ...args) {
-    if (this._listeners && this._listeners.length > 0) {
+    const listeners = _listeners.get(this);
+    if (listeners && listeners.length > 0) {
       const toRemove = [];
 
       /* invoke each relevant listener */
-      for (const listener of this._listeners) {
+      for (const listener of listeners) {
         const handlerArgs = args.slice();
         if (listener.eventName === '__ALL__') {
           handlerArgs.unshift(eventName);
@@ -31,7 +37,7 @@ class Emitter {
       }
 
       toRemove.forEach(listener => {
-        this._listeners.splice(this._listeners.indexOf(listener), 1);
+        listeners.splice(listeners.indexOf(listener), 1);
       });
     }
 
@@ -40,11 +46,12 @@ class Emitter {
   }
 
   _emitTarget (eventName, target, ...args) {
-    if (this._listeners && this._listeners.length > 0) {
+    const listeners = _listeners.get(this);
+    if (listeners && listeners.length > 0) {
       const toRemove = [];
 
       /* invoke each relevant listener */
-      for (const listener of this._listeners) {
+      for (const listener of listeners) {
         const handlerArgs = args.slice();
         if (listener.eventName === '__ALL__') {
           handlerArgs.unshift(eventName);
@@ -59,7 +66,7 @@ class Emitter {
       }
 
       toRemove.forEach(listener => {
-        this._listeners.splice(this._listeners.indexOf(listener), 1);
+        listeners.splice(listeners.indexOf(listener), 1);
       });
     }
 
@@ -75,7 +82,7 @@ class Emitter {
     * @param {boolean} [options.once] - If `true`, the handler will be invoked once then removed.
     */
   on (eventName, handler, options) {
-    createListenersArray(this);
+    const listeners = _listeners.get(this);
     options = options || {};
     if (arguments.length === 1 && typeof eventName === 'function') {
       handler = eventName;
@@ -86,7 +93,7 @@ class Emitter {
     } else if (handler && typeof handler !== 'function') {
       throw new Error('handler arg must be a function')
     } else {
-      this._listeners.push({ eventName, handler: handler, once: options.once });
+      listeners.push({ eventName, handler: handler, once: options.once });
     }
   }
 
@@ -96,11 +103,12 @@ class Emitter {
    * @param handler {function} - the event handler
    */
   removeEventListener (eventName, handler) {
-    if (!this._listeners || this._listeners.length === 0) return
-    const index = this._listeners.findIndex(function (listener) {
+    const listeners = _listeners.get(this);
+    if (!listeners || listeners.length === 0) return
+    const index = listeners.findIndex(function (listener) {
       return listener.eventName === eventName && listener.handler === handler
     });
-    if (index > -1) this._listeners.splice(index, 1);
+    if (index > -1) listeners.splice(index, 1);
   }
 
   /**
@@ -112,31 +120,12 @@ class Emitter {
     /* TODO: the once option is browser-only */
     this.on(eventName, handler, { once: true });
   }
-
-  /**
-   * Propagate events from the supplied emitter to this emitter.
-   * @param {string} eventName - the event name to propagate
-   * @param {object} from - the emitter to propagate from
-   */
-  propagate (eventName, from) {
-    from.on(eventName, (...args) => this.emit(eventName, ...args));
-  }
 }
 
 /**
  * Alias for `on`.
  */
-Emitter.prototype.addEventListener = Emitter.prototype.on;
-
-function createListenersArray (target) {
-  if (target._listeners) return
-  Object.defineProperty(target, '_listeners', {
-    enumerable: false,
-    configurable: false,
-    writable: false,
-    value: []
-  });
-}
+Emitter$1.prototype.addEventListener = Emitter$1.prototype.on;
 
 /**
  * Takes any input and guarantees an array back.
@@ -228,24 +217,28 @@ function flatten (arr, curr) {
  * @typicalname stateMachine
  */
 
-const _initialState = new WeakMap();
-const _state = new WeakMap();
-const _validMoves = new WeakMap();
+const _initialState$1 = new WeakMap();
+const _state$1 = new WeakMap();
+const _validMoves$1 = new WeakMap();
 
 /**
  * @alias module:fsm-base
  * @extends {Emitter}
  */
-class StateMachine extends Emitter {
+class StateMachine$1 extends Emitter$1 {
+  /**
+   * @param {string} - Initial state, e.g. 'pending'.
+   * @param {object[]} - Array of valid move rules.
+   */
   constructor (initialState, validMoves) {
     super();
-    _validMoves.set(this, arrayify(validMoves).map(move => {
+    _validMoves$1.set(this, arrayify(validMoves).map(move => {
       move.from = arrayify(move.from);
       move.to = arrayify(move.to);
       return move
     }));
-    _state.set(this, initialState);
-    _initialState.set(this, initialState);
+    _state$1.set(this, initialState);
+    _initialState$1.set(this, initialState);
   }
 
   /**
@@ -254,7 +247,7 @@ class StateMachine extends Emitter {
    * @throws `INVALID_MOVE` if an invalid move made
    */
   get state () {
-    return _state.get(this)
+    return _state$1.get(this)
   }
 
   set state (state) {
@@ -269,7 +262,7 @@ class StateMachine extends Emitter {
     /* nothing to do */
     if (this.state === state) return
 
-    const validTo = _validMoves.get(this).some(move => move.to.indexOf(state) > -1);
+    const validTo = _validMoves$1.get(this).some(move => move.to.indexOf(state) > -1);
     if (!validTo) {
       const msg = `Invalid state: ${state}`;
       const err = new Error(msg);
@@ -279,9 +272,9 @@ class StateMachine extends Emitter {
 
     let moved = false;
     const prevState = this.state;
-    _validMoves.get(this).forEach(move => {
+    _validMoves$1.get(this).forEach(move => {
       if (move.from.indexOf(this.state) > -1 && move.to.indexOf(state) > -1) {
-        _state.set(this, state);
+        _state$1.set(this, state);
         moved = true;
         /**
          * fired on every state change
@@ -293,13 +286,12 @@ class StateMachine extends Emitter {
 
         /**
          * fired on every state change
-         * @event module:fsm-base#&lt;state value&gt;
          */
         this.emit(state, ...args);
       }
     });
     if (!moved) {
-      const froms = _validMoves.get(this)
+      const froms = _validMoves$1.get(this)
         .filter(move => move.to.indexOf(state) > -1)
         .map(move => move.from.map(from => `'${from}'`))
         .reduce(flatten);
@@ -310,10 +302,14 @@ class StateMachine extends Emitter {
     }
   }
 
+  /**
+   * Reset to initial state.
+   * @emits "reset"
+   */
   resetState () {
     const prevState = this.state;
-    const initialState = _initialState.get(this);
-    _state.set(this, initialState);
+    const initialState = _initialState$1.get(this);
+    _state$1.set(this, initialState);
     this.emit('reset', prevState);
   }
 }
@@ -605,6 +601,241 @@ class Composite {
 
 function isComposite (item) {
   return item && item.children && item.add && item.level && item.root
+}
+
+/**
+ * @module obso
+ */
+
+/**
+ * @alias module:obso
+ */
+class Emitter {
+  /**
+   * Emit an event.
+   * @param {string} eventName - the event name to emit.
+   * @param ...args {*} - args to pass to the event handler
+   */
+  emit (eventName, ...args) {
+    if (this._listeners && this._listeners.length > 0) {
+      const toRemove = [];
+
+      /* invoke each relevant listener */
+      for (const listener of this._listeners) {
+        const handlerArgs = args.slice();
+        if (listener.eventName === '__ALL__') {
+          handlerArgs.unshift(eventName);
+        }
+
+        if (listener.eventName === '__ALL__' || listener.eventName === eventName) {
+          listener.handler.call(this, ...handlerArgs);
+
+          /* remove once handler */
+          if (listener.once) toRemove.push(listener);
+        }
+      }
+
+      toRemove.forEach(listener => {
+        this._listeners.splice(this._listeners.indexOf(listener), 1);
+      });
+    }
+
+    /* bubble event up */
+    if (this.parent) this.parent._emitTarget(eventName, this, ...args);
+  }
+
+  _emitTarget (eventName, target, ...args) {
+    if (this._listeners && this._listeners.length > 0) {
+      const toRemove = [];
+
+      /* invoke each relevant listener */
+      for (const listener of this._listeners) {
+        const handlerArgs = args.slice();
+        if (listener.eventName === '__ALL__') {
+          handlerArgs.unshift(eventName);
+        }
+
+        if (listener.eventName === '__ALL__' || listener.eventName === eventName) {
+          listener.handler.call(target, ...handlerArgs);
+
+          /* remove once handler */
+          if (listener.once) toRemove.push(listener);
+        }
+      }
+
+      toRemove.forEach(listener => {
+        this._listeners.splice(this._listeners.indexOf(listener), 1);
+      });
+    }
+
+    /* bubble event up */
+    if (this.parent) this.parent._emitTarget(eventName, target || this, ...args);
+  }
+
+   /**
+    * Register an event listener.
+    * @param {string} [eventName] - The event name to watch. Omitting the name will catch all events.
+    * @param {function} handler - The function to be called when `eventName` is emitted. Invocated with `this` set to `emitter`.
+    * @param {object} [options]
+    * @param {boolean} [options.once] - If `true`, the handler will be invoked once then removed.
+    */
+  on (eventName, handler, options) {
+    createListenersArray(this);
+    options = options || {};
+    if (arguments.length === 1 && typeof eventName === 'function') {
+      handler = eventName;
+      eventName = '__ALL__';
+    }
+    if (!handler) {
+      throw new Error('handler function required')
+    } else if (handler && typeof handler !== 'function') {
+      throw new Error('handler arg must be a function')
+    } else {
+      this._listeners.push({ eventName, handler: handler, once: options.once });
+    }
+  }
+
+  /**
+   * Remove an event listener.
+   * @param eventName {string} - the event name
+   * @param handler {function} - the event handler
+   */
+  removeEventListener (eventName, handler) {
+    if (!this._listeners || this._listeners.length === 0) return
+    const index = this._listeners.findIndex(function (listener) {
+      return listener.eventName === eventName && listener.handler === handler
+    });
+    if (index > -1) this._listeners.splice(index, 1);
+  }
+
+  /**
+   * Once.
+   * @param {string} eventName - the event name to watch
+   * @param {function} handler - the event handler
+   */
+  once (eventName, handler) {
+    /* TODO: the once option is browser-only */
+    this.on(eventName, handler, { once: true });
+  }
+
+  /**
+   * Propagate events from the supplied emitter to this emitter.
+   * @param {string} eventName - the event name to propagate
+   * @param {object} from - the emitter to propagate from
+   */
+  propagate (eventName, from) {
+    from.on(eventName, (...args) => this.emit(eventName, ...args));
+  }
+}
+
+/**
+ * Alias for `on`.
+ */
+Emitter.prototype.addEventListener = Emitter.prototype.on;
+
+function createListenersArray (target) {
+  if (target._listeners) return
+  Object.defineProperty(target, '_listeners', {
+    enumerable: false,
+    configurable: false,
+    writable: false,
+    value: []
+  });
+}
+
+/**
+ * @module fsm-base
+ * @typicalname stateMachine
+ */
+
+const _initialState = new WeakMap();
+const _state = new WeakMap();
+const _validMoves = new WeakMap();
+
+/**
+ * @alias module:fsm-base
+ * @extends {Emitter}
+ */
+class StateMachine extends Emitter {
+  constructor (initialState, validMoves) {
+    super();
+    _validMoves.set(this, arrayify(validMoves).map(move => {
+      move.from = arrayify(move.from);
+      move.to = arrayify(move.to);
+      return move
+    }));
+    _state.set(this, initialState);
+    _initialState.set(this, initialState);
+  }
+
+  /**
+   * The current state
+   * @type {string} state
+   * @throws `INVALID_MOVE` if an invalid move made
+   */
+  get state () {
+    return _state.get(this)
+  }
+
+  set state (state) {
+    this.setState(state);
+  }
+
+  /**
+   * Set the current state. The second arg onward will be sent as event args.
+   * @param {string} state
+   */
+  setState (state, ...args) {
+    /* nothing to do */
+    if (this.state === state) return
+
+    const validTo = _validMoves.get(this).some(move => move.to.indexOf(state) > -1);
+    if (!validTo) {
+      const msg = `Invalid state: ${state}`;
+      const err = new Error(msg);
+      err.name = 'INVALID_MOVE';
+      throw err
+    }
+
+    let moved = false;
+    const prevState = this.state;
+    _validMoves.get(this).forEach(move => {
+      if (move.from.indexOf(this.state) > -1 && move.to.indexOf(state) > -1) {
+        _state.set(this, state);
+        moved = true;
+        /**
+         * fired on every state change
+         * @event module:fsm-base#state
+         * @param state {string} - the new state
+         * @param prev {string} - the previous state
+         */
+        this.emit('state', state, prevState);
+
+        /**
+         * fired on every state change
+         * @event module:fsm-base#&lt;state value&gt;
+         */
+        this.emit(state, ...args);
+      }
+    });
+    if (!moved) {
+      const froms = _validMoves.get(this)
+        .filter(move => move.to.indexOf(state) > -1)
+        .map(move => move.from.map(from => `'${from}'`))
+        .reduce(flatten);
+      const msg = `Can only move to '${state}' from ${froms.join(' or ') || '<unspecified>'} (not '${prevState}')`;
+      const err = new Error(msg);
+      err.name = 'INVALID_MOVE';
+      throw err
+    }
+  }
+
+  resetState () {
+    const prevState = this.state;
+    const initialState = _initialState.get(this);
+    _state.set(this, initialState);
+    this.emit('reset', prevState);
+  }
 }
 
 /**
@@ -1144,7 +1375,7 @@ class Tom extends createMixin(Composite)(StateMachine) {
  * @param {function} [options.view] - View instance.
  * @param {boolean} [options.debug] - Log all errors.
  */
-class TestRunnerCore extends StateMachine {
+class TestRunnerCore extends StateMachine$1 {
   constructor (tom, options = {}) {
     /* validation */
     Tom.validate(tom);
