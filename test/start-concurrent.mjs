@@ -1,4 +1,4 @@
-import Tom from 'test-object-model'
+import Tom from '@test-runner/tom'
 import TestRunner from '../index.mjs'
 import assert from 'assert'
 import sleep from '../node_modules/sleep-anywhere/index.mjs'

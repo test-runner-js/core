@@ -1,7 +1,7 @@
-import StateMachine from 'fsm-base/index.mjs'
+import StateMachine from 'fsm-base'
 import Queue from './lib/queue.mjs'
 import Stats from './lib/stats.mjs'
-import TOM from 'test-object-model'
+import Tom from '@test-runner/tom'
 
 /**
  * @module test-runner-core
@@ -17,7 +17,7 @@ import TOM from 'test-object-model'
 class TestRunnerCore extends StateMachine {
   constructor (tom, options = {}) {
     /* validation */
-    TOM.validate(tom)
+    Tom.validate(tom)
 
     super('pending', [
       { from: 'pending', to: 'in-progress' },
@@ -204,7 +204,7 @@ class TestRunnerCore extends StateMachine {
     }
     this.stats.start = Date.now()
 
-    /* encapsulate this as a TOM method? */
+    /* encapsulate this as a Tom method? */
     const testCount = Array.from(this.tom).filter(t => t.testFn).length
     this.stats.total = testCount
 

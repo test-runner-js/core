@@ -17,7 +17,7 @@ This trivial example creates a test object model containing one passing and one 
 
 ```js
 import TestRunnerCore from '../index.mjs'
-import Tom from 'test-object-model'
+import Tom from '@test-runner/tom'
 
 /* Define a simple test model */
 const tom = new Tom()

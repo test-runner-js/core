@@ -1,4 +1,4 @@
-import Tom from 'test-object-model'
+import Tom from '@test-runner/tom'
 import Queue from '../lib/queue.mjs'
 import assert from 'assert'
 import sleep from 'sleep-anywhere'

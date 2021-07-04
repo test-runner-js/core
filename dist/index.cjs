@@ -1,3 +1,25 @@
+'use strict';
+
+function _interopNamespace(e) {
+  if (e && e.__esModule) return e;
+  var n = Object.create(null);
+  if (e) {
+    Object.keys(e).forEach(function (k) {
+      if (k !== 'default') {
+        var d = Object.getOwnPropertyDescriptor(e, k);
+        Object.defineProperty(n, k, d.get ? d : {
+          enumerable: true,
+          get: function () {
+            return e[k];
+          }
+        });
+      }
+    });
+  }
+  n['default'] = e;
+  return Object.freeze(n);
+}
+
 /**
  * @module obso
  */
@@ -1057,7 +1079,7 @@ class Tom extends createMixin(Composite)(StateMachine) {
 
   async _getPerformance () {
     if (typeof window === 'undefined') {
-      const { performance } = await import('perf_hooks');
+      const { performance } = await Promise.resolve().then(function () { return /*#__PURE__*/_interopNamespace(require('perf_hooks')); });
       return performance
     } else {
       return window.performance
@@ -1338,4 +1360,4 @@ class TestRunnerCore extends StateMachine {
   }
 }
 
-export default TestRunnerCore;
+module.exports = TestRunnerCore;
