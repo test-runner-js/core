@@ -1,4 +1,4 @@
-import TestRunnerCore from '../index.mjs'
+import TestRunnerCore from '../index.js'
 import Tom from '@test-runner/tom'
 import assert from 'assert'
 const a = assert.strict

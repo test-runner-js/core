@@ -1,6 +1,6 @@
 import StateMachine from 'fsm-base'
-import Queue from './lib/queue.mjs'
-import Stats from './lib/stats.mjs'
+import Queue from './lib/queue.js'
+import Stats from './lib/stats.js'
 import Tom from '@test-runner/tom'
 
 /**

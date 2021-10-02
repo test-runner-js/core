@@ -41,7 +41,7 @@ runner.start()
 Output.
 
 ```
-$ nodem tmp/synopsis.mjs
+$ nodem tmp/synopsis.js
 
 Start: 2 tests loaded
 
@@ -49,7 +49,7 @@ Start: 2 tests loaded
  ⨯ tom A failing test
 
    Error: This failed
-       at TestContext.<anonymous> (file:///Users/lloyd/Documents/test-runner-js/core/tmp/synopsis.mjs:13:9)
+       at TestContext.<anonymous> (file:///Users/lloyd/Documents/test-runner-js/core/tmp/synopsis.js:13:9)
        ...
        at processTimers (internal/timers.js:475:7)
 
@@ -79,7 +79,7 @@ runner.start().then(() => {
 Output.
 
 ```
-$ node --experimental-modules synopsis.mjs
+$ node --experimental-modules synopsis.js
 Runner state change: pending -> in-progress
 Test passed: A successful test
 Test failed: A failing test

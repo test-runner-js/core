@@ -1338,4 +1338,4 @@ class TestRunnerCore extends StateMachine {
   }
 }
 
-export default TestRunnerCore;
+export { TestRunnerCore as default };

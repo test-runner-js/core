@@ -4,8 +4,9 @@
   "version": "0.10.0",
   "description": "Minimal, extensible, isomorphic test runner.",
   "repository": "https://github.com/test-runner-js/core",
+  "type": "module",
   "exports": {
-    "import": "./index.mjs",
+    "import": "./index.js",
     "require": "./dist/index.cjs"
   },
   "license": "MIT",
@@ -21,26 +22,26 @@
     "mocha"
   ],
   "engines": {
-    "node": ">=14"
+    "node": ">=12.17"
   },
   "scripts": {
-    "test": "npm run dist && test-runner --view.hide-skips test/*.mjs",
+    "test": "npm run dist && npm run test:ci",
+    "test:ci": "test-runner --view.hide-skips test/*.js",
     "dist": "rollup -c",
-    "watch": "rollup -cw",
-    "docs": "jsdoc2md -c jsdoc.conf index.mjs > docs/API.md && jsdoc2md -c jsdoc.conf lib/view.mjs > docs/view.md"
+    "docs": "jsdoc2md index.js > docs/API.md && jsdoc2md lib/view.js > docs/view.md"
   },
   "dependencies": {
     "@test-runner/tom": "^0.8.0",
     "fsm-base": "^0.7.0"
   },
   "devDependencies": {
-    "@rollup/plugin-node-resolve": "^13.0.0",
-    "isomorphic-assert": "^0.2.0",
+    "@rollup/plugin-node-resolve": "^13.0.5",
+    "isomorphic-assert": "^1.0.0",
     "jsdoc-to-markdown": "^7.0.1",
-    "node-fetch": "^2.6.1",
-    "rollup": "^2.52.7",
-    "sleep-anywhere": "^1.1.3",
-    "test-runner": "^0.9.5"
+    "node-fetch": "^3.0.0",
+    "rollup": "^2.58.0",
+    "sleep-anywhere": "^2.1.0",
+    "test-runner": "^0.9.8"
   },
   "standard": {
     "ignore": [
@@ -51,6 +52,6 @@
   "files": [
     "lib",
     "dist",
-    "index.mjs"
+    "index.js"
   ]
 }

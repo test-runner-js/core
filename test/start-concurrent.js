@@ -1,7 +1,7 @@
 import Tom from '@test-runner/tom'
-import TestRunner from '../index.mjs'
+import TestRunner from '@test-runner/core'
 import assert from 'assert'
-import sleep from '../node_modules/sleep-anywhere/index.mjs'
+import sleep from '../node_modules/sleep-anywhere/index.js'
 const a = assert.strict
 
 const tom = new Tom()

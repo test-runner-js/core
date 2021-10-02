@@ -1,9 +1,9 @@
-import TestRunner from '../index.mjs'
+import TestRunner from '@test-runner/core'
 import Tom from '@test-runner/tom'
 import getAssert from 'isomorphic-assert'
 import sleep from 'sleep-anywhere'
 
-async function start () {
+async function getTom () {
   const tom = new Tom()
   const a = await getAssert()
 
@@ -70,4 +70,4 @@ async function start () {
   return tom
 }
 
-export default start()
+export default getTom()

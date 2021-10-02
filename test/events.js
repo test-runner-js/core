@@ -1,5 +1,5 @@
 import Tom from '@test-runner/tom'
-import TestRunner from '../index.mjs'
+import TestRunner from '@test-runner/core'
 import assert from 'assert'
 const a = assert.strict
 

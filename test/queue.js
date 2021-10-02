@@ -1,5 +1,5 @@
 import Tom from '@test-runner/tom'
-import Queue from '../lib/queue.mjs'
+import Queue from '../lib/queue.js'
 import assert from 'assert'
 import sleep from 'sleep-anywhere'
 const a = assert.strict
