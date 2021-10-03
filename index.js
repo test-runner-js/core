@@ -1,5 +1,5 @@
 import StateMachine from 'fsm-base'
-import Queue from './lib/queue.js'
+import { Job, Queue } from 'work'
 import Stats from './lib/stats.js'
 import Tom from '@test-runner/tom'
 
@@ -8,13 +8,15 @@ import Tom from '@test-runner/tom'
  */
 
 /**
+ * A runner associates a TOM with a View. A runner organises TOM tests into a Work queue and executes them. The runner encapulates the opinion of how a TOM should be executed and displayed. Must be isomorphic.
+ *
  * @alias module:test-runner-core
  * @param {TestObjectModel} tom
- * @param {object} [options] - Config object.
- * @param {function} [options.view] - View instance.
- * @param {boolean} [options.debug] - Log all errors.
+ * @param [options] {object} - Config object.
+ * @param [options.view] {function} - View instance.
+ * @param [options.debug] {boolean} - Log all errors.
  */
-class TestRunnerCore extends StateMachine {
+class TestRunner extends StateMachine {
   constructor (tom, options = {}) {
     /* validation */
     Tom.validate(tom)
@@ -42,7 +44,7 @@ class TestRunnerCore extends StateMachine {
      * Ended flag
      * @type {boolean}
      */
-    this.ended = false
+    this.ended = false /* TODO: make getter returning true if either pass or fail state */
 
     /**
      * View
@@ -73,7 +75,7 @@ class TestRunnerCore extends StateMachine {
 
     /* translate tom to runner events */
     this.tom.on('in-progress', (...args) => {
-      this.stats.inProgress++
+      this.stats.inProgress++ //TODO: move `.stats` to TOM - tom.stats returns event invocation counts
       /**
        * Test start.
        * @event module:test-runner-core#test-start
@@ -138,61 +140,48 @@ class TestRunnerCore extends StateMachine {
     })
   }
 
-  async runTomNode (tom) {
-    /* create array of job functions */
-    const tests = [...tom.children]
-    const jobs = []
-    const beforeJobs = tests
-      .filter(t => t.options.before)
-      .map(test => {
-        return () => {
-          const promise = this.run(test)
-          return Promise.all([promise, this.runTomNode(test)])
+  createWork (tom) {
+    let node
+    if (tom.type === 'test' || tom.type === 'todo') {
+      node = new Job({
+        fn: () => tom.run(),
+        maxConcurrency: tom.options.maxConcurrency
+      })
+      node.onFail = new Job({
+        fn: () => {
+          /* Set runner state to fail otherwise carry on */
+          this.state = 'fail'
+          if (this.options.debug) {
+            console.error('-----------------------\nDEBUG')
+            console.error('-----------------------')
+            console.error(err)
+            console.error('-----------------------')
+          }
         }
       })
-    const mainJobs = tests
-      .filter(t => !(t.options.before || t.options.after))
-      .map(test => {
-        return () => {
-          const promise = this.run(test)
-          return Promise.all([promise, this.runTomNode(test)])
-        }
-      })
-    const afterJobs = tests
-      .filter(t => t.options.after)
-      .map(test => {
-        return () => {
-          const promise = this.run(test)
-          return Promise.all([promise, this.runTomNode(test)])
-        }
-      })
-
-    jobs.push(...beforeJobs, ...mainJobs, ...afterJobs)
-
-    return new Promise((resolve, reject) => {
-      /* isomorphic nextTick */
-      setTimeout(async () => {
-        const beforeQueue = new Queue(beforeJobs, tom.options.maxConcurrency)
-        await beforeQueue.process()
-        const mainQueue = new Queue(mainJobs, tom.options.maxConcurrency)
-        await mainQueue.process()
-        const afterQueue = new Queue(afterJobs, tom.options.maxConcurrency)
-        await afterQueue.process()
-        resolve()
-      }, 0)
-    })
-  }
-
-  async run (tom) {
-    return tom.run().catch(err => {
-      this.state = 'fail'
-      if (this.options.debug) {
-        console.error('-----------------------\nDEBUG')
-        console.error('-----------------------')
-        console.error(err)
-        console.error('-----------------------')
+    } else {
+      tom.setState('ignored')
+      node = new Queue({ maxConcurrency: 1 })
+      const beforeJobs = tom.children.filter(t => t.options.before).map(t => this.createWork(t))
+      const mainJobs = tom.children.filter(t => !(t.options.before || t.options.after)).map(t => this.createWork(t))
+      const afterJobs = tom.children.filter(t => t.options.after).map(t => this.createWork(t))
+      const beforeQueue = new Queue({ maxConcurrency: tom.options.maxConcurrency })
+      for (const job of beforeJobs) {
+        beforeQueue.add(job)
       }
-    })
+      const mainQueue = new Queue({ maxConcurrency: tom.options.maxConcurrency })
+      for (const job of mainJobs) {
+        mainQueue.add(job)
+      }
+      const afterQueue = new Queue({ maxConcurrency: tom.options.maxConcurrency })
+      for (const job of afterJobs) {
+        afterQueue.add(job)
+      }
+      node.add(beforeQueue)
+      node.add(mainQueue)
+      node.add(afterQueue)
+    }
+    return node
   }
 
   /**
@@ -213,7 +202,7 @@ class TestRunnerCore extends StateMachine {
      * @event module:test-runner-core#in-progress
      * @param testCount {number} - the numbers of tests
      */
-    this.setState('in-progress', testCount)
+    this.setState('in-progress', testCount) /* TODO: why not pass the whole this.stats object, or pass nothing at all if the stats is available on `this`? */
 
     /**
      * Start
@@ -221,8 +210,8 @@ class TestRunnerCore extends StateMachine {
      * @param testCount {number} - the numbers of tests
      */
     this.emit('start', testCount)
-    await this.run(this.tom)
-    await this.runTomNode(this.tom)
+    const work = this.createWork(this.tom)
+    await work.process()
     this.ended = true
     if (this.state !== 'fail') {
       /**
@@ -240,4 +229,4 @@ class TestRunnerCore extends StateMachine {
   }
 }
 
-export default TestRunnerCore
+export default TestRunner

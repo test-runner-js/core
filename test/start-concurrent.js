@@ -6,7 +6,7 @@ const a = assert.strict
 
 const tom = new Tom()
 
-tom.test('runner.start(): execution order', async function () {
+tom.test('execution order', async function () {
   const counts = []
   const tom = new Tom()
   tom.test('one', () => {
@@ -21,7 +21,7 @@ tom.test('runner.start(): execution order', async function () {
   a.deepEqual(counts, ['one', 'two'])
 })
 
-tom.test('runner.start(): execution order 2', async function () {
+tom.test('execution order, failing tests', async function () {
   const counts = []
   const tom = new Tom()
   tom.test('one', () => {
@@ -38,7 +38,7 @@ tom.test('runner.start(): execution order 2', async function () {
   a.deepEqual(counts, ['one', 'two'])
 })
 
-tom.test('run in parallel', async function () {
+tom.test('multiple tests run in parallel', async function () {
   const actuals = []
   const tom = new Tom()
   tom.test('one', async () => {
@@ -71,7 +71,7 @@ tom.test('run in parallel', async function () {
   a.deepEqual(actuals, [2, 1.1, 1, 2.1, 1.2, 2.2])
 })
 
-tom.test('runner.start(): single test, no children', async function () {
+tom.test('single test, no children', async function () {
   const counts = []
   const tom = new Tom('one', () => {
     counts.push('one')

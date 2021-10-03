@@ -23,6 +23,8 @@ tom.test('this.index', async function () {
   a.equal(tom.children[1].index, 2)
 })
 
+/* TODO: what's this? */
+
 // { /* ctx.index: pass ctx as the final arg so `this` is not the only way to access it */
 //   const tom = new Tom()
 //   const actuals = []

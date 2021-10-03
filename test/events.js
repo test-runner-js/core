@@ -100,24 +100,27 @@ tom.test('runner.start(): only', async function () {
 tom.test('runner.start(): deep only', async function () {
   const actuals = []
   const tom = new Tom()
-  const one = tom.only('one', () => 1)
-  const two = one.test('two', () => 2)
-  const three = two.only('three', () => 3)
+  tom.only('one', () => 1)
+  const group = tom.group('group1')
+  group.test('two', () => 2)
+  group.only('three', () => 3)
 
   const runner = new TestRunner(tom)
-  runner.on('test-pass', () => actuals.push('test-pass'))
-  runner.on('test-fail', () => actuals.push('test-fail'))
-  runner.on('test-skip', () => actuals.push('test-skip'))
+  runner.on('test-pass', (t) => actuals.push(`test-pass: ${t.name}`))
+  runner.on('test-fail', (t) => actuals.push(`test-fail: ${t.name}`))
+  runner.on('test-skip', (t) => actuals.push(`test-skip: ${t.name}`))
   await runner.start()
-  a.deepEqual(actuals, ['test-pass', 'test-skip', 'test-pass'])
+  a.deepEqual(actuals, ['test-pass: one', 'test-skip: two', 'test-pass: three'])
 })
 
 tom.test('runner.start(): deep only with fail', async function () {
   const actuals = []
   const tom = new Tom()
-  const one = tom.only('one', () => 1)
-  const two = one.test('two', () => 2)
-  const three = two.only('three', () => {
+  tom.only('one', () => 1)
+  const group1 = tom.group('group1')
+  group1.test('two', () => 2)
+  const group2 = group1.group('group2')
+  group2.only('three', () => {
     throw new Error('broken')
   })
 
@@ -132,9 +135,11 @@ tom.test('runner.start(): deep only with fail', async function () {
 tom.test('runner.start(): deep only with skipped fail', async function () {
   const actuals = []
   const tom = new Tom()
-  const one = tom.only('one', () => 1)
-  const two = one.test('two', () => 2)
-  const three = two.skip('three', () => {
+  tom.only('one', () => 1)
+  const group1 = tom.group('group1')
+  group1.test('two', () => 2)
+  const group2 = group1.group('group2')
+  group2.skip('three', () => {
     throw new Error('broken')
   })
 

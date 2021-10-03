@@ -79,7 +79,7 @@ runner.start().then(() => {
 Output.
 
 ```
-$ node --experimental-modules synopsis.js
+$ node synopsis.js
 Runner state change: pending -> in-progress
 Test passed: A successful test
 Test failed: A failing test
