@@ -1,24 +1,26 @@
 import TestRunner from '@test-runner/core'
 import Tom from '@test-runner/tom'
-import assert from 'assert'
-const a = assert.strict
+import { strict as a } from 'assert'
+import { halt } from './lib/util.js'
 
-const tom = new Tom()
+{ /* TOM must be defined */
+  async function testFn () {
+    const tom = undefined
+    a.throws(
+      () => { const runner = new TestRunner(tom) },
+      /valid tom required/i
+    )
+  }
+  testFn().catch(halt)
+}
 
-tom.test('TOM must be defined', async function () {
-  const tom = undefined
-  a.throws(
-    () => { const runner = new TestRunner(tom) },
-    /valid tom required/i
-  )
-})
-
-tom.test('TOM must be of type TestObjectModel', async function () {
-  const tom = {}
-  a.throws(
-    () => { const runner = new TestRunner(tom) },
-    /valid tom required/i
-  )
-})
-
-export default tom
+{ /* TOM must be of type TestObjectModel */
+  async function testFn () {
+    const tom = {}
+    a.throws(
+      () => { const runner = new TestRunner(tom) },
+      /valid tom required/i
+    )
+  }
+  testFn().catch(halt)
+}

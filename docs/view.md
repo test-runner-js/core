@@ -7,6 +7,7 @@ Custom view API.
 
 * [CustomView](#CustomView)
     * _instance_
+        * [.runner](#CustomView+runner)
         * [.init()](#CustomView+init) ⇒ <code>Promise</code>
         * [.start(count)](#CustomView+start)
         * [.testStart(test)](#CustomView+testStart)
@@ -19,6 +20,12 @@ Custom view API.
     * _static_
         * [.optionDefinitions()](#CustomView.optionDefinitions) ⇒ <code>Array.&lt;OptionDefinition&gt;</code>
 
+<a name="CustomView+runner"></a>
+
+### customView.runner
+TODO: Remove. Currently used by live-view.
+
+**Kind**: instance property of [<code>CustomView</code>](#CustomView)  
 <a name="CustomView+init"></a>
 
 ### customView.init() ⇒ <code>Promise</code>

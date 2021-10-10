@@ -1,27 +1,28 @@
 import TestRunner from '@test-runner/core'
 import Tom from '@test-runner/tom'
-import assert from 'assert'
-const a = assert.strict
+import { strict as a } from 'assert'
+import { halt } from './lib/util.js'
 
-const tom = new Tom()
+{ /* this.index */
+  async function testFn () {
+    const tom = new Tom()
+    const actuals = []
+    tom.test('one', function () {
+      actuals.push(this.index)
+    })
+    tom.test('two', function () {
+      actuals.push(this.index)
+    })
 
-tom.test('this.index', async function () {
-  const tom = new Tom()
-  const actuals = []
-  tom.test('one', function () {
-    actuals.push(this.index)
-  })
-  tom.test('two', function () {
-    actuals.push(this.index)
-  })
-
-  const runner = new TestRunner(tom)
-  const results = await runner.start()
-  a.deepEqual(actuals, [1, 2])
-  a.equal(tom.index, 1)
-  a.equal(tom.children[0].index, 1)
-  a.equal(tom.children[1].index, 2)
-})
+    const runner = new TestRunner(tom)
+    const results = await runner.start()
+    a.deepEqual(actuals, [1, 2])
+    a.equal(tom.index, 1)
+    a.equal(tom.children[0].index, 1)
+    a.equal(tom.children[1].index, 2)
+  }
+  testFn().catch(halt)
+}
 
 /* TODO: what's this? */
 
@@ -43,4 +44,3 @@ tom.test('this.index', async function () {
 //     .catch(halt)
 // }
 
-export default tom

@@ -1569,7 +1569,7 @@ class Node extends createMixin(Composite)(StateMachine) {
   }
 
   toString () {
-    return `${this.name || this.invoke || this.fn.name}: ${this.state}`.replace(/^bound /, '')
+    return `${this.name || this.invoke || (this.fn && this.fn.name) || '<no name>'}: ${this.state}`.replace(/^bound /, '')
   }
 
   tree () {
@@ -1816,14 +1816,14 @@ class TestContext {
  * @module typical
  * @typicalname t
  * @example
- * const t = require('typical')
+ * import * as t from 'typical'
  * const allDefined = array.every(t.isDefined)
  */
 
 /**
  * A plain object is a simple object literal, it is not an instance of a class. Returns true if the input `typeof` is `object` and directly decends from `Object`.
  *
- * @param {*} - the input to test
+ * @param {*} input - The input to test
  * @returns {boolean}
  * @static
  * @example
@@ -1852,7 +1852,7 @@ function isPlainObject (input) {
 
 /**
  * Returns true if the input value is defined.
- * @param {*} - the input to test
+ * @param {*} input - The input to test
  * @returns {boolean}
  * @static
  */
@@ -1862,7 +1862,7 @@ function isDefined (input) {
 
 /**
  * Returns true if the input is a Promise.
- * @param {*} - the input to test
+ * @param {*} input - The input to test
  * @returns {boolean}
  * @static
  */
@@ -1878,7 +1878,7 @@ function isPromise (input) {
 
 /**
  * Returns true if the input value is a string. The equivalent of `typeof input === 'string'` for use in funcitonal contexts.
- * @param {*} - the input to test
+ * @param {*} input - The input to test
  * @returns {boolean}
  * @static
  */
@@ -1888,7 +1888,7 @@ function isString (input) {
 
 /**
  * Returns true if the input value is a function. The equivalent of `typeof input === 'function'` for use in funcitonal contexts.
- * @param {*} - the input to test
+ * @param {*} input - The input to test
  * @returns {boolean}
  * @static
  */
@@ -1915,6 +1915,79 @@ function isFunction (input) {
  * @alias module:test-object-model
  */
 class Tom extends createMixin(Composite)(StateMachine) {
+  /**
+   * Test name
+   * @type {string}
+   */
+  name = 'tom'
+
+  /**
+   * A function which will either succeed, reject or throw.
+   * @type {function}
+   */
+  testFn
+
+  /**
+   * Position of this test within its parents children
+   * @type {number}
+   */
+  index = 1
+
+  /**
+   * True if the test has ended.
+   * @type {boolean}
+   */
+  ended = false
+
+  /**
+   * If the test passed, the value returned by the test function. If it failed, the exception thrown or rejection reason.
+   * @type {*}
+   */
+  result
+
+  /**
+   * True if one or more different tests are marked as `only`.
+   * @type {boolean}
+   */
+  disabledByOnly = false
+
+  /**
+   * The options set when creating the test.
+   */
+  options
+
+  /**
+   * Test execution stats
+   * @namespace
+   */
+  stats = {
+    /**
+     * Start time.
+     * @type {number}
+     */
+    start: 0,
+    /**
+     * End time.
+     * @type {number}
+     */
+    end: 0,
+    /**
+     * Test execution duration.
+     * @type {number}
+     */
+    duration: 0,
+    finish: function (end) {
+      this.end = end;
+      this.duration = this.end - this.start;
+    }
+  }
+
+  /**
+   * The text execution context.
+   * @type {TextContext}
+   */
+  context
+
   constructor (name, testFn, options) {
     if (name) {
       if (isString(name)) {
@@ -1951,82 +2024,12 @@ class Tom extends createMixin(Composite)(StateMachine) {
       { from: 'in-progress', to: 'fail' }
     ]);
 
-    /**
-     * Test name
-     * @type {string}
-     */
     this.name = name || 'tom';
-
-    /**
-     * A function which will either succeed, reject or throw.
-     * @type {function}
-     */
     this.testFn = testFn;
-
-    /**
-     * Position of this test within its parents children
-     * @type {number}
-     */
-    this.index = 1;
-
-    /**
-     * True if the test has ended.
-     * @type {boolean}
-     */
-    this.ended = false;
-
-    /**
-     * If the test passed, the value returned by the test function. If it failed, the exception thrown or rejection reason.
-     * @type {*}
-     */
-    this.result = undefined;
-
     options = Object.assign({}, options);
     options.maxConcurrency = options.maxConcurrency || 10;
     options.timeout = options.timeout || 10000;
-
-    /**
-     * True if one or more different tests are marked as `only`.
-     * @type {boolean}
-     */
-    this.disabledByOnly = false;
-
-    /**
-     * The options set when creating the test.
-     */
     this.options = options;
-
-    /**
-     * Test execution stats
-     * @namespace
-     */
-    this.stats = {
-      /**
-       * Start time.
-       * @type {number}
-       */
-      start: 0,
-      /**
-       * End time.
-       * @type {number}
-       */
-      end: 0,
-      /**
-       * Test execution duration.
-       * @type {number}
-       */
-      duration: 0,
-      finish: function (end) {
-        this.end = end;
-        this.duration = this.end - this.start;
-      }
-    };
-
-    /**
-     * The text execution context.
-     * @type {TextContext}
-     */
-    this.context = undefined;
   }
 
   /**
@@ -2165,86 +2168,30 @@ class Tom extends createMixin(Composite)(StateMachine) {
   }
 
   /**
-   * Execute the stored test function.
+   * Execute the stored test function. Return a promise that either resolves with the value returned by the test function or rejects.
    * @returns {Promise}
    * @fulfil {*}
    */
   async run () {
-    const performance = await this._getPerformance();
-    if (this.testFn) {
-      if (this.toSkip) {
-        /**
-         * Test skipped.
-         * @event module:test-object-model#skipped
-         * @param test {TestObjectModel} - The test node.
-         */
-        this.setState('skipped', this);
-      } else if (this.options.todo) {
-        /**
-         * Test todo.
-         * @event module:test-object-model#todo
-         * @param test {TestObjectModel} - The test node.
-         */
-        this.setState('todo', this);
-      } else {
-        /**
-         * Test in-progress.
-         * @event module:test-object-model#in-progress
-         * @param test {TestObjectModel} - The test node.
-         */
-        this.setState('in-progress', this);
-
-        this.stats.start = performance.now();
-
-        try {
-          this.context = new TestContext({
-            name: this.name,
-            index: this.index
-          });
-          const testResult = this.testFn.call(this.context);
-          if (isPromise(testResult)) {
-            try {
-              const result = await Promise.race([testResult, raceTimeout(this.options.timeout)]);
-              this.result = result;
-              this.stats.finish(performance.now());
-
-              /**
-               * Test pass.
-               * @event module:test-object-model#pass
-               * @param test {TestObjectModel} - The test node.
-               * @param result {*} - The value returned by the test.
-               */
-              this.setState('pass', this, result);
-              return result
-            } catch (err) {
-              this.result = err;
-              this.stats.finish(performance.now());
-
-              /**
-               * Test fail.
-               * @event module:test-object-model#fail
-               * @param test {TestObjectModel} - The test node.
-               * @param err {Error} - The exception thrown.
-               */
-              this.setState('fail', this, err);
-              return Promise.reject(err)
-            }
-          } else {
-            this.stats.finish(performance.now());
-            this.result = testResult;
-            this.setState('pass', this, testResult);
-            return testResult
-          }
-        } catch (err) {
-          this.result = err;
-          this.stats.finish(performance.now());
-          this.setState('fail', this, err);
-          throw (err)
-        }
-      }
+    if (this.options.todo) {
+      /**
+       * Test todo.
+       * @event module:test-object-model#todo
+       * @param test {TestObjectModel} - The test node.
+       */
+      this.setState('todo', this);
     } else {
-      if (this.options.todo) {
-        this.setState('todo', this);
+      if (this.testFn) {
+        if (this.toSkip) {
+          /**
+           * Test skipped.
+           * @event module:test-object-model#skipped
+           * @param test {TestObjectModel} - The test node.
+           */
+          this.setState('skipped', this);
+        } else {
+          return this._runTestFn()
+        }
       } else {
         /**
          * Test ignored.
@@ -2254,6 +2201,66 @@ class Tom extends createMixin(Composite)(StateMachine) {
         this.setState('ignored', this);
       }
     }
+  }
+
+  async _runTestFn () {
+    this.performance = await this._getPerformance();
+    /**
+     * Test in-progress.
+     * @event module:test-object-model#in-progress
+     * @param test {TestObjectModel} - The test node.
+     */
+    this.setState('in-progress', this);
+
+    this.stats.start = this.performance.now();
+
+    try {
+      this.context = new TestContext({ name: this.name, index: this.index });
+      const testResult = this.testFn.call(this.context);
+      if (isPromise(testResult)) {
+        try {
+          const result = await Promise.race([testResult, raceTimeout(this.options.timeout)]);
+          this._testPassed(result);
+          return result
+        } catch (err) {
+          return Promise.reject(this._testFailed(err))
+        }
+      } else {
+        this._testPassed(testResult);
+        return testResult
+      }
+    } catch (err) {
+      throw this._testFailed(err)
+    }
+
+  }
+
+  _testPassed (result) {
+    this.result = result;
+    this.stats.finish(this.performance.now());
+
+    /**
+     * Test pass.
+     * @event module:test-object-model#pass
+     * @param test {TestObjectModel} - The test node.
+     * @param result {*} - The value returned by the test.
+     */
+    this.setState('pass', this, result);
+  }
+
+  _testFailed (err) {
+    const testFailError = new TestFailError(this.name, err);
+    this.result = err;
+    this.stats.finish(this.performance.now());
+
+    /**
+     * Test fail.
+     * @event module:test-object-model#fail
+     * @param test {TestObjectModel} - The test node.
+     * @param err {Error} - The exception thrown.
+     */
+    this.setState('fail', this, testFailError);
+    return testFailError
   }
 
   /**
@@ -2278,6 +2285,13 @@ class Tom extends createMixin(Composite)(StateMachine) {
     } else {
       return window.performance
     }
+  }
+
+  /**
+   * Used in the @test-runner/core stats.
+   */
+  getTestCount () {
+    return Array.from(this).filter(t => t.testFn).length
   }
 
   /**
@@ -2317,6 +2331,15 @@ class Tom extends createMixin(Composite)(StateMachine) {
   }
 }
 
+class TestFailError extends Error {
+  constructor (name, cause) {
+    super(`Test failed [${name}]`);
+    /* Used to differentiate a test suite fail (expected) from a library bug (unexpected) */
+    this.isTestFail = true;
+    this.cause = cause;
+  }
+}
+
 /**
  * @module test-runner-core
  */
@@ -2333,8 +2356,9 @@ class Tom extends createMixin(Composite)(StateMachine) {
 class TestRunner extends StateMachine {
   constructor (tom, options = {}) {
     /* validation */
-    Tom.validate(tom);
+    Tom.validate(tom); //TODO: Should a TOM be validated when created instead of here? Will it avoid circ references?
 
+    /* TODO: This should be the state of the _run_, not the runner.. */
     super('pending', [
       { from: 'pending', to: 'in-progress' },
       { from: 'in-progress', to: 'pass' },
@@ -2389,7 +2413,7 @@ class TestRunner extends StateMachine {
 
     /* translate tom to runner events */
     this.tom.on('in-progress', (...args) => {
-      this.stats.inProgress++; //TODO: move `.stats` to TOM - tom.stats returns event invocation counts
+      this.stats.inProgress++; // TODO: move `.stats` to TOM - tom.stats returns event invocation counts
       /**
        * Test start.
        * @event module:test-runner-core#test-start
@@ -2461,15 +2485,13 @@ class TestRunner extends StateMachine {
         fn: () => tom.run(),
         maxConcurrency: tom.options.maxConcurrency
       });
+      node.name = tom.name;
       node.onFail = new Job({
-        fn: () => {
-          /* Set runner state to fail otherwise carry on */
-          this.state = 'fail';
-          if (this.options.debug) {
-            console.error('-----------------------\nDEBUG');
-            console.error('-----------------------');
-            console.error(err);
-            console.error('-----------------------');
+        fn: (err) => {
+          if (err.isTestFail) {
+            this.state = 'fail';
+          } else {
+            throw err
           }
         }
       });
@@ -2496,6 +2518,10 @@ class TestRunner extends StateMachine {
       node.add(afterQueue);
     }
     return node
+  }
+
+  async * eventStream () {
+
   }
 
   /**
@@ -2534,6 +2560,7 @@ class TestRunner extends StateMachine {
        */
       this.state = 'pass';
     }
+
     /**
      * Test suite ended
      * @event module:test-runner-core#end

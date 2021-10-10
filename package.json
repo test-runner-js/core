@@ -26,12 +26,12 @@
   },
   "scripts": {
     "test": "npm run dist && npm run test:ci",
-    "test:ci": "test-runner --view.hide-skips test/*.js",
+    "test:ci": "node test/tests.js",
     "dist": "rollup -c",
     "docs": "jsdoc2md index.js > docs/API.md && jsdoc2md lib/view.js > docs/view.md"
   },
   "dependencies": {
-    "@test-runner/tom": "^0.8.0",
+    "@test-runner/tom": "^0.9.0",
     "fsm-base": "^0.7.0",
     "work": "^0.10.0"
   },
@@ -42,8 +42,7 @@
     "jsdoc-to-markdown": "^7.0.1",
     "node-fetch": "^3.0.0",
     "rollup": "^2.58.0",
-    "sleep-anywhere": "^2.1.0",
-    "test-runner": "^0.9.8"
+    "sleep-anywhere": "^2.1.0"
   },
   "standard": {
     "ignore": [

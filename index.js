@@ -14,13 +14,13 @@ import Tom from '@test-runner/tom'
  * @param {TestObjectModel} tom
  * @param [options] {object} - Config object.
  * @param [options.view] {function} - View instance.
- * @param [options.debug] {boolean} - Log all errors.
  */
 class TestRunner extends StateMachine {
   constructor (tom, options = {}) {
     /* validation */
-    Tom.validate(tom)
+    Tom.validate(tom) //TODO: Should a TOM be validated when created instead of here? Will it avoid circ references?
 
+    /* TODO: This should be the state of the _run_, not the runner.. */
     super('pending', [
       { from: 'pending', to: 'in-progress' },
       { from: 'in-progress', to: 'pass' },
@@ -75,7 +75,7 @@ class TestRunner extends StateMachine {
 
     /* translate tom to runner events */
     this.tom.on('in-progress', (...args) => {
-      this.stats.inProgress++ //TODO: move `.stats` to TOM - tom.stats returns event invocation counts
+      this.stats.inProgress++ // TODO: move `.stats` to TOM - tom.stats returns event invocation counts
       /**
        * Test start.
        * @event module:test-runner-core#test-start
@@ -147,15 +147,13 @@ class TestRunner extends StateMachine {
         fn: () => tom.run(),
         maxConcurrency: tom.options.maxConcurrency
       })
+      node.name = tom.name
       node.onFail = new Job({
-        fn: () => {
-          /* Set runner state to fail otherwise carry on */
-          this.state = 'fail'
-          if (this.options.debug) {
-            console.error('-----------------------\nDEBUG')
-            console.error('-----------------------')
-            console.error(err)
-            console.error('-----------------------')
+        fn: (err) => {
+          if (err.isTestFail) {
+            this.state = 'fail'
+          } else {
+            throw err
           }
         }
       })
@@ -182,6 +180,10 @@ class TestRunner extends StateMachine {
       node.add(afterQueue)
     }
     return node
+  }
+
+  async * eventStream () {
+
   }
 
   /**
@@ -220,6 +222,7 @@ class TestRunner extends StateMachine {
        */
       this.state = 'pass'
     }
+
     /**
      * Test suite ended
      * @event module:test-runner-core#end

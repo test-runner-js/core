@@ -1,8 +1,6 @@
 import Tom from '@test-runner/tom'
 import TestRunner from '@test-runner/core'
-import assert from 'assert'
-import sleep from '../node_modules/sleep-anywhere/index.js'
-const a = assert.strict
+import { strict as a } from 'assert'
 
 const tom = new Tom()
 
@@ -18,7 +16,7 @@ tom.test('simple tom', async function () {
 
   const runner = new TestRunner(tom)
   await runner.start()
-  a.deepEqual(actuals, [ 'one', 'two' ])
+  a.deepEqual(actuals, ['one', 'two'])
 })
 
 tom.test('with before and after', async function () {
@@ -36,7 +34,7 @@ tom.test('with before and after', async function () {
 
   const runner = new TestRunner(tom)
   await runner.start()
-  a.deepEqual(actuals, [ 'three', 'two', 'one' ])
+  a.deepEqual(actuals, ['three', 'two', 'one'])
 })
 
 tom.test('with before and after, deep', async function () {
@@ -65,7 +63,7 @@ tom.test('with before and after, deep', async function () {
 
   const runner = new TestRunner(tom)
   await runner.start()
-  a.deepEqual(actuals, [ 'three', 'two', 'group three', 'group two', 'group one', 'one' ])
+  a.deepEqual(actuals, ['three', 'two', 'group three', 'group two', 'group one', 'one'])
 })
 
 tom.test('one failing test', async function () {
@@ -81,8 +79,7 @@ tom.test('one failing test', async function () {
 
   const runner = new TestRunner(tom)
   await runner.start()
-  a.deepEqual(actuals, [ 'one', 'two' ])
+  a.deepEqual(actuals, ['one', 'two'])
 })
 
 export default tom
-
