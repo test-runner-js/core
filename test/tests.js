@@ -1,5 +1,5 @@
 import './before-after.js'
-// import './events.js'
+import './events.js'
 import './runner-state.js'
 import './start-concurrent.js'
 import './start-sequential.js'

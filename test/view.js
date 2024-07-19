@@ -1,4 +1,4 @@
-import TestRunnerCore from '../index.js'
+import TestRunnerCore from '@test-runner/core'
 import Tom from '@test-runner/tom'
 import { strict as a } from 'assert'
 import { halt } from './lib/util.js'

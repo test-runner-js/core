@@ -5,10 +5,7 @@
   "description": "Minimal, extensible, isomorphic test runner.",
   "repository": "https://github.com/test-runner-js/core",
   "type": "module",
-  "exports": {
-    "import": "./index.js",
-    "require": "./dist/index.cjs"
-  },
+  "exports": "./index.js",
   "license": "MIT",
   "keywords": [
     "test",
@@ -25,9 +22,7 @@
     "node": ">=12.17"
   },
   "scripts": {
-    "test": "npm run dist && npm run test:ci",
-    "test:ci": "node test/tests.js",
-    "dist": "rollup -c",
+    "test": "node test/tests.js",
     "docs": "jsdoc2md index.js > docs/API.md && jsdoc2md lib/view.js > docs/view.md"
   },
   "dependencies": {
@@ -36,12 +31,9 @@
     "work": "^0.10.0"
   },
   "devDependencies": {
-    "@rollup/plugin-commonjs": "^21.0.0",
-    "@rollup/plugin-node-resolve": "^13.0.5",
     "isomorphic-assert": "^1.0.0",
     "jsdoc-to-markdown": "^7.0.1",
     "node-fetch": "^3.0.0",
-    "rollup": "^2.58.0",
     "sleep-anywhere": "^2.1.0"
   },
   "standard": {

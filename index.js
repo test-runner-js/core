@@ -16,54 +16,57 @@ import Tom from '@test-runner/tom'
  * @param [options.view] {function} - View instance.
  */
 class TestRunner extends StateMachine {
+  options
+
+  /**
+   * Test Object Model
+   * @type {TestObjectModel}
+   */
+  tom
+
+  /**
+   * Ended flag
+   * @type {boolean}
+   */
+  ended = false /* TODO: make getter returning true if either pass or fail state */
+
+  /**
+   * View
+   * @type {View}
+   */
+  view
+
+  /**
+   * Runner stats
+   * @namespace
+   * @property {number} fail
+   * @property {number} pass
+   * @property {number} skip
+   * @property {number} start
+   * @property {number} end
+   */
+  stats = new Stats()
+
   constructor (tom, options = {}) {
-    /* validation */
     Tom.validate(tom) //TODO: Should a TOM be validated when created instead of here? Will it avoid circ references?
 
     /* TODO: This should be the state of the _run_, not the runner.. */
+    /**
+     * State machine: pending -> in-progress -> pass or fail
+     * @member {string} module:test-runner-core#state
+     */
     super('pending', [
       { from: 'pending', to: 'in-progress' },
       { from: 'in-progress', to: 'pass' },
       { from: 'in-progress', to: 'fail' }
     ])
 
-    /**
-     * State machine: pending -> in-progress -> pass or fail
-     * @member {string} module:test-runner-core#state
-     */
-
     this.options = options
-
-    /**
-     * Test Object Model
-     * @type {TestObjectModel}
-     */
     this.tom = tom
-
-    /**
-     * Ended flag
-     * @type {boolean}
-     */
-    this.ended = false /* TODO: make getter returning true if either pass or fail state */
-
-    /**
-     * View
-     * @type {View}
-     */
     this.view = options.view
     if (this.view) {
-      this.view.runner = this
+      this.view.runner = this /* TODO: Circular? Used by live-view. */
     }
-
-    /**
-     * Runner stats
-     * @namespace
-     * @property {number} fail
-     * @property {number} pass
-     * @property {number} skip
-     * @property {number} start
-     * @property {number} end
-     */
     this.stats = new Stats()
 
     this.on('start', (...args) => {

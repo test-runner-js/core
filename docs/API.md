@@ -5,10 +5,10 @@
 * [test-runner-core](#module_test-runner-core)
     * [TestRunner](#exp_module_test-runner-core--TestRunner) ⏏
         * [new TestRunner(tom, [options])](#new_module_test-runner-core--TestRunner_new)
-        * [.state](#module_test-runner-core--TestRunner+state) : <code>string</code>
         * [.tom](#module_test-runner-core--TestRunner+tom) : <code>TestObjectModel</code>
         * [.ended](#module_test-runner-core--TestRunner+ended) : <code>boolean</code>
         * [.view](#module_test-runner-core--TestRunner+view) : <code>View</code>
+        * [.state](#module_test-runner-core--TestRunner+state) : <code>string</code>
         * [.stats](#module_test-runner-core--TestRunner+stats) : <code>object</code>
         * [.start()](#module_test-runner-core--TestRunner+start)
         * ["test-start" (test)](#module_test-runner-core--TestRunner+event_test-start)
@@ -38,12 +38,6 @@ A runner associates a TOM with a View. A runner organises TOM tests into a Work 
 | [options] | <code>object</code> | Config object. |
 | [options.view] | <code>function</code> | View instance. |
 
-<a name="module_test-runner-core--TestRunner+state"></a>
-
-#### testRunner.state : <code>string</code>
-State machine: pending -> in-progress -> pass or fail
-
-**Kind**: instance property of [<code>TestRunner</code>](#exp_module_test-runner-core--TestRunner)  
 <a name="module_test-runner-core--TestRunner+tom"></a>
 
 #### testRunner.tom : <code>TestObjectModel</code>
@@ -60,6 +54,12 @@ Ended flag
 
 #### testRunner.view : <code>View</code>
 View
+
+**Kind**: instance property of [<code>TestRunner</code>](#exp_module_test-runner-core--TestRunner)  
+<a name="module_test-runner-core--TestRunner+state"></a>
+
+#### testRunner.state : <code>string</code>
+State machine: pending -> in-progress -> pass or fail
 
 **Kind**: instance property of [<code>TestRunner</code>](#exp_module_test-runner-core--TestRunner)  
 <a name="module_test-runner-core--TestRunner+stats"></a>
